@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+data/sessions/*
+data/setups/*
+!data/sessions/.gitkeep
+!data/setups/.gitkeep
+.venv/
+dist/
+*.egg-info/
