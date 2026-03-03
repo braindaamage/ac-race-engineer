@@ -1,5 +1,7 @@
 # Contract: Session Metadata JSON
 
+> **DEPRECATED (v1.0)**: Superseded by specs/002-setup-stint-tracking/contracts/meta-json.md (v2.0). Fields setup_filename, setup_contents, setup_confidence no longer exist in files produced by app version 0.2.0+.
+
 **Feature**: 001-telemetry-capture
 **Version**: 1.0
 

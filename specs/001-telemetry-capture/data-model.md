@@ -117,9 +117,9 @@ Session-level information stored in the `.meta.json` sidecar file.
 | air_temp_c | float | `info.physics.airTemp` | Celsius, real-time value (AC 1.14+). Falls back to `info.static.airTemp` |
 | road_temp_c | float | `info.physics.roadTemp` | Celsius, real-time value (AC 1.14+). Falls back to `info.static.roadTemp` |
 | driver_name | string | `ac.getDriverName(0)` | player name |
-| setup_filename | string | discovered | name of setup file found, or null |
-| setup_contents | string | file read | raw .ini text, or null |
-| setup_confidence | string | computed | "high", "medium", "low", or null (see R-004) |
+| setup_filename | string | discovered | name of setup file found, or null — **Removed in v2.0** — see specs/002-setup-stint-tracking/data-model.md |
+| setup_contents | string | file read | raw .ini text, or null — **Removed in v2.0** — see specs/002-setup-stint-tracking/data-model.md |
+| setup_confidence | string | computed | "high", "medium", "low", or null (see R-004) — **Removed in v2.0** — see specs/002-setup-stint-tracking/data-model.md |
 | channels_available | list[string] | computed | channels that returned valid data |
 | channels_unavailable | list[string] | computed | channels that returned NaN |
 | sim_info_available | bool | computed | whether shared memory was accessible |
