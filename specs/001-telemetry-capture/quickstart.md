@@ -7,21 +7,8 @@
    {AC_install}/apps/python/ac_race_engineer/
    ```
 
-2. (Optional) For full channel support, ensure `_ctypes.pyd` is available:
-   - Check if `{AC_install}/apps/python/system/DLLs/_ctypes.pyd` exists
-   - If so, copy it to `ac_race_engineer/DLLs/` (create the folder if needed)
-   - Without this, the app runs in **reduced mode** (47 of 76 channels). The 29 affected channels are:
-     - fuel (1)
-     - tyre_wear_fl/fr/rl/rr (4)
-     - wheel_load_fl/fr/rl/rr (4)
-     - damage_front/rear/left/right/center (5)
-     - session_type (falls back to "unknown")
-     - drs (1)
-     - ers_charge (1)
-     - tyre_temp_inner_fl/fr/rl/rr (4)
-     - tyre_temp_mid_fl/fr/rl/rr (4)
-     - tyre_temp_outer_fl/fr/rl/rr (4)
-   - These channels will be written as empty (NaN). All other channels work normally via the `ac` module.
+2. The app includes `_ctypes.pyd` for both 32-bit and 64-bit Python (`DLLs/Lib/` and `DLLs/Lib64/`). Full channel support (76 channels) is enabled automatically. No manual DLL setup is required.
+   - If sim_info fails to load despite bundled DLLs, the app falls back to **reduced mode** (47 of 76 channels) and session detection uses speed/position heuristics instead of shared memory.
 
 3. Launch Assetto Corsa. Enable the "AC Race Engineer" app from the sidebar app list.
 
@@ -75,7 +62,9 @@ ac_app/
     ├── ac_race_engineer.py     # Entry point
     ├── config.ini              # Configuration
     ├── sim_info.py             # Shared memory access
-    ├── DLLs/                   # _ctypes.pyd (user-provided)
+    ├── DLLs/                   # Bundled DLLs (auto-detected)
+    │   ├── Lib/                # 32-bit _ctypes.pyd
+    │   └── Lib64/              # 64-bit _ctypes.pyd
     └── modules/                # Core logic
         ├── channels.py         # Channel definitions
         ├── buffer.py           # Sample buffer
