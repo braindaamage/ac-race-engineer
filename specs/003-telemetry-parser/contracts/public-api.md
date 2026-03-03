@@ -206,6 +206,7 @@ class LapSegment(BaseModel):
     start_norm_pos: float
     end_norm_pos: float
     sample_count: int
+    is_invalid: bool = False     # True if lap_invalid==1 on any sample or disqualifying anomaly
     data: dict[str, list]        # channel_name → list of values (NaN as None)
     corners: list[CornerSegment]
     active_setup: SetupEntry | None

@@ -247,13 +247,16 @@ If no flying lap exists, fall back to first outlap. If no flying or outlap
 exists (pure pit session), corner detection is skipped and all laps have
 `corners = []`. This is not an error.
 
-### D5: `is_invalid` vs classification priority
+### D5: `is_invalid` boolean field alongside `classification`
 
-Classification is a single field (`LapClassification`). The priority order
-(outlap/inlap > incomplete > invalid > flying) means an outlap where the driver
-cuts a corner will be `outlap` not `invalid`. Quality warnings serve as the
-secondary signal for "this outlap also had invalid samples". This simplifies
-downstream filtering logic.
+`LapSegment` carries both `classification` (pit-lane logic: outlap/inlap/incomplete/invalid/flying)
+and `is_invalid: bool` (data-quality flag: True whenever any sample has `lap_invalid==1` or a
+disqualifying anomaly is detected, regardless of classification).
+
+The priority order (outlap/inlap > incomplete > invalid > flying) means an outlap where the driver
+cuts a lap is `classification="outlap"`, `is_invalid=True`. The `invalid` classification is reserved
+for non-pit laps with no closing transition where `lap_invalid` was set. This dual-field approach
+gives downstream consumers independent access to lap type and data quality without ambiguity.
 
 ### D6: pyproject.toml setup
 

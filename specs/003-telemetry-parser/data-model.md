@@ -127,6 +127,7 @@ One lap's worth of telemetry data plus all derived structures.
 | `data` | `dict[str, list]` | keys = channel names | Time-series data (82 columns) |
 | `corners` | `list[CornerSegment]` | ordered by `corner_number` | Detected corners |
 | `active_setup` | `SetupEntry \| None` | — | Setup active during this lap |
+| `is_invalid` | `bool` | — | True if any sample has `lap_invalid==1` or a disqualifying anomaly; independent of `classification` |
 | `quality_warnings` | `list[QualityWarning]` | — | Detected data quality issues |
 
 **Classification values**:
@@ -145,10 +146,13 @@ One lap's worth of telemetry data plus all derived structures.
 4. If any sample `lap_invalid == 1` → `invalid`
 5. Otherwise → `flying`
 
-Note: An outlap can also be `invalid` (e.g., driver cuts a lap during pit exit).
-The classification priority ensures `outlap`/`inlap` are detected first; `invalid`
-can be applied as an additional flag. Implementation: `is_invalid` boolean field
-in addition to `classification`, or keep `classification` as the primary label.
+Note: `classification` determines the lap type (outlap/inlap/incomplete/invalid/flying)
+using the priority rules above. `is_invalid` is an orthogonal boolean that is `True`
+whenever any sample has `lap_invalid==1` or a disqualifying anomaly is detected,
+regardless of classification. An outlap where the driver cuts a lap is
+`classification="outlap"`, `is_invalid=True`. The `invalid` classification is
+reserved for laps with no pit-lane involvement and no closing transition where
+`lap_invalid` was set.
 
 **`data` field encoding**:
 - Keys are the 82 channel names from `HEADER` in `channels.py`
