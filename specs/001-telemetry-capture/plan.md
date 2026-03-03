@@ -5,7 +5,7 @@
 
 ## Summary
 
-Build a Python telemetry capture application that runs inside Assetto Corsa's embedded Python ~3.3 runtime as an in-game app. The app automatically records 76 telemetry channels at 20-30Hz to CSV files with JSON metadata sidecars, using a buffered write strategy for crash safety and zero frame-time impact. A hybrid data access approach combines `ac.getCarState()` (primary) with `sim_info.py` shared memory (secondary) to maximize channel coverage across all cars including mods.
+Build a Python telemetry capture application that runs inside Assetto Corsa's embedded Python ~3.3 runtime as an in-game app. The app automatically records 82 telemetry channels at 20-30Hz to CSV files with JSON metadata sidecars, using a buffered write strategy for crash safety and zero frame-time impact. A hybrid data access approach combines `ac.getCarState()` (primary) with `sim_info.py` shared memory (secondary) to maximize channel coverage across all cars including mods.
 
 ## Technical Context
 
@@ -17,7 +17,7 @@ Build a Python telemetry capture application that runs inside Assetto Corsa's em
 **Project Type**: AC Python app (in-game plugin)
 **Performance Goals**: Zero perceptible frame impact, 20-30Hz sampling, <5ms disk flush, return from acUpdate in <1ms on non-sampling frames
 **Constraints**: No external packages, Python 3.3 syntax (no f-strings, no pathlib, no enum, no typing), no blocking I/O on main thread, bounded memory (~400KB buffer max), must work with vanilla and modded cars
-**Scale/Scope**: Single user, sessions up to 60+ minutes, ~76 channels per sample, ~2-10 MB CSV per 30-minute session
+**Scale/Scope**: Single user, sessions up to 60+ minutes, ~82 channels per sample, ~2-10 MB CSV per 30-minute session
 
 ## Constitution Check
 
@@ -41,7 +41,7 @@ Build a Python telemetry capture application that runs inside Assetto Corsa's em
 | Principle | Status | Notes |
 |---|---|---|
 | II. Car-Agnostic Design | PASS | Channel definitions are data-driven (list of ChannelDefinition objects). No car-name checks anywhere. |
-| I. Data Integrity | PASS | All 76 channels always present in CSV. Missing → empty cell (NaN). `channels_unavailable` list in metadata for transparency. |
+| I. Data Integrity | PASS | All 82 channels always present in CSV. Missing → empty cell (NaN). `channels_unavailable` list in metadata for transparency. |
 
 **Post-design gate result**: PASS — no violations.
 

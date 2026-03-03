@@ -47,7 +47,7 @@ def init_reduced_mode(sim_info_obj):
     global reduced_mode
     reduced_mode = (sim_info_obj is None)
     if reduced_mode:
-        _log("WARNING: sim_info not available - running in reduced mode (29 channels will return NaN)")
+        _log("WARNING: sim_info not available - running in reduced mode (28 channels will return NaN)")
         # Log which channels are unavailable in reduced mode
         unavailable = [ch["name"] for ch in CHANNEL_DEFINITIONS if ch["source"] == "sim_info"]
         _log("Unavailable channels in reduced mode: %s" % ", ".join(unavailable))

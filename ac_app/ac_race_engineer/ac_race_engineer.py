@@ -176,15 +176,22 @@ def _start_recording(car_name, track_name):
     tyre_compound = ac.getCarTyreCompound(0)
     driver_name = ac.getDriverName(0)
 
-    # Temperatures
+    # Temperatures — read from physics page (real-time values, AC 1.14+).
+    # The static page values are set once at session load and roadTemp is
+    # often 0.0 when AC doesn't explicitly configure it.
     air_temp = None
     road_temp = None
     if _sim_info is not None:
         try:
-            air_temp = _sim_info.static.airTemp
-            road_temp = _sim_info.static.roadTemp
+            air_temp = _sim_info.physics.airTemp
+            road_temp = _sim_info.physics.roadTemp
         except Exception:
-            pass
+            # Fall back to static page if physics extended fields unavailable
+            try:
+                air_temp = _sim_info.static.airTemp
+                road_temp = _sim_info.static.roadTemp
+            except Exception:
+                pass
 
     # Build metadata
     _session_metadata = {

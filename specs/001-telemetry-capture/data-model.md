@@ -94,7 +94,7 @@ A single point-in-time capture of all telemetry channels. One row in the CSV out
 | **Flags** | in_pit_lane | int | `ac.isCarInPitlane(0)` | 0 or 1 |
 | | lap_invalid | int | `acsys.CS.LapInvalidated` | 0 or 1 |
 
-**Total**: 76 channels per sample
+**Total**: 82 channels per sample
 
 ### SessionMetadata
 
@@ -114,8 +114,8 @@ Session-level information stored in the `.meta.json` sidecar file.
 | laps_completed | int | `acsys.CS.LapCount` | at session end |
 | total_samples | int | computed | total rows written to CSV |
 | sample_rate_hz | float | computed | actual avg samples/second |
-| air_temp_c | float | `info.static.airTemp` | Celsius, if available |
-| road_temp_c | float | `info.static.roadTemp` | Celsius, if available |
+| air_temp_c | float | `info.physics.airTemp` | Celsius, real-time value (AC 1.14+). Falls back to `info.static.airTemp` |
+| road_temp_c | float | `info.physics.roadTemp` | Celsius, real-time value (AC 1.14+). Falls back to `info.static.roadTemp` |
 | driver_name | string | `ac.getDriverName(0)` | player name |
 | setup_filename | string | discovered | name of setup file found, or null |
 | setup_contents | string | file read | raw .ini text, or null |

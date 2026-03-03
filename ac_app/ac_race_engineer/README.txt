@@ -22,7 +22,7 @@ is loaded automatically. No manual DLL setup is required.
 
 If _ctypes.pyd fails to load despite the bundled DLLs, the app
 runs in "reduced mode" - it still records all sessions normally,
-but 29 channels will show as empty (NaN). The remaining 53
+but 28 channels will show as empty (NaN). The remaining 54
 channels work fine.
 
 OUTPUT FILES

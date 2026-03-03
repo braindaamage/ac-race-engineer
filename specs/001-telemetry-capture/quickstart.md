@@ -7,8 +7,8 @@
    {AC_install}/apps/python/ac_race_engineer/
    ```
 
-2. The app includes `_ctypes.pyd` for both 32-bit and 64-bit Python (`DLLs/Lib/` and `DLLs/Lib64/`). Full channel support (76 channels) is enabled automatically. No manual DLL setup is required.
-   - If sim_info fails to load despite bundled DLLs, the app falls back to **reduced mode** (47 of 76 channels) and session detection uses speed/position heuristics instead of shared memory.
+2. The app includes `_ctypes.pyd` for both 32-bit and 64-bit Python (`DLLs/Lib/` and `DLLs/Lib64/`). Full channel support (82 channels) is enabled automatically. No manual DLL setup is required.
+   - If sim_info fails to load despite bundled DLLs, the app falls back to **reduced mode** (54 of 82 channels) and session detection uses speed/position heuristics instead of shared memory.
 
 3. Launch Assetto Corsa. Enable the "AC Race Engineer" app from the sidebar app list.
 

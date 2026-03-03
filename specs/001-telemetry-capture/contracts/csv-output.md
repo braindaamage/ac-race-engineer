@@ -20,7 +20,7 @@ Columns appear in this exact order. All columns are always present in every file
 timestamp,session_time_ms,normalized_position,lap_count,lap_time_ms,throttle,brake,steering,gear,clutch,handbrake,speed_kmh,rpm,g_lat,g_lon,g_vert,yaw_rate,local_vel_x,local_vel_y,local_vel_z,tyre_temp_core_fl,tyre_temp_core_fr,tyre_temp_core_rl,tyre_temp_core_rr,tyre_temp_inner_fl,tyre_temp_inner_fr,tyre_temp_inner_rl,tyre_temp_inner_rr,tyre_temp_mid_fl,tyre_temp_mid_fr,tyre_temp_mid_rl,tyre_temp_mid_rr,tyre_temp_outer_fl,tyre_temp_outer_fr,tyre_temp_outer_rl,tyre_temp_outer_rr,tyre_pressure_fl,tyre_pressure_fr,tyre_pressure_rl,tyre_pressure_rr,slip_angle_fl,slip_angle_fr,slip_angle_rl,slip_angle_rr,slip_ratio_fl,slip_ratio_fr,slip_ratio_rl,slip_ratio_rr,tyre_wear_fl,tyre_wear_fr,tyre_wear_rl,tyre_wear_rr,tyre_dirty_fl,tyre_dirty_fr,tyre_dirty_rl,tyre_dirty_rr,wheel_speed_fl,wheel_speed_fr,wheel_speed_rl,wheel_speed_rr,susp_travel_fl,susp_travel_fr,susp_travel_rl,susp_travel_rr,wheel_load_fl,wheel_load_fr,wheel_load_rl,wheel_load_rr,world_pos_x,world_pos_y,world_pos_z,turbo_boost,drs,ers_charge,fuel,damage_front,damage_rear,damage_left,damage_right,damage_center,in_pit_lane,lap_invalid
 ```
 
-**Total columns**: 76
+**Total columns**: 82
 
 ## Data Types
 

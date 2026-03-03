@@ -54,7 +54,7 @@
 
 ## Phase 3: User Story 1 — Automatic Telemetry Recording (Priority: P1) MVP
 
-**Goal**: The app automatically records a complete telemetry session (76 channels) to a properly named CSV file with a JSON metadata sidecar when the driver enters and exits any track session.
+**Goal**: The app automatically records a complete telemetry session (82 channels) to a properly named CSV file with a JSON metadata sidecar when the driver enters and exits any track session.
 
 **Independent Test**: Enter any practice session in AC, drive for 10 seconds, exit to menu. Verify: (1) CSV file exists in output directory with correct filename pattern, (2) file has header row + 200-300 data rows, (3) `.meta.json` sidecar exists with matching filename and valid JSON schema.
 
@@ -62,19 +62,19 @@
 
 ### Implementation for User Story 1
 
-- [X] T011 [P] [US1] Implement channel definitions in `ac_app/ac_race_engineer/modules/channels.py` — define `CHANNEL_DEFINITIONS` list of 76 channel dicts (name, source, reader_key, index, fallback) per data-model.md TelemetrySample table. Define `HEADER` list of column names in CSV column order per contracts/csv-output.md. Implement `read_all_channels(ac_module, sim_info_obj)` function that reads all channels and returns a list of values in header order. For multi-value channels (AccG→3, per-wheel→4), unpack into individual columns. Python 3.3 compatible.
+- [X] T011 [P] [US1] Implement channel definitions in `ac_app/ac_race_engineer/modules/channels.py` — define `CHANNEL_DEFINITIONS` list of 82 channel dicts (name, source, reader_key, index, fallback) per data-model.md TelemetrySample table. Define `HEADER` list of column names in CSV column order per contracts/csv-output.md. Implement `read_all_channels(ac_module, sim_info_obj)` function that reads all channels and returns a list of values in header order. For multi-value channels (AccG→3, per-wheel→4), unpack into individual columns. Python 3.3 compatible.
 - [X] T012 [P] [US1] Implement sample buffer in `ac_app/ac_race_engineer/modules/buffer.py` — `SampleBuffer` class with `__init__(max_size)`, `append(sample_row)` adds row to internal list, `get_all()` returns copy and clears, `count` property, `clear()` method. Simple list-based storage. Python 3.3 compatible.
 - [X] T013 [P] [US1] Implement setup file reader in `ac_app/ac_race_engineer/modules/setup_reader.py` — function `find_active_setup(car_name, track_name)` that searches `Documents/Assetto Corsa/setups/{car_name}/{track_name}/*.ini` then `Documents/Assetto Corsa/setups/{car_name}/*.ini`, returns `(filename, contents, confidence)` tuple per research.md R-004. Confidence: "high" if single file in track dir modified within 60s of now, "medium" if most recent but multiple or older than 60s, "low" if only in generic dir or older than 10min, None if no files. Read file contents with `open(path, 'r').read()`. Handle IOError gracefully. Python 3.3 compatible.
 - [X] T014 [US1] Implement CSV and JSON writer in `ac_app/ac_race_engineer/modules/writer.py` — function `write_csv_header(filepath, header_list)` writes header row to new file; function `append_csv_rows(filepath, rows)` opens in append mode, writes rows via `csv.writer`, closes file; function `write_metadata(filepath, metadata_dict)` writes JSON with `indent=2`; function `generate_filename(car, track, timestamp)` returns `{date}_{time}_{sanitized_car}_{sanitized_track}` using sanitize module; function `ensure_output_dir(path)` calls `os.makedirs(path, exist_ok=True)`. Python 3.3 compatible.
 - [X] T015 [US1] Implement session lifecycle state machine in `ac_app/ac_race_engineer/modules/session.py` — `SessionManager` class with exactly 3 states: IDLE, RECORDING, FINALIZING per data-model.md state diagram. FLUSHING is NOT a state — flush operations occur inline within RECORDING without a state transition (the UI status module handles the yellow indicator independently). Methods: `check_session_start(car_name, track_name, session_status)` transitions IDLE→RECORDING if status is LIVE (2); `check_session_end(car_name, track_name, session_status)` transitions RECORDING→FINALIZING if status leaves LIVE or car/track changes; `finalize()` transitions FINALIZING→IDLE. Tracks current car/track names for change detection. Python 3.3 compatible.
 - [X] T016 [US1] Implement AC app entry point in `ac_app/ac_race_engineer/ac_race_engineer.py` — `acMain(ac_version)`: load config, attempt sim_info import, create app window, return app name. `acUpdate(deltaT)`: check session state, if RECORDING read channels and append to buffer, if FINALIZING do final flush and write metadata. `acShutdown()`: finalize if recording. Wire together config_reader, channels, buffer, writer, setup_reader, session modules. Import `ac` and `acsys` (only file to do so). Build session metadata dict per contracts/meta-json.md schema. Python 3.3 compatible.
-- [X] T017 [P] [US1] Write unit tests for channels in `tests/telemetry_capture/unit/test_channels.py` — test: HEADER list has exactly 76 entries matching contracts/csv-output.md column order, CHANNEL_DEFINITIONS covers all 76 channels, `read_all_channels` returns correct length, each channel type (scalar, 3-tuple, 4-tuple) is correctly unpacked
+- [X] T017 [P] [US1] Write unit tests for channels in `tests/telemetry_capture/unit/test_channels.py` — test: HEADER list has exactly 82 entries matching contracts/csv-output.md column order, CHANNEL_DEFINITIONS covers all 82 channels, `read_all_channels` returns correct length, each channel type (scalar, 3-tuple, 4-tuple) is correctly unpacked
 - [X] T018 [P] [US1] Write unit tests for buffer in `tests/telemetry_capture/unit/test_buffer.py` — test: append increments count, get_all returns all rows and clears buffer, clear resets count to 0, empty buffer get_all returns empty list
 - [X] T019 [P] [US1] Write unit tests for writer in `tests/telemetry_capture/unit/test_writer.py` — test: CSV header matches contract, append rows produce valid CSV readable by csv.reader, JSON metadata matches contract schema (all required fields present), filename generation produces `{date}_{time}_{car}_{track}` pattern, ensure_output_dir creates nested directories
 - [X] T020 [P] [US1] Write unit tests for setup_reader in `tests/telemetry_capture/unit/test_setup_reader.py` — test: finds .ini in track-specific dir, falls back to generic dir, returns None when no setups exist, confidence "high"/"medium"/"low" based on timestamp and uniqueness, handles IOError gracefully
 - [X] T021 [P] [US1] Write unit tests for session state machine in `tests/telemetry_capture/unit/test_session.py` — test: IDLE→RECORDING on live status, RECORDING→FINALIZING on status change, RECORDING→FINALIZING on car/track change, FINALIZING→IDLE after finalize(), stays IDLE when not live
 
-**Checkpoint**: MVP complete — app records a full session with all 76 channels to CSV + meta.json. Test by entering/exiting a practice session in AC.
+**Checkpoint**: MVP complete — app records a full session with all 82 channels to CSV + meta.json. Test by entering/exiting a practice session in AC.
 
 ---
 
@@ -89,10 +89,10 @@
 ### Implementation for User Story 2
 
 - [X] T022 [US2] Add try/except wrapping with NaN fallback to all channel reader functions in `ac_app/ac_race_engineer/modules/channels.py` — wrap every `ac.getCarState()` call in try/except that returns `float('nan')` on failure. Wrap every `sim_info.physics.*` access similarly. Log first failure per channel at session start (not per-sample to avoid log spam). Python 3.3 compatible.
-- [X] T023 [US2] Implement reduced mode detection in `ac_app/ac_race_engineer/modules/channels.py` — at init, try importing sim_info; if ImportError set `reduced_mode=True` and define fallback readers for the 29 sim_info-only channels (all return NaN). Log warning with full list of unavailable channels per R-011 table.
+- [X] T023 [US2] Implement reduced mode detection in `ac_app/ac_race_engineer/modules/channels.py` — at init, try importing sim_info; if ImportError set `reduced_mode=True` and define fallback readers for the 28 sim_info-only channels (all return NaN). Log warning with full list of unavailable channels per R-011 table.
 - [X] T024 [US2] Implement tyre temp zone validation in `ac_app/ac_race_engineer/modules/channels.py` — at first sample, read all 12 tyre temp zone values (`tyreTempI/M/O`). If ALL 12 are exactly 0.0, set `tyre_temp_zones_validated=False`, switch zone readers to return NaN, and log info message. Otherwise `tyre_temp_zones_validated=True`.
 - [X] T025 [US2] Add channel availability tracking in `ac_app/ac_race_engineer/modules/channels.py` — after first sample, build two lists: `channels_available` (names that returned valid data) and `channels_unavailable` (names that returned NaN). Store as module state. Include these in metadata dict built by entry point.
-- [X] T026 [US2] Update unit tests for compatibility features in `tests/telemetry_capture/unit/test_channels.py` — add tests: channel read returning exception produces NaN, reduced mode sets correct 29 channels to NaN and 47 to valid, tyre zone validation detects all-zero and sets flag, availability tracking correctly categorizes channels
+- [X] T026 [US2] Update unit tests for compatibility features in `tests/telemetry_capture/unit/test_channels.py` — add tests: channel read returning exception produces NaN, reduced mode sets correct 28 channels to NaN and 54 to valid, tyre zone validation detects all-zero and sets flag, availability tracking correctly categorizes channels
 
 **Checkpoint**: App handles any car gracefully. Missing channels produce NaN, metadata reports what's available.
 
@@ -276,7 +276,7 @@ Note: US4 and US6 both modify `ac_race_engineer.py` — if done in parallel, mer
 **Phase 1 + Phase 2 + Phase 3 (US1)** = 22 tasks
 
 This delivers a fully functional telemetry capture app that:
-- Records all 76 channels at 25Hz
+- Records all 82 channels at 25Hz
 - Saves to properly named CSV + meta.json
 - Captures active setup file
 - Works for one complete session cycle

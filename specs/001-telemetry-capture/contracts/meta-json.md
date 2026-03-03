@@ -67,7 +67,7 @@
 | channels_available | list | yes | Channel names that produced valid data |
 | channels_unavailable | list | yes | Channel names that returned NaN/unavailable |
 | sim_info_available | bool | yes | Whether shared memory was accessible |
-| reduced_mode | bool | yes | true if sim_info failed to load (29 channels unavailable). See R-011 |
+| reduced_mode | bool | yes | true if sim_info failed to load (28 CSV channels unavailable). See R-011 |
 | tyre_temp_zones_validated | bool | yes | true if inner/middle/outer tyre temps read non-zero values. false if zones unavailable (core temp still valid). See R-011 |
 | csv_filename | string | yes | Name of the corresponding CSV file |
 

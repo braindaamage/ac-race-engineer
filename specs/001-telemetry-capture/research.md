@@ -263,9 +263,9 @@ ac.drawBackground(status_label, 1)
 
 **Decision**: Define an explicit "reduced mode" that activates when `sim_info.py` fails to load. Track this state in metadata via `reduced_mode` (bool) and `tyre_temp_zones_validated` (bool) fields. The app always starts recording — it never refuses to operate.
 
-**Rationale**: The app's primary value is capturing data. Losing 29 shared-memory-only channels is better than capturing nothing. Users and downstream analysis tools need to know whether a session was recorded in reduced mode so they can adjust expectations (e.g., skip tyre wear analysis if wear data is NaN).
+**Rationale**: The app's primary value is capturing data. Losing 28 shared-memory-only CSV channels is better than capturing nothing. Users and downstream analysis tools need to know whether a session was recorded in reduced mode so they can adjust expectations (e.g., skip tyre wear analysis if wear data is NaN).
 
-**Reduced mode impact** (29 of 76 channels affected):
+**Reduced mode impact** (28 CSV channels + 1 metadata field affected):
 
 | Category | Channels lost | Count |
 |---|---|---|
@@ -279,9 +279,9 @@ ac.drawBackground(status_label, 1)
 | Tyre temp inner | tyre_temp_inner_fl/fr/rl/rr | 4 |
 | Tyre temp middle | tyre_temp_mid_fl/fr/rl/rr | 4 |
 | Tyre temp outer | tyre_temp_outer_fl/fr/rl/rr | 4 |
-| **Total** | | **29** (1 metadata) |
+| **Total** | | **28 CSV** + 1 metadata |
 
-**Remaining channels in reduced mode**: 47 channels via `ac.getCarState()` and `ac.*` functions, including all timing, driver inputs, vehicle dynamics, tyre core temps, pressures, slip angles/ratios, dirty levels, wheel speeds, suspension travel, world position, turbo boost, pit lane status, and lap invalidation.
+**Remaining channels in reduced mode**: 54 channels via `ac.getCarState()` and `ac.*` functions, including all timing, driver inputs, vehicle dynamics, tyre core temps, pressures, slip angles/ratios, dirty levels, wheel speeds, suspension travel, world position, turbo boost, pit lane status, and lap invalidation.
 
 **Tyre temperature zone validation** (`tyre_temp_zones_validated` field): Even when `sim_info` loads successfully, the extended tyre temp fields (`tyreTempI`, `tyreTempM`, `tyreTempO`) may not be populated on older AC versions. At session start, the app reads all 12 zone values. If ALL 12 read as exactly `0.0`, the zones are considered unavailable — the app sets `tyre_temp_zones_validated = false` and writes NaN for inner/middle/outer temps (core temps from `ac.getCarState()` remain valid). If any zone reads non-zero, `tyre_temp_zones_validated = true`.
 

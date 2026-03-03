@@ -27,7 +27,7 @@ else:
 _dll_path = os.path.join(_app_dir, "DLLs", _dll_subdir)
 
 # Module-level detection log message (logged by entry point via ac.log)
-arch_detection_msg = "[INFO] Python architecture: %d-bit, loading DLLs from %s/" % (_arch_bits, _dll_subdir)
+arch_detection_msg = "Python architecture: %d-bit, loading DLLs from %s/" % (_arch_bits, _dll_subdir)
 
 if os.path.isdir(_dll_path) and _dll_path not in sys.path:
     sys.path.insert(0, _dll_path)
