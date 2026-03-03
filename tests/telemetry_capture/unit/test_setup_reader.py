@@ -80,7 +80,7 @@ class TestFindActiveSetup:
         _, _, confidence = find_active_setup("car", "track")
         assert confidence == "medium"
 
-    def test_confidence_low_old_file(self, tmp_path, monkeypatch):
+    def test_confidence_high_single_old_file(self, tmp_path, monkeypatch):
         track_dir = self._create_setup_dirs(tmp_path, "car", "track")
         self._write_setup(track_dir, "old.ini", age_seconds=700)
         monkeypatch.setattr(
@@ -88,7 +88,28 @@ class TestFindActiveSetup:
             lambda: str(tmp_path / "setups")
         )
         _, _, confidence = find_active_setup("car", "track")
-        assert confidence == "low"
+        assert confidence == "high"
+
+    def test_confidence_high_old_single(self, tmp_path, monkeypatch):
+        track_dir = self._create_setup_dirs(tmp_path, "car", "track")
+        self._write_setup(track_dir, "old.ini", age_seconds=48 * 3600)
+        monkeypatch.setattr(
+            "setup_reader._get_setups_base_dir",
+            lambda: str(tmp_path / "setups")
+        )
+        _, _, confidence = find_active_setup("car", "track")
+        assert confidence == "high"
+
+    def test_confidence_medium_old_multiple(self, tmp_path, monkeypatch):
+        track_dir = self._create_setup_dirs(tmp_path, "car", "track")
+        self._write_setup(track_dir, "old1.ini", age_seconds=48 * 3600)
+        self._write_setup(track_dir, "old2.ini", age_seconds=48 * 3600 + 60)
+        monkeypatch.setattr(
+            "setup_reader._get_setups_base_dir",
+            lambda: str(tmp_path / "setups")
+        )
+        _, _, confidence = find_active_setup("car", "track")
+        assert confidence == "medium"
 
     def test_handles_ioerror_gracefully(self, tmp_path, monkeypatch):
         monkeypatch.setattr(

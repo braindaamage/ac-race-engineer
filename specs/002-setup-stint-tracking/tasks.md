@@ -18,7 +18,7 @@
 
 **Purpose**: Confirm baseline is green before any changes land.
 
-- [ ] T001 Run `conda activate ac-race-engineer && pytest tests/telemetry_capture/ -v` and confirm all tests pass before any changes are made
+- [X] T001 Run `conda activate ac-race-engineer && pytest tests/telemetry_capture/ -v` and confirm all tests pass before any changes are made
 
 ---
 
@@ -28,7 +28,7 @@
 
 **⚠️ CRITICAL**: Must complete before either user story ships to production.
 
-- [ ] T002 Bump `APP_VERSION` from `"0.1.0"` to `"0.2.0"` in `ac_app/ac_race_engineer/ac_race_engineer.py` (line 38)
+- [X] T002 Bump `APP_VERSION` from `"0.1.0"` to `"0.2.0"` in `ac_app/ac_race_engineer/ac_race_engineer.py` (line 38)
 
 **Checkpoint**: Version updated — user story implementation can now begin.
 
@@ -42,9 +42,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T003 [US1] Rewrite `_search_directory` in `ac_app/ac_race_engineer/modules/setup_reader.py`: remove the `now` parameter and `age_seconds` computation; replace the timestamp-threshold confidence block (lines 86–94) with the location+count rule: `is_track_specific + 1 file → "high"`, `is_track_specific + multiple files → "medium"`, `not is_track_specific → "low"`; also remove `now = time.time()` and the `now` argument in the `find_active_setup` caller
+- [X] T003 [US1] Rewrite `_search_directory` in `ac_app/ac_race_engineer/modules/setup_reader.py`: remove the `now` parameter and `age_seconds` computation; replace the timestamp-threshold confidence block (lines 86–94) with the location+count rule: `is_track_specific + 1 file → "high"`, `is_track_specific + multiple files → "medium"`, `not is_track_specific → "low"`; also remove `now = time.time()` and the `now` argument in the `find_active_setup` caller
 
-- [ ] T004 [US1] Update `tests/telemetry_capture/unit/test_setup_reader.py`: (1) rename `test_confidence_low_old_file` → `test_confidence_high_single_old_file` and change its assertion from `"low"` to `"high"`, (2) add `test_confidence_high_old_single` with `age_seconds=48*3600` asserting `"high"`, (3) add `test_confidence_medium_old_multiple` with two old files asserting `"medium"`
+- [X] T004 [US1] Update `tests/telemetry_capture/unit/test_setup_reader.py`: (1) rename `test_confidence_low_old_file` → `test_confidence_high_single_old_file` and change its assertion from `"low"` to `"high"`, (2) add `test_confidence_high_old_single` with `age_seconds=48*3600` asserting `"high"`, (3) add `test_confidence_medium_old_multiple` with two old files asserting `"medium"`
 
 **Checkpoint**: US1 fully functional. Run `pytest tests/telemetry_capture/unit/test_setup_reader.py -v` — all tests green, including the three changed/new cases.
 
@@ -58,15 +58,15 @@
 
 ### Implementation for User Story 2
 
-- [ ] T005 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`, in `_start_recording`: remove the three flat fields `"setup_filename"`, `"setup_contents"`, `"setup_confidence"` from the `_session_metadata` dict and replace them with a `"setup_history"` key initialized to a one-element list: `[{"timestamp": ..., "trigger": "session_start", "lap": 0, "filename": setup_filename, "contents": setup_contents, "confidence": setup_confidence}]`
+- [X] T005 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`, in `_start_recording`: remove the three flat fields `"setup_filename"`, `"setup_contents"`, `"setup_confidence"` from the `_session_metadata` dict and replace them with a `"setup_history"` key initialized to a one-element list: `[{"timestamp": ..., "trigger": "session_start", "lap": 0, "filename": setup_filename, "contents": setup_contents, "confidence": setup_confidence}]`
 
-- [ ] T006 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`: add `_was_in_pitlane = False` to the module-level globals block; in `_start_recording`, initialize it by reading `bool(ac.isCarInPitlane(0))` inside a try/except (fall back to `False` on exception)
+- [X] T006 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`: add `_was_in_pitlane = False` to the module-level globals block; in `_start_recording`, initialize it by reading `bool(ac.isCarInPitlane(0))` inside a try/except (fall back to `False` on exception)
 
-- [ ] T007 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`, implement `_on_pit_exit(car_name, track_name)`: read lap count via `ac.getCarState(0, acsys.CS.LapCount)`; call `find_active_setup(car_name, track_name)`; compare new `contents` against `_session_metadata["setup_history"][-1]["contents"]`; if equal (including `None == None` — FR-011 takes precedence over FR-012 in the null-null case: no entry appended), return without action; otherwise append a new `{"timestamp": ..., "trigger": "pit_exit", "lap": ..., "filename": ..., "contents": ..., "confidence": ...}` entry and call `write_early_metadata(_meta_filepath, _session_metadata)` in a try/except that logs a warning on IOError but does not set `_error_flag`
+- [X] T007 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`, implement `_on_pit_exit(car_name, track_name)`: read lap count via `ac.getCarState(0, acsys.CS.LapCount)`; call `find_active_setup(car_name, track_name)`; compare new `contents` against `_session_metadata["setup_history"][-1]["contents"]`; if equal (including `None == None` — FR-011 takes precedence over FR-012 in the null-null case: no entry appended), return without action; otherwise append a new `{"timestamp": ..., "trigger": "pit_exit", "lap": ..., "filename": ..., "contents": ..., "confidence": ...}` entry and call `write_early_metadata(_meta_filepath, _session_metadata)` in a try/except that logs a warning on IOError but does not set `_error_flag`
 
-- [ ] T008 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`, in the `STATE_RECORDING` branch of `acUpdate`, after the `check_session_end` block and before the `_sample_interval` throttle check: read `current_in_pitlane = bool(ac.isCarInPitlane(0))` in a try/except; detect pit exit as `_was_in_pitlane and not current_in_pitlane`; call `_on_pit_exit(car_name, track_name)` on exit; update `_was_in_pitlane = current_in_pitlane`
+- [X] T008 [US2] In `ac_app/ac_race_engineer/ac_race_engineer.py`, in the `STATE_RECORDING` branch of `acUpdate`, after the `check_session_end` block and before the `_sample_interval` throttle check: read `current_in_pitlane = bool(ac.isCarInPitlane(0))` in a try/except; detect pit exit as `_was_in_pitlane and not current_in_pitlane`; call `_on_pit_exit(car_name, track_name)` on exit; update `_was_in_pitlane = current_in_pitlane`
 
-- [ ] T009 [P] [US2] Create `tests/telemetry_capture/unit/test_setup_history.py` with the following six test cases using monkeypatching and `tmp_path`: `test_history_initial_entry` (one entry after session start with valid setup), `test_history_initial_null_setup` (one entry after session start when no setup found — null fields), `test_pit_exit_with_change` (different contents → new entry appended, metadata file rewritten), `test_pit_exit_no_change` (identical contents → no new entry, metadata unchanged), `test_pit_exit_null_dedup` (previous entry has null contents, new read also returns null → no new entry; this is the FR-011-over-FR-012 clarification), `test_pit_exit_unreadable_file` (find_active_setup returns `(None, None, None)` but previous entry had real contents → null entry IS appended and metadata is rewritten)
+- [X] T009 [P] [US2] Create `tests/telemetry_capture/unit/test_setup_history.py` with the following six test cases using monkeypatching and `tmp_path`: `test_history_initial_entry` (one entry after session start with valid setup), `test_history_initial_null_setup` (one entry after session start when no setup found — null fields), `test_pit_exit_with_change` (different contents → new entry appended, metadata file rewritten), `test_pit_exit_no_change` (identical contents → no new entry, metadata unchanged), `test_pit_exit_null_dedup` (previous entry has null contents, new read also returns null → no new entry; this is the FR-011-over-FR-012 clarification), `test_pit_exit_unreadable_file` (find_active_setup returns `(None, None, None)` but previous entry had real contents → null entry IS appended and metadata is rewritten)
 
 **Checkpoint**: US2 fully functional. Run `pytest tests/telemetry_capture/unit/test_setup_history.py -v` — all six tests green.
 
@@ -80,7 +80,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T010 [US3] Add `test_history_queryable_by_lap` to `tests/telemetry_capture/unit/test_setup_history.py`: build a three-entry history list (session_start at lap 0, pit_exit at lap 8, pit_exit at lap 15); implement the lookup pattern `active = [e for e in history if e["lap"] <= N][-1]` inline; assert: lap 0 → entry 0, lap 7 → entry 0, lap 8 → entry 1, lap 10 → entry 1, lap 15 → entry 2, lap 20 → entry 2
+- [X] T010 [US3] Add `test_history_queryable_by_lap` to `tests/telemetry_capture/unit/test_setup_history.py`: build a three-entry history list (session_start at lap 0, pit_exit at lap 8, pit_exit at lap 15); implement the lookup pattern `active = [e for e in history if e["lap"] <= N][-1]` inline; assert: lap 0 → entry 0, lap 7 → entry 0, lap 8 → entry 1, lap 10 → entry 1, lap 15 → entry 2, lap 20 → entry 2
 
 **Checkpoint**: US3 verified. The history data structure produced by US2 correctly supports per-stint setup attribution.
 
@@ -90,11 +90,11 @@
 
 **Purpose**: Documentation updates and final validation pass.
 
-- [ ] T011 [P] Add the following deprecation header to the top of `specs/001-telemetry-capture/contracts/meta-json.md`, below the title: `> **DEPRECATED (v1.0)**: Superseded by specs/002-setup-stint-tracking/contracts/meta-json.md (v2.0). Fields setup_filename, setup_contents, setup_confidence no longer exist in files produced by app version 0.2.0+.`
+- [X] T011 [P] Add the following deprecation header to the top of `specs/001-telemetry-capture/contracts/meta-json.md`, below the title: `> **DEPRECATED (v1.0)**: Superseded by specs/002-setup-stint-tracking/contracts/meta-json.md (v2.0). Fields setup_filename, setup_contents, setup_confidence no longer exist in files produced by app version 0.2.0+.`
 
-- [ ] T012 [P] Add a deprecation note to the `setup_filename`, `setup_contents`, and `setup_confidence` rows in the SessionMetadata table in `specs/001-telemetry-capture/data-model.md`, marking each as `**Removed in v2.0** — see specs/002-setup-stint-tracking/data-model.md`
+- [X] T012 [P] Add a deprecation note to the `setup_filename`, `setup_contents`, and `setup_confidence` rows in the SessionMetadata table in `specs/001-telemetry-capture/data-model.md`, marking each as `**Removed in v2.0** — see specs/002-setup-stint-tracking/data-model.md`
 
-- [ ] T013 Run `conda activate ac-race-engineer && pytest tests/telemetry_capture/ -v` — confirm all tests pass (baseline tests from T001 still green, plus new tests from T004, T009, T010)
+- [X] T013 Run `conda activate ac-race-engineer && pytest tests/telemetry_capture/ -v` — confirm all tests pass (baseline tests from T001 still green, plus new tests from T004, T009, T010)
 
 ---
 

@@ -4,7 +4,6 @@ Discovers and reads the active setup .ini file for a car/track combination.
 Python 3.3 compatible.
 """
 import os
-import time
 import glob as glob_module
 
 
@@ -28,24 +27,23 @@ def find_active_setup(car_name, track_name):
         confidence: "high", "medium", "low", or None
     """
     base_dir = _get_setups_base_dir()
-    now = time.time()
 
     # Search track-specific directory first
     track_dir = os.path.join(base_dir, car_name, track_name)
-    result = _search_directory(track_dir, now, is_track_specific=True)
+    result = _search_directory(track_dir, is_track_specific=True)
     if result[0] is not None:
         return result
 
     # Fall back to generic car directory
     car_dir = os.path.join(base_dir, car_name)
-    result = _search_directory(car_dir, now, is_track_specific=False)
+    result = _search_directory(car_dir, is_track_specific=False)
     if result[0] is not None:
         return result
 
     return (None, None, None)
 
 
-def _search_directory(directory, now, is_track_specific):
+def _search_directory(directory, is_track_specific):
     """Search a directory for setup .ini files.
 
     Returns (filename, contents, confidence) or (None, None, None).
@@ -66,12 +64,6 @@ def _search_directory(directory, now, is_track_specific):
         return (None, None, None)
 
     best_file = ini_files[0]
-    try:
-        mtime = os.path.getmtime(best_file)
-    except OSError:
-        return (None, None, None)
-
-    age_seconds = now - mtime
 
     # Read the file contents
     try:
@@ -82,14 +74,12 @@ def _search_directory(directory, now, is_track_specific):
 
     filename = os.path.basename(best_file)
 
-    # Determine confidence
+    # Determine confidence based on location and file count
     if is_track_specific:
-        if len(ini_files) == 1 and age_seconds <= 60:
+        if len(ini_files) == 1:
             confidence = "high"
-        elif age_seconds <= 600:
-            confidence = "medium"
         else:
-            confidence = "low"
+            confidence = "medium"
     else:
         confidence = "low"
 

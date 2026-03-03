@@ -35,7 +35,7 @@ from session import (
 from setup_reader import find_active_setup
 from status import STATUS_IDLE, STATUS_RECORDING, STATUS_FLUSHING, STATUS_ERROR, get_status_display
 
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.2.0"
 APP_NAME = "AC Race Engineer"
 
 # Session type mapping from shared memory value to string
@@ -73,6 +73,9 @@ _session_metadata = None
 # Logging
 _log_level_map = {"debug": 0, "info": 1, "warn": 2, "error": 3}
 _current_log_level = 1
+
+# Pit exit tracking
+_was_in_pitlane = False
 
 # Error state
 _error_flag = False
@@ -119,13 +122,17 @@ def _start_recording(car_name, track_name):
     """Initialize a new recording session."""
     global _csv_filepath, _meta_filepath, _base_filename
     global _session_start_time, _total_samples_written, _flush_count, _last_sample_time
-    global _session_metadata, _error_flag
+    global _session_metadata, _error_flag, _was_in_pitlane
 
     _error_flag = False
     _session_start_time = time.time()
     _total_samples_written = 0
     _flush_count = 0
     _last_sample_time = 0.0
+    try:
+        _was_in_pitlane = bool(ac.isCarInPitlane(0))
+    except Exception:
+        _was_in_pitlane = False
 
     set_session_start_time(_session_start_time)
     reset_session_state()
@@ -212,9 +219,16 @@ def _start_recording(car_name, track_name):
         "air_temp_c": air_temp,
         "road_temp_c": road_temp,
         "driver_name": driver_name if driver_name else "",
-        "setup_filename": setup_filename,
-        "setup_contents": setup_contents,
-        "setup_confidence": setup_confidence,
+        "setup_history": [
+            {
+                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(_session_start_time)),
+                "trigger": "session_start",
+                "lap": 0,
+                "filename": setup_filename,
+                "contents": setup_contents,
+                "confidence": setup_confidence,
+            }
+        ],
         "channels_available": [],
         "channels_unavailable": [],
         "sim_info_available": _sim_info is not None,
@@ -238,6 +252,37 @@ def _start_recording(car_name, track_name):
 
     _set_status(STATUS_RECORDING)
     _log("info", "Recording started: %s" % os.path.basename(_csv_filepath))
+
+
+def _on_pit_exit(car_name, track_name):
+    """Handle a pit exit event: re-read setup, append history entry if changed."""
+    global _session_metadata, _meta_filepath
+
+    now_str = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+    try:
+        lap = int(ac.getCarState(0, acsys.CS.LapCount))
+    except Exception:
+        lap = 0
+
+    filename, contents, confidence = find_active_setup(car_name, track_name)
+
+    last_contents = _session_metadata["setup_history"][-1]["contents"]
+    if contents == last_contents:
+        return  # No change — do not append
+
+    _session_metadata["setup_history"].append({
+        "timestamp": now_str,
+        "trigger": "pit_exit",
+        "lap": lap,
+        "filename": filename,
+        "contents": contents,
+        "confidence": confidence,
+    })
+
+    try:
+        write_early_metadata(_meta_filepath, _session_metadata)
+    except IOError as e:
+        _log("warn", "Cannot update metadata after pit exit: %s" % str(e))
 
 
 def _flush_buffer():
@@ -401,6 +446,22 @@ def acUpdate(deltaT):
                     if _session_mgr.check_session_start(car_name, track_name, session_status):
                         _start_recording(car_name, track_name)
                 return
+
+            # Pit exit detection
+            global _was_in_pitlane
+            try:
+                current_in_pitlane = bool(ac.isCarInPitlane(0))
+            except Exception:
+                current_in_pitlane = _was_in_pitlane  # assume no change on error
+
+            if _was_in_pitlane and not current_in_pitlane:
+                _on_pit_exit(car_name, track_name)
+                try:
+                    _log("info", "Pit exit detected at lap %d" % int(ac.getCarState(0, acsys.CS.LapCount)))
+                except Exception:
+                    _log("info", "Pit exit detected")
+
+            _was_in_pitlane = current_in_pitlane
 
             # Sampling throttle: only read channels at configured rate
             if current_time - _last_sample_time < _sample_interval:
