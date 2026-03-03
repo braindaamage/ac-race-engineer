@@ -1,25 +1,30 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 0.0.0 → 1.0.0 (Initial ratification)
+Version change: 1.0.0 → 1.1.0 (MINOR: new subsection added)
 
-Modified principles: N/A (initial creation)
+Modified principles: None
 
 Added sections:
-- 7 Core Principles (I-VII)
-- Technical Boundaries section
-- Development Workflow section
-- Governance section
+- Technical Boundaries > Development Environment (conda requirement)
 
-Removed sections: N/A
+Removed sections: None
 
 Templates requiring updates:
-- .specify/templates/plan-template.md: ✅ No updates needed (Constitution Check placeholder works)
+- .specify/templates/plan-template.md: ✅ No updates needed (generic placeholders compatible)
 - .specify/templates/spec-template.md: ✅ No updates needed (generic structure compatible)
 - .specify/templates/tasks-template.md: ✅ No updates needed (phase structure compatible)
-- .specify/templates/commands/*.md: N/A (no command files exist yet)
+- .specify/templates/commands/*.md: N/A (no command files exist)
 
-Follow-up TODOs: None
+Follow-up TODOs:
+- Technical Boundaries > Technology Stack says "Parquet for session data" but
+  spec 001-telemetry-capture clarified CSV is primary in-game format with
+  Parquet as a separate post-processing step. Consider updating Storage line
+  to "CSV for in-game capture, Parquet for post-processed sessions, .ini for
+  setups" in a future amendment.
+- CLAUDE.md Stack section says "Parquet para almacenamiento de sesiones" —
+  same inconsistency. Consider updating when constitution storage line is
+  amended.
 ==================
 -->
 
@@ -131,7 +136,7 @@ complexity and should wrap proven functionality, not drive architecture.
 
 - **Language**: Python 3.11+
 - **Data Processing**: pandas, numpy, scipy for telemetry analysis
-- **Storage**: Parquet for session data, .ini for setups
+- **Storage**: CSV for in-game capture, Parquet for post-processed sessions, .ini for setups
 - **LLM Integration**: Claude API with function calling (Sonnet for fast analysis,
   Opus for complex reasoning)
 - **CLI Framework**: Click or Typer
@@ -150,6 +155,25 @@ complexity and should wrap proven functionality, not drive architecture.
 - Test coverage MUST include unit tests for metric calculations
 - Integration tests MUST verify end-to-end CLI workflows
 - Parser tests MUST cover malformed .ini handling
+
+### Development Environment
+
+All Python development outside of Assetto Corsa's embedded runtime MUST use
+the project's conda environment.
+
+- Environment name: `ac-race-engineer` with Python 3.11+
+- Before running ANY Python code, script, test, or installation command,
+  MUST activate with `conda activate ac-race-engineer`
+- MUST NOT install packages or run scripts in the base conda environment or
+  system Python
+- If the environment does not exist, create it with
+  `conda create -n ac-race-engineer python=3.11 -y` before proceeding
+- Applies to: post-processing utilities, tests, CLI tools, analysis modules
+- SOLE EXCEPTION: Code running inside AC's embedded Python app (telemetry
+  capture), which uses AC's own Python ~3.3 runtime with no conda access
+
+**Rationale**: Consistent environment management prevents dependency conflicts
+and ensures reproducible builds across all development phases.
 
 ## Development Workflow
 
@@ -201,4 +225,4 @@ these principles.
 - **MINOR**: New principle added or existing principle materially expanded
 - **PATCH**: Clarifications, wording improvements, non-semantic changes
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-02
+**Version**: 1.1.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-02
