@@ -1,30 +1,37 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.1.0 (MINOR: new subsection added)
+Version change: 1.1.0 → 1.2.0 (MINOR: 4 new principles added, Principle IV
+materially updated, Technology Stack rewritten for 3-component architecture,
+Project Structure subsection added)
 
-Modified principles: None
+Modified principles:
+- IV. LLM as Interpreter, Not Calculator → updated to add Pydantic AI agent
+  framing and provider-agnostic requirement
 
 Added sections:
-- Technical Boundaries > Development Environment (conda requirement)
+- Core Principles: VIII. API-First Design
+- Core Principles: IX. Separation of Concerns — Three Layers
+- Core Principles: X. Desktop App Stack
+- Core Principles: XI. LLM Provider Abstraction
+- Technical Boundaries: Project Structure (new subsection)
 
 Removed sections: None
 
 Templates requiring updates:
-- .specify/templates/plan-template.md: ✅ No updates needed (generic placeholders compatible)
-- .specify/templates/spec-template.md: ✅ No updates needed (generic structure compatible)
-- .specify/templates/tasks-template.md: ✅ No updates needed (phase structure compatible)
-- .specify/templates/commands/*.md: N/A (no command files exist)
+- .specify/templates/plan-template.md: ✅ No updates needed (Option 2
+  "Web application" structure already present and compatible)
+- .specify/templates/spec-template.md: ✅ No updates needed (generic
+  structure compatible)
+- .specify/templates/tasks-template.md: ✅ No updates needed (Path
+  Conventions already include backend/ and frontend/ options)
+- .specify/templates/agent-file-template.md: ✅ No updates needed
+  (generic placeholders)
 
 Follow-up TODOs:
-- Technical Boundaries > Technology Stack says "Parquet for session data" but
-  spec 001-telemetry-capture clarified CSV is primary in-game format with
-  Parquet as a separate post-processing step. Consider updating Storage line
-  to "CSV for in-game capture, Parquet for post-processed sessions, .ini for
-  setups" in a future amendment.
-- CLAUDE.md Stack section says "Parquet para almacenamiento de sesiones" —
-  same inconsistency. Consider updating when constitution storage line is
-  amended.
+- Principle VII (CLI-First MVP) may need revisiting in a future amendment
+  once Phase 7 begins — the CLI-first constraint still applies through
+  Phase 6, but the eventual end-user interface is Tauri + React.
 ==================
 -->
 
@@ -77,16 +84,20 @@ Corrupted setups waste driver time and erode trust.
 ### IV. LLM as Interpreter, Not Calculator
 
 All numerical analysis MUST be performed by deterministic Python code. The LLM
-receives only pre-processed metrics to reason about.
+receives only pre-processed metrics to reason about. All LLM interactions MUST
+go through Pydantic AI agents and MUST NOT call provider SDKs directly.
 
 - The LLM MUST NOT perform calculations (averages, deltas, physics formulas)
 - Metrics passed to the LLM MUST be fully computed with clear labels and units
-- Setup change suggestions MUST come via structured function calling, not free text
+- Setup change suggestions MUST come via Pydantic AI tool calls, not free text
 - The LLM's role is interpretation: "tire temps show understeer" not "avg 92.3°C"
 - Deterministic code MUST be testable independent of LLM behavior
+- All LLM calls MUST be made via Pydantic AI agents (see Principle XI for
+  provider abstraction details)
 
 **Rationale**: LLMs are unreliable calculators. Reproducible numerical analysis
 requires deterministic code. LLMs excel at pattern recognition and explanation.
+Provider abstraction via Pydantic AI ensures no vendor lock-in.
 
 ### V. Educational Explanations
 
@@ -118,43 +129,157 @@ Large rewrites make it impossible to know what helped or hurt.
 
 ### VII. CLI-First MVP
 
-The initial implementation MUST focus on a functional command-line interface before
-any GUI or web interface.
+The backend implementation (Phases 2–6) MUST be fully usable via CLI before any
+desktop GUI is introduced (Phase 7).
 
-- Core functionality MUST be fully usable via CLI commands
+- Core functionality MUST be fully usable via CLI commands through Phase 6
 - CLI MUST support: analyze session, suggest changes, apply changes, compare setups
 - Output MUST be both human-readable and machine-parseable (JSON option)
-- No GUI work until CLI covers all core workflows
+- No desktop GUI work until CLI covers all core workflows
 - CLI design MUST enable future GUI integration without architectural changes
 
-**Rationale**: CLI-first ensures the core logic is solid and testable. GUI adds
-complexity and should wrap proven functionality, not drive architecture.
+**Rationale**: CLI-first ensures the core logic is solid and testable. The Tauri +
+React desktop app (Phase 7) wraps proven functionality rather than driving architecture.
+
+### VIII. API-First Design
+
+All analysis logic MUST live in `backend/ac_engineer/` as pure Python functions.
+FastAPI routes MUST be thin wrappers that delegate to these functions.
+
+- `ac_engineer/` modules MUST NOT contain HTTP-specific code (no Request/Response
+  objects, no web framework imports)
+- The same `ac_engineer/` functions MUST be callable from the API, CLI, or tests
+  without modification
+- FastAPI routes MUST handle request validation (via Pydantic) and call `ac_engineer/`
+  functions; no business logic lives in route handlers
+- This ensures the analysis engine is independently testable without a running server
+
+**Rationale**: Coupling analysis logic to HTTP transport creates untestable and
+inflexible code. Keeping pure functions in `ac_engineer/` enables CLI, API, and
+test consumers without duplication.
+
+### IX. Separation of Concerns — Three Layers
+
+The system MUST maintain strict separation across three layers, each with defined
+responsibilities and prohibited cross-layer concerns.
+
+- **`ac_engineer/` modules**: Pure computation only. Permitted: file reads,
+  pandas/numpy operations, Pydantic AI agent calls. Prohibited: HTTP awareness,
+  web framework imports, frontend concerns
+- **`api/` routes**: HTTP interface only. Permitted: Pydantic request/response
+  models, calling `ac_engineer/` functions, HTTP status codes. Prohibited:
+  business logic, direct file I/O beyond what `ac_engineer/` exposes, LLM calls
+- **`frontend/`**: Visualization and user interaction only. Permitted: HTTP calls
+  to `api/` endpoints, UI state management. Prohibited: analysis logic, direct
+  data file access, LLM calls of any kind
+- Cross-layer imports MUST flow in one direction: `api/` → `ac_engineer/`;
+  `frontend/` → `api/` (via HTTP only)
+- Reverse imports (e.g., `ac_engineer/` importing from `api/`) are FORBIDDEN
+
+**Rationale**: Clear layer boundaries make each component independently testable,
+replaceable, and comprehensible. Violations create hidden coupling that makes
+future changes expensive.
+
+### X. Desktop App Stack
+
+The desktop application (Phase 7) MUST use Tauri as the native Windows shell and
+React with TypeScript as the UI layer, communicating with the backend via localhost
+HTTP.
+
+- The Tauri shell (`frontend/src-tauri/`) MUST contain minimal Rust configuration
+  only—no business logic in Rust
+- The React app (`frontend/src/`) MUST consume backend endpoints exclusively; no
+  direct file system access from the frontend
+- The backend FastAPI server MUST be started as a subprocess when the Tauri app
+  launches
+- The frontend MUST NOT duplicate any logic already present in `ac_engineer/`
+  modules
+- UI state MUST reflect data returned from the API, not locally derived analysis
+
+**Rationale**: Tauri provides native Windows integration without Electron's overhead.
+Starting the backend as a subprocess keeps the distribution self-contained while
+preserving the API-first architecture from Principle VIII.
+
+### XI. LLM Provider Abstraction
+
+All LLM interactions in `backend/ac_engineer/engineer/` MUST be implemented using
+Pydantic AI agents. Direct calls to provider SDKs (Anthropic, OpenAI, Google) are
+FORBIDDEN in application code.
+
+- The active LLM provider MUST be selectable via configuration (environment variable
+  or config file), not hardcoded in source
+- Supported providers MUST include at minimum: Anthropic Claude, OpenAI, Google Gemini
+- Pydantic AI tools (function calling) MUST be used for all structured interactions
+  (setup reads, setup modifications, metric queries)
+- Provider-specific behavior differences MUST NOT leak into `ac_engineer/` business
+  logic
+- Switching providers MUST require only a configuration change, not code changes
+
+**Rationale**: Vendor lock-in to a single LLM provider creates dependency risk and
+limits model selection. Pydantic AI provides a stable abstraction layer that allows
+switching providers as models improve or pricing changes.
 
 ## Technical Boundaries
 
 ### Technology Stack
 
-- **Language**: Python 3.11+
-- **Data Processing**: pandas, numpy, scipy for telemetry analysis
-- **Storage**: CSV for in-game capture, Parquet for post-processed sessions, .ini for setups
-- **LLM Integration**: Claude API with function calling (Sonnet for fast analysis,
-  Opus for complex reasoning)
-- **CLI Framework**: Click or Typer
-- **Testing**: pytest with fixtures for telemetry data
+Three-component architecture:
+
+1. **AC In-Game App** (Phases 1–1.5, completed):
+   - Python ~3.3 (AC embedded runtime; conda does not apply)
+   - Captures telemetry to CSV at 20–30Hz
+
+2. **Backend** (Phases 2–6):
+   - Python 3.11+ in conda env `ac-race-engineer`
+   - FastAPI for HTTP API server
+   - pandas, numpy, scipy for telemetry analysis
+   - Pydantic AI for LLM agent framework (provider-agnostic)
+   - pytest for testing
+
+3. **Desktop App** (Phase 7):
+   - Tauri (Rust) for native Windows shell
+   - React with TypeScript for UI
+   - Communicates with backend via localhost HTTP
+
+**Storage**: CSV for in-game capture, Parquet for post-processed sessions, .ini for setups
+
+**LLM Providers** (selectable via config): Anthropic Claude, OpenAI, Google Gemini
+
+### Project Structure
+
+```
+ac_app/                  # AC in-game app (Python ~3.3, completed)
+backend/
+  ac_engineer/           # Core Python package
+    parser/              # Telemetry & setup file parsing
+    analyzer/            # Metric calculation engine
+    knowledge/           # Vehicle dynamics knowledge base + loader
+    engineer/            # Pydantic AI agents for setup reasoning
+  api/                   # FastAPI server (thin HTTP wrappers)
+  tests/                 # pytest tests for all backend modules
+frontend/
+  src/                   # React app (TypeScript)
+  src-tauri/             # Tauri shell (Rust, minimal config only)
+data/
+  sessions/              # Telemetry CSV + metadata (.meta.json) per session
+  setups/                # Setup .ini files
+```
 
 ### Data Flow Constraints
 
-- Telemetry capture runs in-game at 20-30Hz via AC Python app
+- Telemetry capture runs in-game at 20–30Hz via AC Python app
 - Post-session analysis only—no real-time setup changes
-- All analysis is local; LLM calls are the only external dependency
+- All analysis is local; LLM provider calls are the only external dependency
 - Setup files remain in AC's standard locations
+- Frontend communicates with backend exclusively via localhost HTTP (FastAPI)
 
 ### Quality Gates
 
 - All code MUST pass type checking (mypy or pyright)
 - Test coverage MUST include unit tests for metric calculations
-- Integration tests MUST verify end-to-end CLI workflows
+- Integration tests MUST verify end-to-end API workflows
 - Parser tests MUST cover malformed .ini handling
+- `ac_engineer/` modules MUST be testable without starting the FastAPI server
 
 ### Development Environment
 
@@ -168,7 +293,8 @@ the project's conda environment.
   system Python
 - If the environment does not exist, create it with
   `conda create -n ac-race-engineer python=3.11 -y` before proceeding
-- Applies to: post-processing utilities, tests, CLI tools, analysis modules
+- Applies to: post-processing utilities, tests, CLI tools, analysis modules,
+  FastAPI server
 - SOLE EXCEPTION: Code running inside AC's embedded Python app (telemetry
   capture), which uses AC's own Python ~3.3 runtime with no conda access
 
@@ -182,13 +308,16 @@ and ensures reproducible builds across all development phases.
 - All changes MUST be reviewed for constitution compliance
 - Car-specific logic is an automatic rejection
 - LLM doing calculations is an automatic rejection
+- Business logic in FastAPI route handlers is an automatic rejection
+- `ac_engineer/` importing from `api/` is an automatic rejection
 - Setup changes without explanations are incomplete
 
 ### Testing Discipline
 
 - Metric calculation code MUST have unit tests with known inputs/outputs
 - Parser code MUST have tests for edge cases (missing sections, unknown params)
-- CLI commands MUST have integration tests
+- API endpoints MUST have integration tests
+- `ac_engineer/` functions MUST have tests that run without a live API server
 - Test data MUST include both vanilla cars and mods
 
 ### Documentation Standards
@@ -225,4 +354,4 @@ these principles.
 - **MINOR**: New principle added or existing principle materially expanded
 - **PATCH**: Clarifications, wording improvements, non-semantic changes
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-02
+**Version**: 1.2.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-03
