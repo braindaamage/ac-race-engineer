@@ -65,6 +65,7 @@ _meta_filepath = None
 _base_filename = None
 _session_start_time = 0.0
 _total_samples_written = 0
+_flush_count = 0
 _last_sample_time = 0.0
 _sample_interval = 0.04  # 1/25 Hz default
 _session_metadata = None
@@ -117,12 +118,13 @@ def _get_session_type():
 def _start_recording(car_name, track_name):
     """Initialize a new recording session."""
     global _csv_filepath, _meta_filepath, _base_filename
-    global _session_start_time, _total_samples_written, _last_sample_time
+    global _session_start_time, _total_samples_written, _flush_count, _last_sample_time
     global _session_metadata, _error_flag
 
     _error_flag = False
     _session_start_time = time.time()
     _total_samples_written = 0
+    _flush_count = 0
     _last_sample_time = 0.0
 
     set_session_start_time(_session_start_time)
@@ -240,7 +242,7 @@ def _start_recording(car_name, track_name):
 
 def _flush_buffer():
     """Flush the sample buffer to the CSV file."""
-    global _total_samples_written
+    global _total_samples_written, _flush_count
 
     if _buffer.count == 0:
         return
@@ -250,6 +252,7 @@ def _flush_buffer():
         _set_status(STATUS_FLUSHING)
         append_csv_rows(_csv_filepath, rows)
         _total_samples_written += len(rows)
+        _flush_count += 1
         _buffer.mark_flushed()
         _log("debug", "Flushed %d samples (total: %d)" % (len(rows), _total_samples_written))
         _set_status(STATUS_RECORDING)
@@ -300,7 +303,7 @@ def _finalize_session():
             _log("error", "Cannot write final metadata: %s" % str(e))
 
     _set_status(STATUS_IDLE)
-    _log("info", "Session finalized: %d samples written" % _total_samples_written)
+    _log("info", "Session finalized: %d samples written (%d flushes)" % (_total_samples_written, _flush_count))
 
 
 def acMain(ac_version):
