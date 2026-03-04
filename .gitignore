@@ -4,6 +4,8 @@ __pycache__/
 .env.*
 data/sessions/*
 data/setups/*
+data/*.db
+data/config.json
 !data/sessions/.gitkeep
 !data/setups/.gitkeep
 examples/
