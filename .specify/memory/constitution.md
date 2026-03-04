@@ -1,32 +1,28 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.2.0 (MINOR: 4 new principles added, Principle IV
-materially updated, Technology Stack rewritten for 3-component architecture,
-Project Structure subsection added)
+Version change: 1.2.0 → 1.3.0 (MINOR: structural update to Technical
+Boundaries reflecting config/ and storage/ modules from Phase 5.1.
+No principles added or removed, no existing principle redefined.)
 
-Modified principles:
-- IV. LLM as Interpreter, Not Calculator → updated to add Pydantic AI agent
-  framing and provider-agnostic requirement
+Modified principles: None
 
-Added sections:
-- Core Principles: VIII. API-First Design
-- Core Principles: IX. Separation of Concerns — Three Layers
-- Core Principles: X. Desktop App Stack
-- Core Principles: XI. LLM Provider Abstraction
-- Technical Boundaries: Project Structure (new subsection)
+Modified sections:
+- Technical Boundaries → Technology Stack: Storage line expanded to
+  include SQLite (stdlib sqlite3)
+- Technical Boundaries → Project Structure: added config/ and storage/
+  under ac_engineer/, added config.json and ac_engineer.db under data/
+- Technical Boundaries → Data Flow Constraints: added bullet on local
+  SQLite and config.json persistence
 
+Added sections: None
 Removed sections: None
 
 Templates requiring updates:
-- .specify/templates/plan-template.md: ✅ No updates needed (Option 2
-  "Web application" structure already present and compatible)
-- .specify/templates/spec-template.md: ✅ No updates needed (generic
-  structure compatible)
-- .specify/templates/tasks-template.md: ✅ No updates needed (Path
-  Conventions already include backend/ and frontend/ options)
-- .specify/templates/agent-file-template.md: ✅ No updates needed
-  (generic placeholders)
+- .specify/templates/plan-template.md: ✅ No updates needed (generic)
+- .specify/templates/spec-template.md: ✅ No updates needed (generic)
+- .specify/templates/tasks-template.md: ✅ No updates needed (generic)
+- .specify/templates/agent-file-template.md: ✅ No updates needed (generic)
 
 Follow-up TODOs:
 - Principle VII (CLI-First MVP) may need revisiting in a future amendment
@@ -241,7 +237,7 @@ Three-component architecture:
    - React with TypeScript for UI
    - Communicates with backend via localhost HTTP
 
-**Storage**: CSV for in-game capture, Parquet for post-processed sessions, .ini for setups
+**Storage**: CSV for in-game capture, Parquet for post-processed sessions, .ini for setups, SQLite (stdlib sqlite3) for local relational persistence of sessions index, recommendations, setup change history, and conversation messages
 
 **LLM Providers** (selectable via config): Anthropic Claude, OpenAI, Google Gemini
 
@@ -254,6 +250,8 @@ backend/
     parser/              # Telemetry & setup file parsing
     analyzer/            # Metric calculation engine
     knowledge/           # Vehicle dynamics knowledge base + loader
+    config/              # User configuration (ACConfig, read/write config.json)
+    storage/             # Local SQLite persistence (sessions, recommendations, setup_changes, messages)
     engineer/            # Pydantic AI agents for setup reasoning
   api/                   # FastAPI server (thin HTTP wrappers)
   tests/                 # pytest tests for all backend modules
@@ -263,6 +261,8 @@ frontend/
 data/
   sessions/              # Telemetry CSV + metadata (.meta.json) per session
   setups/                # Setup .ini files
+  config.json            # User configuration (ac_install_path, llm_provider, llm_model)
+  ac_engineer.db         # SQLite database (sessions, recommendations, setup_changes, messages)
 ```
 
 ### Data Flow Constraints
@@ -270,6 +270,7 @@ data/
 - Telemetry capture runs in-game at 20–30Hz via AC Python app
 - Post-session analysis only—no real-time setup changes
 - All analysis is local; LLM provider calls are the only external dependency
+- Session metadata, engineer recommendations, setup change history, and conversation messages are persisted locally in SQLite (data/ac_engineer.db). User configuration is persisted in data/config.json. Both files are created automatically on first run.
 - Setup files remain in AC's standard locations
 - Frontend communicates with backend exclusively via localhost HTTP (FastAPI)
 
@@ -354,4 +355,4 @@ these principles.
 - **MINOR**: New principle added or existing principle materially expanded
 - **PATCH**: Clarifications, wording improvements, non-semantic changes
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-03
+**Version**: 1.3.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-04

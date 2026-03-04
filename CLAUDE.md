@@ -5,13 +5,17 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 
 ## Arquitectura
 - ac_app/ → App in-game para AC: captura telemetría a CSV (20-30Hz), Python ~3.3 embebido, Fases 1-1.5 COMPLETADAS
-- backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/
+- backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/, config/, storage/
+  - config/   → ACConfig model + read_config / write_config / update_config
+  - storage/  → SQLite init + CRUD functions para sessions, recommendations, setup_changes, messages
 - backend/api/ → Servidor FastAPI que expone los módulos de ac_engineer como endpoints HTTP
 - backend/tests/ → Tests pytest para todos los módulos del backend
 - frontend/src/ → App React (TypeScript)
 - frontend/src-tauri/ → Shell Tauri (Rust, solo configuración mínima)
 - data/sessions/ → Archivos de telemetría (.csv) y metadata (.meta.json) por sesión
 - data/setups/ → Archivos de setup .ini
+- data/config.json → Configuración de usuario (ac_install_path, llm_provider, llm_model)
+- data/ac_engineer.db → Base de datos SQLite (4 tablas: sessions, recommendations, setup_changes, messages)
 
 ## Stack
 - Python 3.11+ (backend, conda env `ac-race-engineer`)
@@ -22,12 +26,17 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - React con TypeScript para la UI del desktop app
 - CSV para captura in-game, Parquet para post-procesamiento
 
+## Imports públicos (Phase 5.1+)
+- `from ac_engineer.config import read_config, write_config, update_config, ACConfig`
+- `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages_for_session`
+
 ## Fases del proyecto
 - Fase 1 ✅ Captura de telemetría (app in-game AC)
 - Fase 1.5 ✅ Setup stint tracking
 - Fase 2 ✅ Parser (segmentar CSV por vueltas/curvas, parsear .ini) — 143 tests
 - Fase 3 ✅ Analyzer (métricas por vuelta: slip angles, temps, balance, trazada) — 141 tests
 - Fase 4 ✅ Knowledge Base (dinámica vehicular en markdown + loader) — 48 tests
+- Fase 5.1 ✅ Config + Storage (ACConfig, SQLite CRUD)
 - Fase 5: Engineer (agentes Pydantic AI con tools para leer/modificar setups)
 - Fase 6: Backend API (FastAPI wrapping fases 2-5 como endpoints HTTP)
 - Fase 7: Desktop App (Tauri + React: session list, lap analysis, setup compare, engineer chat)
@@ -49,4 +58,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1, 1.5, 2, 3 y 4 completadas (captura de telemetría, setup stint tracking, parser con 143 tests, analyzer con 141 tests, knowledge base con 48 tests — 334 tests totales). Próxima: Fase 5 (Engineer — agentes Pydantic AI).
+Fases 1, 1.5, 2, 3 y 4 completadas (captura de telemetría, setup stint tracking, parser con 143 tests, analyzer con 141 tests, knowledge base con 48 tests — 334 tests totales). Fase 5.1 (Config + Storage) en progreso.
