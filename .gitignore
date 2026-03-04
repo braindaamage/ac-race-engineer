@@ -6,6 +6,7 @@ data/sessions/*
 data/setups/*
 !data/sessions/.gitkeep
 !data/setups/.gitkeep
+examples/
 .venv/
 venv/
 dist/
