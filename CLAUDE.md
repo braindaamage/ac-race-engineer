@@ -25,8 +25,8 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 ## Fases del proyecto
 - Fase 1 ✅ Captura de telemetría (app in-game AC)
 - Fase 1.5 ✅ Setup stint tracking
-- Fase 2: Parser (segmentar CSV por vueltas/curvas, parsear .ini)
-- Fase 3: Analyzer (métricas por vuelta: slip angles, temps, balance, trazada)
+- Fase 2 ✅ Parser (segmentar CSV por vueltas/curvas, parsear .ini) — 143 tests
+- Fase 3 ✅ Analyzer (métricas por vuelta: slip angles, temps, balance, trazada) — 141 tests
 - Fase 4: Knowledge Base (dinámica vehicular en markdown + loader)
 - Fase 5: Engineer (agentes Pydantic AI con tools para leer/modificar setups)
 - Fase 6: Backend API (FastAPI wrapping fases 2-5 como endpoints HTTP)
@@ -49,4 +49,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 y 1.5 completadas (captura de telemetría + setup stint tracking). Próxima: Fase 2 (Parser).
+Fases 1, 1.5, 2 y 3 completadas (captura de telemetría, setup stint tracking, parser con 143 tests, analyzer con 141 tests — 286 tests totales). Próxima: Fase 4 (Knowledge Base).
