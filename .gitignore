@@ -18,3 +18,4 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+backend/ac_engineer/knowledge/docs/user/*.md
