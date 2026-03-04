@@ -226,8 +226,9 @@ def _detect_cornering_runs(
     if not runs:
         return []
 
-    # Merge runs separated by < sample_rate * 0.3 samples (same sign only)
-    min_gap = max(1, int(sample_rate * 0.3))
+    # Merge runs separated by < sample_rate * 0.5 samples (same sign only).
+    # 0.5s gap allows same-direction corner sections split by brief G-force dips.
+    min_gap = max(1, int(sample_rate * 0.5))
     merged: list[tuple[int, int]] = [runs[0]]
     for start, end in runs[1:]:
         prev_start, prev_end = merged[-1]
@@ -241,8 +242,8 @@ def _detect_cornering_runs(
         else:
             merged.append((start, end))
 
-    # Discard runs shorter than sample_rate * 0.5 samples
-    min_duration = max(2, int(sample_rate * 0.5))
+    # Discard runs shorter than sample_rate * 0.75 samples
+    min_duration = max(2, int(sample_rate * 0.75))
     valid_runs = [(s, e) for s, e in merged if (e - s + 1) >= min_duration]
 
     # Build result dicts

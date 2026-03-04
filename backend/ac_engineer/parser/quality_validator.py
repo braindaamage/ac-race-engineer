@@ -72,10 +72,17 @@ def validate_lap(
 
     # -----------------------------------------------------------------------
     # 2. Position jump: normalized_position changed > POSITION_JUMP_THRESHOLD
+    #    Wrap-corrected: S/F crossing (0.999 → 0.001) produces a raw diff of
+    #    ~-0.999. Any diff < -0.5 is a forward S/F wrap-around, not a real
+    #    jump — correct it to diff + 1.0 (actual movement ≈ +0.001).
     # -----------------------------------------------------------------------
     if "normalized_position" in lap_df.columns:
         pos = lap_df["normalized_position"]
-        jumps = pos.diff().abs()
+        raw_diffs = pos.diff()
+        # Apply wrap correction: forward S/F crossing has diff < -0.5
+        corrected_diffs = raw_diffs.copy()
+        corrected_diffs[raw_diffs < -0.5] = raw_diffs[raw_diffs < -0.5] + 1.0
+        jumps = corrected_diffs.abs()
         jump_mask = jumps > POSITION_JUMP_THRESHOLD
         if jump_mask.any():
             first_jump_idx = int(jump_mask.idxmax())

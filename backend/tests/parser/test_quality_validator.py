@@ -87,6 +87,46 @@ class TestPositionJump:
         types = [w.warning_type for w in warnings]
         assert "position_jump" not in types
 
+    def test_sf_wrap_around_no_false_positive(self):
+        """S/F crossing (0.9998 → 0.0003) must NOT trigger position_jump.
+
+        This is a regression test for real-session data where the last
+        sample(s) of a lap group show the car crossing the start/finish
+        line, producing a raw diff of ~-0.9995 which should be ignored.
+        """
+        n = 100
+        ts = 1_740_000_000.0 + np.arange(n) * SAMPLE_INTERVAL
+        # Build a lap that ends near the S/F line
+        norm_pos = np.linspace(0.90, 0.9995, n)
+        # Last sample wraps to just past S/F
+        norm_pos[-1] = 0.0003
+        speed = np.full(n, 100.0)
+        df = pd.DataFrame({
+            "timestamp": ts,
+            "normalized_position": norm_pos,
+            "speed_kmh": speed,
+        })
+        warnings = validate_lap(df, SAMPLE_RATE, is_last=False)
+        types = [w.warning_type for w in warnings]
+        assert "position_jump" not in types
+
+    def test_genuine_backward_jump_triggers_warning(self):
+        """A genuine large backward teleport should still be flagged."""
+        n = 200
+        ts = 1_740_000_000.0 + np.arange(n) * SAMPLE_INTERVAL
+        norm_pos = np.linspace(0.15, 0.85, n)
+        # Backward jump at sample 100: position goes from ~0.50 back to 0.10
+        norm_pos[100] = 0.10
+        speed = np.full(n, 100.0)
+        df = pd.DataFrame({
+            "timestamp": ts,
+            "normalized_position": norm_pos,
+            "speed_kmh": speed,
+        })
+        warnings = validate_lap(df, SAMPLE_RATE, is_last=False)
+        types = [w.warning_type for w in warnings]
+        assert "position_jump" in types
+
 
 class TestZeroSpeedMidLap:
     def test_zero_speed_mid_lap_triggers_warning(self):
