@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+VALID_SESSION_STATES = ("discovered", "parsed", "analyzed", "engineered")
+
 
 class SessionRecord(BaseModel):
     """Index record for an analyzed telemetry session."""
@@ -14,6 +16,18 @@ class SessionRecord(BaseModel):
     session_date: str = Field(..., min_length=1)
     lap_count: int = Field(..., ge=0)
     best_lap_time: float | None = Field(default=None, ge=0)
+    state: str = Field(default="discovered")
+    session_type: str | None = Field(default=None)
+    csv_path: str | None = Field(default=None)
+    meta_path: str | None = Field(default=None)
+
+
+class SyncResult(BaseModel):
+    """Result of a session directory scan."""
+
+    discovered: int = 0
+    already_known: int = 0
+    incomplete: int = 0
 
 
 class SetupChange(BaseModel):

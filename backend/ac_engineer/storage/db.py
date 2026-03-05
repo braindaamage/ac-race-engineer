@@ -53,6 +53,14 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     return conn
 
 
+_MIGRATIONS = [
+    "ALTER TABLE sessions ADD COLUMN state TEXT NOT NULL DEFAULT 'discovered'",
+    "ALTER TABLE sessions ADD COLUMN session_type TEXT",
+    "ALTER TABLE sessions ADD COLUMN csv_path TEXT",
+    "ALTER TABLE sessions ADD COLUMN meta_path TEXT",
+]
+
+
 def init_db(db_path: str | Path) -> None:
     """Create database file and all tables. Idempotent."""
     path = Path(db_path)
@@ -60,6 +68,11 @@ def init_db(db_path: str | Path) -> None:
     conn = _connect(path)
     try:
         conn.executescript(_SCHEMA)
+        for stmt in _MIGRATIONS:
+            try:
+                conn.execute(stmt)
+            except sqlite3.OperationalError:
+                pass  # Column already exists
         conn.commit()
     finally:
         conn.close()
