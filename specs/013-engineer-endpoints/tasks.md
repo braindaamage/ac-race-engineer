@@ -19,8 +19,8 @@
 
 **Purpose**: Create the `api/engineer/` package directory and skeleton files
 
-- [ ] T001 Create `backend/api/engineer/` package with empty `__init__.py`
-- [ ] T002 Create empty `backend/api/routes/engineer.py` with APIRouter scaffold (router = APIRouter(), no endpoints yet)
+- [x] T001 Create `backend/api/engineer/` package with empty `__init__.py`
+- [x] T002 Create empty `backend/api/routes/engineer.py` with APIRouter scaffold (router = APIRouter(), no endpoints yet)
 
 ---
 
@@ -28,12 +28,12 @@
 
 **Purpose**: Shared models and infrastructure that ALL user stories depend on
 
-- [ ] T003 Define all API response models in `backend/api/engineer/serializers.py`: EngineerJobResponse, RecommendationSummary, RecommendationListResponse, SetupChangeDetail, DriverFeedbackDetail, RecommendationDetailResponse, ApplyRequest, ApplyResponse, ChatRequest, ChatJobResponse, MessageResponse, MessageListResponse, ClearMessagesResponse — per data-model.md
-- [ ] T004 Implement recommendation cache helpers in `backend/api/engineer/cache.py`: `save_engineer_response(cache_dir, recommendation_id, response)` saves EngineerResponse as `{cache_dir}/recommendation_{rec_id}.json`, `load_engineer_response(cache_dir, recommendation_id)` loads it back (returns None if file missing) — per research.md R6
-- [ ] T005 Update `backend/api/main.py`: add `app.state.active_engineer_jobs: dict[str, str] = {}` in lifespan startup, import and include engineer router with `prefix="/sessions"` — per research.md R4
-- [ ] T006 Add shared guard helper `_require_analyzed_session()` in `backend/api/routes/engineer.py` that checks session exists (404) and state is "analyzed" or "engineered" (409) — reuse pattern from `api/routes/analysis.py:_get_analyzed_session()`
-- [ ] T007 [P] Write serializer unit tests in `backend/tests/api/test_engineer_serializers.py`: verify all response models instantiate correctly with sample data, validate field types and defaults
-- [ ] T008 [P] Write cache helper tests in `backend/tests/api/test_engineer_cache.py`: test save/load round-trip, test load returns None when file missing, test corrupted JSON handling
+- [x] T003 Define all API response models in `backend/api/engineer/serializers.py`: EngineerJobResponse, RecommendationSummary, RecommendationListResponse, SetupChangeDetail, DriverFeedbackDetail, RecommendationDetailResponse, ApplyRequest, ApplyResponse, ChatRequest, ChatJobResponse, MessageResponse, MessageListResponse, ClearMessagesResponse — per data-model.md
+- [x] T004 Implement recommendation cache helpers in `backend/api/engineer/cache.py`: `save_engineer_response(cache_dir, recommendation_id, response)` saves EngineerResponse as `{cache_dir}/recommendation_{rec_id}.json`, `load_engineer_response(cache_dir, recommendation_id)` loads it back (returns None if file missing) — per research.md R6
+- [x] T005 Update `backend/api/main.py`: add `app.state.active_engineer_jobs: dict[str, str] = {}` in lifespan startup, import and include engineer router with `prefix="/sessions"` — per research.md R4
+- [x] T006 Add shared guard helper `_require_analyzed_session()` in `backend/api/routes/engineer.py` that checks session exists (404) and state is "analyzed" or "engineered" (409) — reuse pattern from `api/routes/analysis.py:_get_analyzed_session()`
+- [x] T007 [P] Write serializer unit tests in `backend/tests/api/test_engineer_serializers.py`: verify all response models instantiate correctly with sample data, validate field types and defaults
+- [x] T008 [P] Write cache helper tests in `backend/tests/api/test_engineer_cache.py`: test save/load round-trip, test load returns None when file missing, test corrupted JSON handling
 
 **Checkpoint**: Foundation ready — all response models defined, cache helpers working, main.py wired up. User story implementation can begin.
 
@@ -47,13 +47,13 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Write pipeline tests in `backend/tests/api/test_engineer_pipeline.py`: test `make_engineer_job()` — mock `analyze_with_engineer()` to return a fake EngineerResponse, verify progress callback called with >=5 steps, verify session state updated to "engineered", verify EngineerResponse cached to disk, verify active_engineer_jobs cleaned up in finally block
-- [ ] T010 [P] [US1] Write route tests for POST /engineer in `backend/tests/api/test_engineer_routes.py`: test 202 on analyzed session (job created), test 404 on nonexistent session, test 409 on discovered/parsed session, test 409 when engineer job already running, test re-run on engineered session creates new recommendation
+- [x] T009 [P] [US1] Write pipeline tests in `backend/tests/api/test_engineer_pipeline.py`: test `make_engineer_job()` — mock `analyze_with_engineer()` to return a fake EngineerResponse, verify progress callback called with >=5 steps, verify session state updated to "engineered", verify EngineerResponse cached to disk, verify active_engineer_jobs cleaned up in finally block
+- [x] T010 [P] [US1] Write route tests for POST /engineer in `backend/tests/api/test_engineer_routes.py`: test 202 on analyzed session (job created), test 404 on nonexistent session, test 409 on discovered/parsed session, test 409 when engineer job already running, test re-run on engineered session creates new recommendation
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement `make_engineer_job()` in `backend/api/engineer/pipeline.py`: factory function returning async callable per run_job() pattern — load AnalyzedSession via `load_analyzed_session(cache_dir)`, call `summarize_session()`, call `analyze_with_engineer(summary, config, db_path)`, save EngineerResponse to cache via `save_engineer_response()`, update session state to "engineered" via `update_session_state()`, emit progress steps (loading analysis 0-15, summarizing 15-30, running engineer 30-85, saving results 85-95, updating state 95-100), clean up active_engineer_jobs in finally block
-- [ ] T012 [US1] Implement POST `/{session_id}/engineer` endpoint in `backend/api/routes/engineer.py`: call `_require_analyzed_session()`, check `active_engineer_jobs` for 409 conflict, read ACConfig via `read_config()`, create job via JobManager, register in active_engineer_jobs, launch via `run_job()`, return 202 EngineerJobResponse
+- [x] T011 [US1] Implement `make_engineer_job()` in `backend/api/engineer/pipeline.py`: factory function returning async callable per run_job() pattern — load AnalyzedSession via `load_analyzed_session(cache_dir)`, call `summarize_session()`, call `analyze_with_engineer(summary, config, db_path)`, save EngineerResponse to cache via `save_engineer_response()`, update session state to "engineered" via `update_session_state()`, emit progress steps (loading analysis 0-15, summarizing 15-30, running engineer 30-85, saving results 85-95, updating state 95-100), clean up active_engineer_jobs in finally block
+- [x] T012 [US1] Implement POST `/{session_id}/engineer` endpoint in `backend/api/routes/engineer.py`: call `_require_analyzed_session()`, check `active_engineer_jobs` for 409 conflict, read ACConfig via `read_config()`, create job via JobManager, register in active_engineer_jobs, launch via `run_job()`, return 202 EngineerJobResponse
 
 **Checkpoint**: User Story 1 complete — triggering the engineer creates a recommendation and advances session state.
 
@@ -67,12 +67,12 @@
 
 ### Tests for User Story 2
 
-- [ ] T013 [P] [US2] Write route tests for GET /recommendations and GET /recommendations/{rec_id} in `backend/tests/api/test_engineer_routes.py`: test list returns recommendations ordered by created_at, test list returns empty array when no recommendations, test 404 on nonexistent session, test detail returns full fields (setup_changes, driver_feedback, explanation) when cache file exists, test detail falls back to SQLite-only data when cache file missing, test 404 on nonexistent recommendation_id
+- [x] T013 [P] [US2] Write route tests for GET /recommendations and GET /recommendations/{rec_id} in `backend/tests/api/test_engineer_routes.py`: test list returns recommendations ordered by created_at, test list returns empty array when no recommendations, test 404 on nonexistent session, test detail returns full fields (setup_changes, driver_feedback, explanation) when cache file exists, test detail falls back to SQLite-only data when cache file missing, test 404 on nonexistent recommendation_id
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Implement GET `/{session_id}/recommendations` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `get_recommendations(db_path, session_id)`, map to RecommendationListResponse with RecommendationSummary items (include change_count from len(changes))
-- [ ] T015 [US2] Implement GET `/{session_id}/recommendations/{recommendation_id}` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `get_recommendations(db_path, session_id)`, find matching rec (404 if not found), attempt `load_engineer_response(cache_dir, recommendation_id)` for full detail (driver_feedback, explanation, confidence, signals_addressed), fall back to SQLite-only data with empty driver_feedback if cache missing, return RecommendationDetailResponse
+- [x] T014 [US2] Implement GET `/{session_id}/recommendations` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `get_recommendations(db_path, session_id)`, map to RecommendationListResponse with RecommendationSummary items (include change_count from len(changes))
+- [x] T015 [US2] Implement GET `/{session_id}/recommendations/{recommendation_id}` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `get_recommendations(db_path, session_id)`, find matching rec (404 if not found), attempt `load_engineer_response(cache_dir, recommendation_id)` for full detail (driver_feedback, explanation, confidence, signals_addressed), fall back to SQLite-only data with empty driver_feedback if cache missing, return RecommendationDetailResponse
 
 **Checkpoint**: User Story 2 complete — recommendations are viewable with full detail.
 
@@ -86,11 +86,11 @@
 
 ### Tests for User Story 3
 
-- [ ] T016 [P] [US3] Write route tests for POST /apply in `backend/tests/api/test_engineer_routes.py`: test successful apply (backup created, status changed to "applied", changes_applied count), test 409 on already-applied recommendation, test 404 on nonexistent recommendation, test 400 on nonexistent setup_path, use tmp_path with a real .ini fixture file
+- [x] T016 [P] [US3] Write route tests for POST /apply in `backend/tests/api/test_engineer_routes.py`: test successful apply (backup created, status changed to "applied", changes_applied count), test 409 on already-applied recommendation, test 404 on nonexistent recommendation, test 400 on nonexistent setup_path, use tmp_path with a real .ini fixture file
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] Implement POST `/{session_id}/recommendations/{recommendation_id}/apply` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), find recommendation in DB (404 if not found), check status != "applied" (409), validate setup_path from ApplyRequest body exists (400), call `apply_recommendation(recommendation_id, setup_path, db_path, ac_install_path, car_name)` — get car_name from session record and ac_install_path from ACConfig, return ApplyResponse with backup_path and changes_applied count
+- [x] T017 [US3] Implement POST `/{session_id}/recommendations/{recommendation_id}/apply` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), find recommendation in DB (404 if not found), check status != "applied" (409), validate setup_path from ApplyRequest body exists (400), call `apply_recommendation(recommendation_id, setup_path, db_path, ac_install_path, car_name)` — get car_name from session record and ac_install_path from ACConfig, return ApplyResponse with backup_path and changes_applied count
 
 **Checkpoint**: User Story 3 complete — recommendations can be applied to .ini files with automatic backup.
 
@@ -104,15 +104,15 @@
 
 ### Tests for User Story 4
 
-- [ ] T018 [P] [US4] Write chat pipeline tests in `backend/tests/api/test_engineer_pipeline.py`: test `make_chat_job()` — mock Pydantic AI agent to return a fixed response, verify user message already saved before job starts, verify assistant message saved after job completes, verify conversation history passed to agent, verify active cleanup not needed (no per-session exclusion for chat)
-- [ ] T019 [P] [US4] Write route tests for GET/POST/DELETE /messages in `backend/tests/api/test_engineer_routes.py`: test POST returns 202 with job_id and message_id, test GET returns messages in chronological order, test DELETE clears messages and returns deleted_count, test 404 on nonexistent session, test 409 on non-analyzed session for POST, test GET on session with no messages returns empty list
+- [x] T018 [P] [US4] Write chat pipeline tests in `backend/tests/api/test_engineer_pipeline.py`: test `make_chat_job()` — mock Pydantic AI agent to return a fixed response, verify user message already saved before job starts, verify assistant message saved after job completes, verify conversation history passed to agent, verify active cleanup not needed (no per-session exclusion for chat)
+- [x] T019 [P] [US4] Write route tests for GET/POST/DELETE /messages in `backend/tests/api/test_engineer_routes.py`: test POST returns 202 with job_id and message_id, test GET returns messages in chronological order, test DELETE clears messages and returns deleted_count, test 404 on nonexistent session, test 409 on non-analyzed session for POST, test GET on session with no messages returns empty list
 
 ### Implementation for User Story 4
 
-- [ ] T020 [US4] Implement `make_chat_job()` in `backend/api/engineer/pipeline.py`: factory function — load AnalyzedSession, summarize to SessionSummary, load conversation history via `get_messages()`, build system prompt from `skills/principal.md` + formatted SessionSummary, build Pydantic AI agent with `get_model_string(config)`, run agent with user message and message_history, save assistant response via `save_message(db_path, session_id, "assistant", response)`, emit progress steps (loading context 0-20, generating response 20-90, saving response 90-100)
-- [ ] T021 [US4] Implement GET `/{session_id}/messages` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `get_messages(db_path, session_id)`, return MessageListResponse
-- [ ] T022 [US4] Implement POST `/{session_id}/messages` endpoint in `backend/api/routes/engineer.py`: call `_require_analyzed_session()`, save user message via `save_message(db_path, session_id, "user", content)`, read ACConfig, create chat job via JobManager, launch via `run_job()`, return 202 ChatJobResponse with job_id and message_id
-- [ ] T023 [US4] Implement DELETE `/{session_id}/messages` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `clear_messages(db_path, session_id)`, return ClearMessagesResponse with deleted_count
+- [x] T020 [US4] Implement `make_chat_job()` in `backend/api/engineer/pipeline.py`: factory function — load AnalyzedSession, summarize to SessionSummary, load conversation history via `get_messages()`, build system prompt from `skills/principal.md` + formatted SessionSummary, build Pydantic AI agent with `get_model_string(config)`, run agent with user message and message_history, save assistant response via `save_message(db_path, session_id, "assistant", response)`, emit progress steps (loading context 0-20, generating response 20-90, saving response 90-100)
+- [x] T021 [US4] Implement GET `/{session_id}/messages` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `get_messages(db_path, session_id)`, return MessageListResponse
+- [x] T022 [US4] Implement POST `/{session_id}/messages` endpoint in `backend/api/routes/engineer.py`: call `_require_analyzed_session()`, save user message via `save_message(db_path, session_id, "user", content)`, read ACConfig, create chat job via JobManager, launch via `run_job()`, return 202 ChatJobResponse with job_id and message_id
+- [x] T023 [US4] Implement DELETE `/{session_id}/messages` endpoint in `backend/api/routes/engineer.py`: verify session exists (404), call `clear_messages(db_path, session_id)`, return ClearMessagesResponse with deleted_count
 
 **Checkpoint**: User Story 4 complete — users can chat with the engineer about any analyzed session.
 
@@ -122,9 +122,9 @@
 
 **Purpose**: Final validation and cleanup
 
-- [ ] T024 Update `backend/api/engineer/__init__.py` with public imports for pipeline functions, serializer models, and cache helpers
-- [ ] T025 Run full test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) — verify all existing 530+ tests still pass and new tests pass
-- [ ] T026 Verify all 7 endpoints respond correctly with manual curl/httpie smoke tests per contracts/endpoints.md examples
+- [x] T024 Update `backend/api/engineer/__init__.py` with public imports for pipeline functions, serializer models, and cache helpers
+- [x] T025 Run full test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) — verify all existing 530+ tests still pass and new tests pass
+- [x] T026 Verify all 7 endpoints respond correctly with manual curl/httpie smoke tests per contracts/endpoints.md examples
 
 ---
 
