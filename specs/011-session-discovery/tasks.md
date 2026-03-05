@@ -19,9 +19,9 @@
 
 **Purpose**: Install new dependency and create package structure
 
-- [ ] T001 Install `watchdog>=4.0` in conda env `ac-race-engineer` and add to `backend/requirements.txt`
-- [ ] T002 Create `backend/api/watcher/__init__.py` package (empty init)
-- [ ] T003 Create `backend/tests/api/__init__.py` if not present (empty init for test discovery)
+- [x] T001 Install `watchdog>=4.0` in conda env `ac-race-engineer` and add to `backend/requirements.txt`
+- [x] T002 Create `backend/api/watcher/__init__.py` package (empty init)
+- [x] T003 Create `backend/tests/api/__init__.py` if not present (empty init for test discovery)
 
 ---
 
@@ -29,15 +29,15 @@
 
 **Purpose**: Extend the existing storage layer with new fields and functions. MUST complete before any user story.
 
-- [ ] T004 Extend `SessionRecord` model in `backend/ac_engineer/storage/models.py` — add fields: `state` (str, default "discovered"), `session_type` (str | None), `csv_path` (str | None), `meta_path` (str | None). Add `VALID_SESSION_STATES` constant.
-- [ ] T005 Add `SyncResult` model in `backend/ac_engineer/storage/models.py` — fields: `discovered` (int), `already_known` (int), `incomplete` (int)
-- [ ] T006 Extend `init_db()` in `backend/ac_engineer/storage/db.py` — add idempotent `ALTER TABLE sessions ADD COLUMN` for state, session_type, csv_path, meta_path (catch OperationalError on duplicate column)
-- [ ] T007 Extend `save_session()` in `backend/ac_engineer/storage/sessions.py` — include new fields (state, session_type, csv_path, meta_path) in INSERT OR REPLACE statement
-- [ ] T008 [P] Add `session_exists(db_path, session_id) -> bool` in `backend/ac_engineer/storage/sessions.py`
-- [ ] T009 [P] Add `delete_session(db_path, session_id) -> bool` in `backend/ac_engineer/storage/sessions.py` — returns True if deleted, False if not found. FK cascade handles related records.
-- [ ] T010 [P] Add `update_session_state(db_path, session_id, state) -> bool` in `backend/ac_engineer/storage/sessions.py` — validate state is in VALID_SESSION_STATES before updating
-- [ ] T011 Update `backend/ac_engineer/storage/__init__.py` — export new functions: `session_exists`, `delete_session`, `update_session_state`, `SyncResult`
-- [ ] T012 Write tests for storage extensions in `backend/tests/storage/test_sessions_extended.py` — test: save with new fields, session_exists (true/false), delete_session (found/not found, cascade), update_session_state (valid/invalid state, not found), migration idempotency, list_sessions returns new fields
+- [x] T004 Extend `SessionRecord` model in `backend/ac_engineer/storage/models.py` — add fields: `state` (str, default "discovered"), `session_type` (str | None), `csv_path` (str | None), `meta_path` (str | None). Add `VALID_SESSION_STATES` constant.
+- [x] T005 Add `SyncResult` model in `backend/ac_engineer/storage/models.py` — fields: `discovered` (int), `already_known` (int), `incomplete` (int)
+- [x] T006 Extend `init_db()` in `backend/ac_engineer/storage/db.py` — add idempotent `ALTER TABLE sessions ADD COLUMN` for state, session_type, csv_path, meta_path (catch OperationalError on duplicate column)
+- [x] T007 Extend `save_session()` in `backend/ac_engineer/storage/sessions.py` — include new fields (state, session_type, csv_path, meta_path) in INSERT OR REPLACE statement
+- [x] T008 [P] Add `session_exists(db_path, session_id) -> bool` in `backend/ac_engineer/storage/sessions.py`
+- [x] T009 [P] Add `delete_session(db_path, session_id) -> bool` in `backend/ac_engineer/storage/sessions.py` — returns True if deleted, False if not found. FK cascade handles related records.
+- [x] T010 [P] Add `update_session_state(db_path, session_id, state) -> bool` in `backend/ac_engineer/storage/sessions.py` — validate state is in VALID_SESSION_STATES before updating
+- [x] T011 Update `backend/ac_engineer/storage/__init__.py` — export new functions: `session_exists`, `delete_session`, `update_session_state`, `SyncResult`
+- [x] T012 Write tests for storage extensions in `backend/tests/storage/test_sessions_extended.py` — test: save with new fields, session_exists (true/false), delete_session (found/not found, cascade), update_session_state (valid/invalid state, not found), migration idempotency, list_sessions returns new fields
 
 **Checkpoint**: Storage layer extended. Run `pytest backend/tests/storage/ -v` — all existing + new tests pass.
 
@@ -51,11 +51,11 @@
 
 ### Implementation
 
-- [ ] T013 [US2] Create sessions router in `backend/api/routes/sessions.py` — define `router = APIRouter(prefix="/sessions")` with Pydantic response models: `SessionListResponse` (wrapping list of `SessionRecord`), and direct `SessionRecord` for detail
-- [ ] T014 [US2] Implement `GET /sessions` in `backend/api/routes/sessions.py` — optional `?car=` query param, calls `list_sessions()`, returns `SessionListResponse`
-- [ ] T015 [US2] Implement `GET /sessions/{session_id}` in `backend/api/routes/sessions.py` — calls `get_session()`, raises HTTPException(404) if not found
-- [ ] T016 [US2] Register sessions router in `backend/api/main.py` — import and `app.include_router(sessions_router)`
-- [ ] T017 [US2] Write tests in `backend/tests/api/test_sessions_routes.py` — test: list empty, list with sessions, list filtered by car, get existing session, get nonexistent session (404). Use httpx TestClient with a test database.
+- [x] T013 [US2] Create sessions router in `backend/api/routes/sessions.py` — define `router = APIRouter(prefix="/sessions")` with Pydantic response models: `SessionListResponse` (wrapping list of `SessionRecord`), and direct `SessionRecord` for detail
+- [x] T014 [US2] Implement `GET /sessions` in `backend/api/routes/sessions.py` — optional `?car=` query param, calls `list_sessions()`, returns `SessionListResponse`
+- [x] T015 [US2] Implement `GET /sessions/{session_id}` in `backend/api/routes/sessions.py` — calls `get_session()`, raises HTTPException(404) if not found
+- [x] T016 [US2] Register sessions router in `backend/api/main.py` — import and `app.include_router(sessions_router)`
+- [x] T017 [US2] Write tests in `backend/tests/api/test_sessions_routes.py` — test: list empty, list with sessions, list filtered by car, get existing session, get nonexistent session (404). Use httpx TestClient with a test database.
 
 **Checkpoint**: `GET /sessions` and `GET /sessions/{id}` work. Run `pytest backend/tests/api/test_sessions_routes.py -v`.
 
@@ -69,13 +69,13 @@
 
 ### Implementation
 
-- [ ] T018 [P] [US1] Implement `scan_sessions_dir()` in `backend/api/watcher/scanner.py` — pure function: takes `sessions_dir` (Path) and `db_path` (Path), scans for `.csv` files, checks for matching `.meta.json`, reads metadata (car_name, track_name, session_start, laps_completed, session_type), registers new sessions via `save_session()`, returns `SyncResult`. Handles: missing dir, malformed JSON, orphan files.
-- [ ] T019 [P] [US1] Write tests for scanner in `backend/tests/api/test_scanner.py` — test: empty dir, valid pair registered, orphan csv skipped, orphan meta skipped, already registered not duplicated, malformed json skipped, missing dir returns empty result, multiple pairs mixed valid/invalid
-- [ ] T020 [US1] Implement `SessionEventHandler` in `backend/api/watcher/handler.py` — extends `watchdog.FileSystemEventHandler`, tracks file modification timestamps in a dict, implements 2-second debounce. On stabilized pair: calls scanner's registration logic for that single pair.
-- [ ] T021 [US1] Implement `SessionWatcher` in `backend/api/watcher/observer.py` — wraps `watchdog.Observer`: `start(sessions_dir, db_path)` schedules handler on directory, `stop()` calls `observer.stop()` + `observer.join()`. Handles missing directory gracefully (log warning, schedule on parent or retry).
-- [ ] T022 [US1] Export public API from `backend/api/watcher/__init__.py` — export `SessionWatcher`, `scan_sessions_dir`
-- [ ] T023 [US1] Integrate watcher into lifespan in `backend/api/main.py` — in `lifespan()`: resolve sessions dir path, create and start `SessionWatcher`, store on `app.state.session_watcher`. On exit: stop watcher. Run initial `scan_sessions_dir()` on startup to catch sessions missed while server was down.
-- [ ] T024 [US1] Write tests for watcher handler in `backend/tests/api/test_watcher.py` — test: handler tracks events, debounce prevents premature processing, stabilized pair triggers registration, handler ignores non-csv/meta files
+- [x] T018 [P] [US1] Implement `scan_sessions_dir()` in `backend/api/watcher/scanner.py` — pure function: takes `sessions_dir` (Path) and `db_path` (Path), scans for `.csv` files, checks for matching `.meta.json`, reads metadata (car_name, track_name, session_start, laps_completed, session_type), registers new sessions via `save_session()`, returns `SyncResult`. Handles: missing dir, malformed JSON, orphan files.
+- [x] T019 [P] [US1] Write tests for scanner in `backend/tests/api/test_scanner.py` — test: empty dir, valid pair registered, orphan csv skipped, orphan meta skipped, already registered not duplicated, malformed json skipped, missing dir returns empty result, multiple pairs mixed valid/invalid
+- [x] T020 [US1] Implement `SessionEventHandler` in `backend/api/watcher/handler.py` — extends `watchdog.FileSystemEventHandler`, tracks file modification timestamps in a dict, implements 2-second debounce. On stabilized pair: calls scanner's registration logic for that single pair.
+- [x] T021 [US1] Implement `SessionWatcher` in `backend/api/watcher/observer.py` — wraps `watchdog.Observer`: `start(sessions_dir, db_path)` schedules handler on directory, `stop()` calls `observer.stop()` + `observer.join()`. Handles missing directory gracefully (log warning, schedule on parent or retry).
+- [x] T022 [US1] Export public API from `backend/api/watcher/__init__.py` — export `SessionWatcher`, `scan_sessions_dir`
+- [x] T023 [US1] Integrate watcher into lifespan in `backend/api/main.py` — in `lifespan()`: resolve sessions dir path, create and start `SessionWatcher`, store on `app.state.session_watcher`. On exit: stop watcher. Run initial `scan_sessions_dir()` on startup to catch sessions missed while server was down.
+- [x] T024 [US1] Write tests for watcher handler in `backend/tests/api/test_watcher.py` — test: handler tracks events, debounce prevents premature processing, stabilized pair triggers registration, handler ignores non-csv/meta files
 
 **Checkpoint**: File watcher starts with server, detects new file pairs, registers them. Run `pytest backend/tests/api/ -v`.
 
@@ -89,8 +89,8 @@
 
 ### Implementation
 
-- [ ] T025 [US3] Implement `POST /sessions/sync` in `backend/api/routes/sessions.py` — calls `scan_sessions_dir()` with sessions dir from `app.state`, returns `SyncResult` as JSON response
-- [ ] T026 [US3] Write tests for sync endpoint in `backend/tests/api/test_sessions_routes.py` — test: sync empty dir, sync with new pairs, sync with already-known sessions, sync with orphan files, sync with nonexistent dir
+- [x] T025 [US3] Implement `POST /sessions/sync` in `backend/api/routes/sessions.py` — calls `scan_sessions_dir()` with sessions dir from `app.state`, returns `SyncResult` as JSON response
+- [x] T026 [US3] Write tests for sync endpoint in `backend/tests/api/test_sessions_routes.py` — test: sync empty dir, sync with new pairs, sync with already-known sessions, sync with orphan files, sync with nonexistent dir
 
 **Checkpoint**: Manual sync works end-to-end. Run `pytest backend/tests/api/test_sessions_routes.py -v`.
 
@@ -104,8 +104,8 @@
 
 ### Implementation
 
-- [ ] T027 [US4] Implement `DELETE /sessions/{session_id}` in `backend/api/routes/sessions.py` — calls `delete_session()`, returns 204 on success, raises HTTPException(404) if not found
-- [ ] T028 [US4] Write tests for delete endpoint in `backend/tests/api/test_sessions_routes.py` — test: delete existing session (204, record gone, files remain), delete nonexistent session (404), delete cascades to related records
+- [x] T027 [US4] Implement `DELETE /sessions/{session_id}` in `backend/api/routes/sessions.py` — calls `delete_session()`, returns 204 on success, raises HTTPException(404) if not found
+- [x] T028 [US4] Write tests for delete endpoint in `backend/tests/api/test_sessions_routes.py` — test: delete existing session (204, record gone, files remain), delete nonexistent session (404), delete cascades to related records
 
 **Checkpoint**: Deletion works. Files preserved on disk. Run `pytest backend/tests/api/test_sessions_routes.py -v`.
 
@@ -119,7 +119,7 @@
 
 ### Implementation
 
-- [ ] T029 [US5] Write lifecycle tests in `backend/tests/api/test_watcher.py` — test: watcher starts on lifespan enter, watcher stops on lifespan exit, watcher handles missing sessions dir at startup, initial scan runs on startup
+- [x] T029 [US5] Write lifecycle tests in `backend/tests/api/test_watcher.py` — test: watcher starts on lifespan enter, watcher stops on lifespan exit, watcher handles missing sessions dir at startup, initial scan runs on startup
 
 **Checkpoint**: Watcher lifecycle is solid. Run full test suite: `pytest backend/tests/ -v`.
 
@@ -129,9 +129,9 @@
 
 **Purpose**: Final validation across all user stories
 
-- [ ] T030 Run full test suite (`pytest backend/tests/ -v`) — all 530+ existing tests still pass, all new tests pass
-- [ ] T031 Validate quickstart.md scenarios manually — server starts, watcher runs, endpoints respond, manual sync works
-- [ ] T032 Verify existing storage tests in `backend/tests/storage/` pass unchanged (no regressions from schema migration)
+- [x] T030 Run full test suite (`pytest backend/tests/ -v`) — all 530+ existing tests still pass, all new tests pass
+- [x] T031 Validate quickstart.md scenarios manually — server starts, watcher runs, endpoints respond, manual sync works
+- [x] T032 Verify existing storage tests in `backend/tests/storage/` pass unchanged (no regressions from schema migration)
 
 ---
 
