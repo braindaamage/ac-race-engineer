@@ -9,7 +9,11 @@ from __future__ import annotations
 import textwrap
 from pathlib import Path
 
+import pydantic_ai.models
 import pytest
+
+# Prevent accidental real LLM calls in tests
+pydantic_ai.models.ALLOW_MODEL_REQUESTS = False
 
 from ac_engineer.analyzer.models import (
     AggregatedStintMetrics,
@@ -37,6 +41,7 @@ from ac_engineer.analyzer.models import (
     SetupParameterDelta,
 )
 from ac_engineer.config import ACConfig
+from ac_engineer.engineer.models import AgentDeps, SessionSummary
 from ac_engineer.parser.models import SessionMetadata
 
 
@@ -340,6 +345,99 @@ def sample_setup_ini(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return setup_path
+
+
+@pytest.fixture
+def sample_session_summary() -> SessionSummary:
+    """A SessionSummary with balance signals and corner issues for agent tests."""
+    from ac_engineer.engineer.models import (
+        CornerIssue,
+        LapSummary,
+        SessionSummary,
+        StintSummary,
+    )
+
+    return SessionSummary(
+        session_id="test_session_001",
+        car_name="test_car",
+        track_name="test_track",
+        track_config="default",
+        recorded_at="2026-03-02T14:00:00",
+        total_lap_count=5,
+        flying_lap_count=3,
+        best_lap_time_s=89.5,
+        worst_lap_time_s=91.0,
+        lap_time_stddev_s=0.6,
+        avg_understeer_ratio=1.2,
+        active_setup_filename="race_setup.ini",
+        active_setup_parameters={
+            "WING_1": {"VALUE": 5.0},
+            "WING_2": {"VALUE": 7.0},
+            "PRESSURE_LF": {"VALUE": 26.5},
+            "ARB_FRONT": {"VALUE": 3.0},
+        },
+        laps=[
+            LapSummary(lap_number=2, lap_time_s=89.5, gap_to_best_s=0.0, is_best=True, tyre_temp_avg_c=82.0, understeer_ratio_avg=1.15),
+            LapSummary(lap_number=3, lap_time_s=90.2, gap_to_best_s=0.7, is_best=False, tyre_temp_avg_c=83.5, understeer_ratio_avg=1.25),
+            LapSummary(lap_number=4, lap_time_s=91.0, gap_to_best_s=1.5, is_best=False, tyre_temp_avg_c=85.0, understeer_ratio_avg=1.3),
+        ],
+        signals=["high_understeer", "tyre_temp_spread_high"],
+        corner_issues=[
+            CornerIssue(
+                corner_number=3,
+                issue_type="understeer",
+                severity="high",
+                understeer_ratio=1.35,
+                apex_speed_loss_pct=33.3,
+                avg_lat_g=0.85,
+                description="Corner 3: understeer (ratio=1.35, deviation=0.35)",
+            ),
+            CornerIssue(
+                corner_number=7,
+                issue_type="understeer",
+                severity="medium",
+                understeer_ratio=1.2,
+                apex_speed_loss_pct=25.0,
+                avg_lat_g=0.92,
+                description="Corner 7: understeer (ratio=1.20, deviation=0.20)",
+            ),
+        ],
+        stints=[
+            StintSummary(
+                stint_index=0,
+                flying_lap_count=3,
+                lap_time_mean_s=90.23,
+                lap_time_stddev_s=0.6,
+                lap_time_trend="degrading",
+                lap_time_slope_s_per_lap=0.75,
+                tyre_temp_slope_c_per_lap=1.5,
+                setup_filename="race_setup.ini",
+            ),
+        ],
+        tyre_temp_averages={"fl": 82.0, "fr": 83.0, "rl": 80.0, "rr": 81.0},
+        tyre_pressure_averages={"fl": 26.5, "fr": 26.5, "rl": 25.0, "rr": 25.0},
+        slip_angle_averages={"fl": 0.03, "fr": 0.03, "rl": 0.03, "rr": 0.03},
+    )
+
+
+@pytest.fixture
+def sample_agent_deps(sample_session_summary) -> AgentDeps:
+    """AgentDeps with sample session summary and parameter ranges."""
+    from ac_engineer.engineer.models import AgentDeps, ParameterRange
+
+    ranges = {
+        "PRESSURE_LF": ParameterRange(section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5),
+        "PRESSURE_RF": ParameterRange(section="PRESSURE_RF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5),
+        "WING_1": ParameterRange(section="WING_1", parameter="VALUE", min_value=0, max_value=20, step=1),
+        "ARB_FRONT": ParameterRange(section="ARB_FRONT", parameter="VALUE", min_value=0, max_value=10, step=1),
+        "SPRING_RATE_LF": ParameterRange(section="SPRING_RATE_LF", parameter="VALUE", min_value=50000, max_value=120000, step=5000, default_value=80000),
+    }
+    return AgentDeps(
+        session_summary=sample_session_summary,
+        parameter_ranges=ranges,
+        domain_signals=["high_understeer"],
+        knowledge_fragments=[],
+    )
 
 
 @pytest.fixture

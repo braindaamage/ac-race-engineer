@@ -26,9 +26,10 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - React con TypeScript para la UI del desktop app
 - CSV para captura in-game, Parquet para post-procesamiento
 
-## Imports públicos (Phase 5.1+)
+## Imports públicos
 - `from ac_engineer.config import read_config, write_config, update_config, ACConfig`
-- `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages_for_session`
+- `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages`
+- `from ac_engineer.engineer import summarize_session, read_parameter_ranges, validate_changes, apply_changes, analyze_with_engineer, apply_recommendation`
 
 ## Fases del proyecto
 - Fase 1 ✅ Captura de telemetría (app in-game AC)
@@ -36,8 +37,9 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 2 ✅ Parser (segmentar CSV por vueltas/curvas, parsear .ini) — 143 tests
 - Fase 3 ✅ Analyzer (métricas por vuelta: slip angles, temps, balance, trazada) — 141 tests
 - Fase 4 ✅ Knowledge Base (dinámica vehicular en markdown + loader) — 48 tests
-- Fase 5.1 ✅ Config + Storage (ACConfig, SQLite CRUD)
-- Fase 5: Engineer (agentes Pydantic AI con tools para leer/modificar setups)
+- Fase 5.1 ✅ Config + Storage (ACConfig, SQLite CRUD) — 62 tests
+- Fase 5.2 ✅ Engineer Core (summarizer, setup reader/writer) — 68 tests
+- Fase 5.3 ✅ Engineer Agents (Pydantic AI specialists, tools, conflict resolution) — 66 tests
 - Fase 6: Backend API (FastAPI wrapping fases 2-5 como endpoints HTTP)
 - Fase 7: Desktop App (Tauri + React: session list, lap analysis, setup compare, engineer chat)
 
@@ -58,4 +60,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1, 1.5, 2, 3 y 4 completadas (captura de telemetría, setup stint tracking, parser con 143 tests, analyzer con 141 tests, knowledge base con 48 tests — 334 tests totales). Fase 5.1 (Config + Storage) en progreso.
+Fases 1 a 5 completadas (530 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 66). Próxima: Fase 6 (Backend API — FastAPI).
