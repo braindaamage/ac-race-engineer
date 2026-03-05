@@ -12,6 +12,8 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "weight transfer", "understeer", "oversteer", "balance",
             "corner phase", "load", "gradient", "neutral steer",
             "load sensitivity", "lateral", "longitudinal",
+            "TLLTD", "roll center", "transient", "steady state",
+            "weight transfer decomposition",
         ],
         "Adjustable Parameters and Effects": [
             "spring rate", "anti-roll bar", "ride height",
@@ -34,6 +36,8 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "thermal model", "core temperature", "surface temperature",
             "inner", "mid", "outer", "pressure", "contact patch",
             "wear", "degradation", "load sensitivity",
+            "brush model", "pneumatic trail", "self-aligning torque",
+            "relaxation length", "camber thrust",
         ],
         "Adjustable Parameters and Effects": [
             "tyre pressure", "camber", "toe", "spring rate",
@@ -55,6 +59,7 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "spring rate", "load transfer", "ride height",
             "anti-roll bar", "roll stiffness", "natural frequency",
             "motion ratio", "geometry",
+            "wheel rate", "anti-dive", "anti-squat", "roll center",
         ],
         "Adjustable Parameters and Effects": [
             "front spring", "rear spring", "anti-roll bar",
@@ -76,6 +81,7 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "bump", "rebound", "slow speed", "fast speed",
             "damper velocity", "transient", "steady state",
             "load transfer", "contact patch", "critical damping",
+            "damping ratio", "velocity domain", "platform control",
         ],
         "Adjustable Parameters and Effects": [
             "bump damping", "rebound damping", "front rear balance",
@@ -97,6 +103,7 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "camber", "contact patch", "toe", "stability",
             "turn-in", "caster", "mechanical trail",
             "kingpin", "scrub radius", "tyre wear",
+            "dynamic camber", "camber thrust", "ackermann",
         ],
         "Adjustable Parameters and Effects": [
             "front camber", "rear camber", "front toe", "rear toe",
@@ -118,6 +125,7 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "downforce", "drag", "wing", "diffuser",
             "ground effect", "aero balance", "ride height",
             "speed dependent", "aero map",
+            "center of pressure", "lift to drag", "efficiency",
         ],
         "Adjustable Parameters and Effects": [
             "front wing", "rear wing", "splitter", "diffuser",
@@ -156,8 +164,8 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
     },
     "drivetrain.md": {
         "Physical Principles": [
-            "differential", "lsd", "preload", "power ramp",
-            "coast ramp", "gear ratio", "final drive",
+            "differential", "lsd", "preload", "power lock",
+            "coast lock", "lock percentage", "gear ratio", "final drive",
             "open differential", "lock",
         ],
         "Adjustable Parameters and Effects": [
@@ -191,6 +199,7 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "suspension bottoming", "stability", "snap oversteer",
             "symptom", "diagnosis", "throttle", "brake trace",
             "steering",
+            "g-g diagram", "friction circle", "reference lap",
         ],
         "Cross-References": [
             "vehicle_balance_fundamentals", "tyre_dynamics",
@@ -204,6 +213,7 @@ KNOWLEDGE_INDEX: dict[str, dict[str, list[str]]] = {
             "baseline", "one variable", "session planning",
             "change validation", "iterative refinement",
             "sensitivity analysis",
+            "interaction effects", "parameter sensitivity",
         ],
         "Adjustable Parameters and Effects": [
             "priority order", "parameter interaction",

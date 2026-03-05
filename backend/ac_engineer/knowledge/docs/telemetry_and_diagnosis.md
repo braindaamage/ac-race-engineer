@@ -4,9 +4,9 @@
 
 ### Data Structure and Sampling
 
-Telemetry data is a collection of time-series channels recorded at a fixed sample rate during a driving session. In Assetto Corsa, the in-game app captures data at approximately 20–30 Hz, meaning each channel produces 20 to 30 data points per second. Each sample is a scalar value associated with a timestamp, so the complete dataset is a two-dimensional structure: time on one axis and channel value on the other.
+Telemetry data is a collection of time-series channels recorded at a fixed sample rate during a driving session. In Assetto Corsa, the in-game app The physics engine runs internally at approximately 333 Hz. Telemetry capture tools log data at rates ranging from 30 to 200 Hz depending on the tool and its configuration — ACTI (a legacy tool) logs at approximately 20 Hz, while modern tools like Telemetrick capture at 30–200 Hz with over 180 channels available. Each sample is a scalar value associated with a timestamp, so the complete dataset is a two-dimensional structure: time on one axis and channel value on the other.
 
-Because the sample rate is finite, rapid transients — such as a kerb strike or an abrupt steering correction — may be captured at lower fidelity than they occur in reality. Events shorter than the sampling interval (33–50 ms at 20–30 Hz) cannot be resolved individually and will appear blurred or averaged across adjacent samples. This is an important limitation when diagnosing very brief phenomena such as ABS pulses or single-wheel lock-up events.
+Because the sample rate is finite, rapid transients — such as a kerb strike or an abrupt steering correction — may be captured at lower fidelity than they occur in reality. Events shorter than the sampling interval (5–33 ms at 30–200 Hz) cannot be resolved individually and will appear blurred or averaged across adjacent samples. This is an important limitation when diagnosing very brief phenomena such as ABS pulses or single-wheel lock-up events.
 
 All channels share a common time axis for a given session file. Synchronisation across channels is therefore exact within the limits of the logger clock. Lap segmentation is performed by detecting when the car crosses the start/finish line, which introduces a fixed reference point for lap-relative analysis.
 
@@ -21,6 +21,9 @@ Telemetry channels fall into four broad categories:
 **Tyre Data** channels cover the thermal and mechanical state of each tyre. Typical channels include tyre surface temperature (inner, middle, and outer zones), tyre core temperature, tyre pressure, and tyre slip ratio (longitudinal). Some implementations also expose lateral slip angle per wheel. Tyre channels are sampled per-corner and are critical for diagnosing grip levels, thermal degradation, and setup balance.
 
 **Suspension Data** channels describe the mechanical behaviour of the suspension system. These include suspension travel (ride height delta at each corner), ride height (if available), and sometimes damper velocity (rate of suspension movement). These channels connect aerodynamic and mechanical grip to setup parameters more directly than any other category.
+
+**Telemetry Tools Ecosystem**
+Several tools are available for capturing and analyzing telemetry in Assetto Corsa. ACTI is the legacy telemetry tool included with AC, logging at approximately 20 Hz with a limited channel set — it remains useful as a quick reference but has been surpassed by modern alternatives. Telemetrick is the recommended primary telemetry tool for AC, offering 30–200 Hz configurable capture rate, over 180 channels (including aero data, suspension geometry, and individual wheel metrics), export to MoTeC and CSV formats, live tracing, and access to Telemetry Exchange for comparing data with other drivers. MoTeC i2 Pro is a professional-grade analysis software used in real motorsport that can import Telemetrick data for advanced visualization and math channel creation. The AC developer apps (accessible in-game via the dev tools menu) provide real-time suspension geometry visualization, tire data, and aero information that complement post-session telemetry analysis.
 
 ### Relationship Between Driver Inputs and Vehicle Response
 
@@ -68,7 +71,13 @@ Tracking metrics systematically transforms telemetry from a diagnostic tool into
 
 ## Telemetry Diagnosis
 
-This section provides a comprehensive symptom-to-cause mapping. For each symptom, the table identifies likely mechanical or setup causes and specifies which telemetry channels carry the diagnostic signal.
+This section provides a symptom-to-cause mapping that serves as a hypothesis generator for diagnosis. Each entry identifies possible mechanical or setup causes for a given symptom and specifies which telemetry channels carry the diagnostic signal. An important caveat: multiple different causes can produce identical symptoms (equifinality). For example, entry understeer can result from excessive front spring rate, insufficient front downforce, incorrect brake bias, or aggressive driving technique — the symptom alone does not distinguish between these. Speed dependence is a critical differentiator: symptoms that worsen with speed are likely aerodynamic in origin, while symptoms consistent across speed ranges are more likely mechanical. Additionally, driver technique can mask or mimic setup problems — a driver who unconsciously adapts to understeer by braking earlier and turning in more aggressively may not report the issue, while a driver unfamiliar with trail braking may report understeer that is actually a technique limitation. Always treat these tables as starting points for investigation, not definitive answers.
+
+**G-G Diagram (Friction Circle Plot)**
+The G-G diagram plots lateral acceleration against longitudinal acceleration for every data point in a lap, producing a characteristic boundary that represents the tyre's total grip utilisation. A fully utilised performance envelope appears as a filled ellipse or rounded rectangle; gaps in the boundary indicate areas where the driver is not exploiting the full friction capacity. Common patterns: a flat top boundary (low peak braking G) indicates the driver is not reaching threshold braking; a narrow lateral spread at zero longitudinal G indicates the driver lifts completely between braking and cornering rather than trail-braking through the transition; gaps in the upper-left and upper-right quadrants (combined braking and turning) indicate missed trail-braking opportunities. The G-G diagram is fundamental for identifying whether lap time is limited by the car's mechanical grip or by driver utilisation of available grip.
+
+**Reference Lap Methodology**
+Comparing telemetry against a reference lap is one of the most powerful diagnostic techniques available. The reference can be the driver's own fastest lap, a previous session's best, or telemetry from another driver obtained via Telemetry Exchange. Overlay the speed trace, steering angle, and throttle/brake channels spatially (distance-based, not time-based) to identify exactly where on track time is gained or lost. Time differences fall into three categories: braking point (the reference brakes later or earlier), corner speed (the reference carries more speed through the apex), and exit speed (the reference gets on throttle earlier or harder). Each category points to a different combination of setup and technique factors. Braking point differences often relate to confidence and brake bias; corner speed differences relate to mechanical balance and commitment; exit speed differences relate to traction, differential settings, and throttle technique. When using another driver's data as reference, differences may also reveal fundamentally different driving approaches — a valid fast line through a corner is not unique.
 
 ### Understeer
 
@@ -106,7 +115,7 @@ This section provides a comprehensive symptom-to-cause mapping. For each symptom
 
 **Symptom**: Varied brake points or brake distances lap-to-lap; driver reporting difficulty with consistency.
 
-**Possible Causes**: Tyre temperature variation at brake zone entry (inconsistent warm-up), ABS threshold sensitivity, brake bias drift, brake duct temperature affecting pad performance.
+**Possible Causes**: Tyre temperature variation at brake zone entry (inconsistent warm-up), ABS threshold sensitivity, brake bias drift, brake duct temperature affecting pad performance (note: brake duct adjustment is car-specific in AC — not available on all cars).
 
 **Channels to Inspect**: Brake pressure trace shape lap-over-lap (compare peak pressure and ramp rate), longitudinal deceleration per lap (should be consistent for same brake zone), wheel speed (check for lock-up events — wheel speed dropping sharply to near zero), front vs. rear wheel speed during braking (reveals bias behaviour).
 
