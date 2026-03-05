@@ -25,10 +25,10 @@
 
 **Purpose**: Add pydantic-ai dependency, create module skeleton, configure test infrastructure
 
-- [ ] T001 Add `pydantic-ai[anthropic]` to dependencies in `backend/pyproject.toml` and install into conda env `ac-race-engineer`
-- [ ] T002 Create `backend/ac_engineer/engineer/skills/` directory with empty `__init__.py` (or no init — it's a data dir)
-- [ ] T003 Add SpecialistResult and AgentDeps models to `backend/ac_engineer/engineer/models.py` per data-model.md (SpecialistResult: setup_changes, driver_feedback, domain_summary; AgentDeps: session_summary, parameter_ranges, domain_signals, knowledge_fragments)
-- [ ] T004 Add test infrastructure to `backend/tests/engineer/conftest.py`: set `pydantic_ai.models.ALLOW_MODEL_REQUESTS = False`, add fixtures for AgentDeps builder and sample SessionSummary with signals
+- [x] T001 Add `pydantic-ai[anthropic]` to dependencies in `backend/pyproject.toml` and install into conda env `ac-race-engineer`
+- [x] T002 Create `backend/ac_engineer/engineer/skills/` directory with empty `__init__.py` (or no init — it's a data dir)
+- [x] T003 Add SpecialistResult and AgentDeps models to `backend/ac_engineer/engineer/models.py` per data-model.md (SpecialistResult: setup_changes, driver_feedback, domain_summary; AgentDeps: session_summary, parameter_ranges, domain_signals, knowledge_fragments)
+- [x] T004 Add test infrastructure to `backend/tests/engineer/conftest.py`: set `pydantic_ai.models.ALLOW_MODEL_REQUESTS = False`, add fixtures for AgentDeps builder and sample SessionSummary with signals
 
 **Checkpoint**: Skeleton ready, pydantic-ai importable, test infrastructure in place
 
@@ -40,12 +40,12 @@
 
 **CRITICAL**: No agent work can begin until these are complete
 
-- [ ] T005 Implement `route_signals()` and constants (SIGNAL_DOMAINS, DOMAIN_PRIORITY, AERO_SECTIONS) in `backend/ac_engineer/engineer/agents.py` per research.md R3 and contracts/agents-api.md — pure function, no LLM
-- [ ] T006 [P] Implement `get_model_string(config)` in `backend/ac_engineer/engineer/agents.py` per research.md R5 — maps ACConfig provider/model to Pydantic AI model string (handles "gemini" → "google" prefix)
-- [ ] T007 [P] Implement tool functions in `backend/ac_engineer/engineer/tools.py`: `search_kb(ctx, query)` wrapping `search_knowledge()`, `get_setup_range(ctx, section)` wrapping parameter range lookup, `get_current_value(ctx, section)` reading from active_setup_parameters, `get_lap_detail(ctx, lap_number)` returning full metrics for a specific flying lap from SessionSummary.laps (empty dict if not found), `get_corner_metrics(ctx, corner_number, lap_number=None)` returning CornerIssue data for a specific corner averaged across flying laps or for a specific lap (None if not found)
-- [ ] T008 Write tests for route_signals() in `backend/tests/engineer/test_agents.py`: single-domain signals, multi-domain signals (brake_balance_issue → balance+technique), aero detection from setup parameters, no signals → empty, unknown signals ignored (~8 tests)
-- [ ] T009 [P] Write tests for get_model_string() in `backend/tests/engineer/test_agents.py`: anthropic default, openai, gemini→google prefix, custom model override (~4 tests)
-- [ ] T010 [P] Write tests for tool functions in `backend/tests/engineer/test_tools.py`: search_kb returns formatted fragments, get_setup_range returns range or None, get_current_value reads from summary, get_lap_detail returns correct lap or empty dict for unknown lap, get_corner_metrics returns aggregated data or per-lap data (~8 tests)
+- [x] T005 Implement `route_signals()` and constants (SIGNAL_DOMAINS, DOMAIN_PRIORITY, AERO_SECTIONS) in `backend/ac_engineer/engineer/agents.py` per research.md R3 and contracts/agents-api.md — pure function, no LLM
+- [x] T006 [P] Implement `get_model_string(config)` in `backend/ac_engineer/engineer/agents.py` per research.md R5 — maps ACConfig provider/model to Pydantic AI model string (handles "gemini" → "google" prefix)
+- [x] T007 [P] Implement tool functions in `backend/ac_engineer/engineer/tools.py`: `search_kb(ctx, query)` wrapping `search_knowledge()`, `get_setup_range(ctx, section)` wrapping parameter range lookup, `get_current_value(ctx, section)` reading from active_setup_parameters, `get_lap_detail(ctx, lap_number)` returning full metrics for a specific flying lap from SessionSummary.laps (empty dict if not found), `get_corner_metrics(ctx, corner_number, lap_number=None)` returning CornerIssue data for a specific corner averaged across flying laps or for a specific lap (None if not found)
+- [x] T008 Write tests for route_signals() in `backend/tests/engineer/test_agents.py`: single-domain signals, multi-domain signals (brake_balance_issue → balance+technique), aero detection from setup parameters, no signals → empty, unknown signals ignored (~8 tests)
+- [x] T009 [P] Write tests for get_model_string() in `backend/tests/engineer/test_agents.py`: anthropic default, openai, gemini→google prefix, custom model override (~4 tests)
+- [x] T010 [P] Write tests for tool functions in `backend/tests/engineer/test_tools.py`: search_kb returns formatted fragments, get_setup_range returns range or None, get_current_value reads from summary, get_lap_detail returns correct lap or empty dict for unknown lap, get_corner_metrics returns aggregated data or per-lap data (~8 tests)
 
 **Checkpoint**: All deterministic routing and tools tested, ready for agent definitions
 
@@ -59,16 +59,16 @@
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Write system prompt `backend/ac_engineer/engineer/skills/principal.md` — role as race engineer orchestrator, instructions on combining specialist outputs into summary and explanation, confidence assessment guidelines
-- [ ] T012 [P] [US1] Write system prompt `backend/ac_engineer/engineer/skills/balance.md` — role as balance specialist, domain knowledge summary (springs, ARB, dampers, brake bias), instructions to propose SetupChanges with reasoning/expected_effect referencing specific corners, tool usage for knowledge search
-- [ ] T013 [P] [US1] Write system prompt `backend/ac_engineer/engineer/skills/tyre.md` — role as tyre specialist, domain knowledge (pressures, camber, toe, temps, wear), same tool/output instructions
-- [ ] T014 [P] [US1] Write system prompt `backend/ac_engineer/engineer/skills/technique.md` — role as driving coach, produces DriverFeedback not SetupChanges, observes consistency/braking technique, references specific corners/laps
-- [ ] T015 [US1] Define specialist Pydantic AI agents in `backend/ac_engineer/engineer/agents.py`: create `_build_specialist_agent(domain, model_string)` that loads the domain's skill prompt from `skills/{domain}.md`, registers tools from tools.py, sets `output_type=SpecialistResult` and `deps_type=AgentDeps`
-- [ ] T016 [US1] Implement `_build_user_prompt(summary, domain_signals)` in `backend/ac_engineer/engineer/agents.py` — formats SessionSummary data into a natural language prompt for the specialist, including relevant signals, corner issues, tyre data, stint trends
-- [ ] T017 [US1] Implement `_combine_results(session_id, specialist_results, summary)` in `backend/ac_engineer/engineer/agents.py` — merges all SpecialistResults into a single EngineerResponse: concatenate setup_changes and driver_feedback, build summary from domain_summaries, set signals_addressed, determine overall confidence
-- [ ] T018 [US1] Implement `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py` per contracts/agents-api.md — orchestrates: read_parameter_ranges → route_signals → pre-load knowledge → run specialists → combine → validate → resolve conflicts → persist → return. Handle edge cases: no signals, no flying laps, LLM errors
-- [ ] T019 [US1] Write tests for analyze_with_engineer() in `backend/tests/engineer/test_integration.py` using TestModel: session with balance signals only → only balance agent runs, session with no signals → empty response, session with no flying laps → insufficient data response (~5 tests)
-- [ ] T020 [US1] Write tests for _combine_results() and _build_user_prompt() in `backend/tests/engineer/test_agents.py`: multiple specialist results merged correctly, summary built from domain summaries, signals_addressed populated (~4 tests)
+- [x] T011 [US1] Write system prompt `backend/ac_engineer/engineer/skills/principal.md` — role as race engineer orchestrator, instructions on combining specialist outputs into summary and explanation, confidence assessment guidelines
+- [x] T012 [P] [US1] Write system prompt `backend/ac_engineer/engineer/skills/balance.md` — role as balance specialist, domain knowledge summary (springs, ARB, dampers, brake bias), instructions to propose SetupChanges with reasoning/expected_effect referencing specific corners, tool usage for knowledge search
+- [x] T013 [P] [US1] Write system prompt `backend/ac_engineer/engineer/skills/tyre.md` — role as tyre specialist, domain knowledge (pressures, camber, toe, temps, wear), same tool/output instructions
+- [x] T014 [P] [US1] Write system prompt `backend/ac_engineer/engineer/skills/technique.md` — role as driving coach, produces DriverFeedback not SetupChanges, observes consistency/braking technique, references specific corners/laps
+- [x] T015 [US1] Define specialist Pydantic AI agents in `backend/ac_engineer/engineer/agents.py`: create `_build_specialist_agent(domain, model_string)` that loads the domain's skill prompt from `skills/{domain}.md`, registers tools from tools.py, sets `output_type=SpecialistResult` and `deps_type=AgentDeps`
+- [x] T016 [US1] Implement `_build_user_prompt(summary, domain_signals)` in `backend/ac_engineer/engineer/agents.py` — formats SessionSummary data into a natural language prompt for the specialist, including relevant signals, corner issues, tyre data, stint trends
+- [x] T017 [US1] Implement `_combine_results(session_id, specialist_results, summary)` in `backend/ac_engineer/engineer/agents.py` — merges all SpecialistResults into a single EngineerResponse: concatenate setup_changes and driver_feedback, build summary from domain_summaries, set signals_addressed, determine overall confidence
+- [x] T018 [US1] Implement `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py` per contracts/agents-api.md — orchestrates: read_parameter_ranges → route_signals → pre-load knowledge → run specialists → combine → validate → resolve conflicts → persist → return. Handle edge cases: no signals, no flying laps, LLM errors
+- [x] T019 [US1] Write tests for analyze_with_engineer() in `backend/tests/engineer/test_integration.py` using TestModel: session with balance signals only → only balance agent runs, session with no signals → empty response, session with no flying laps → insufficient data response (~5 tests)
+- [x] T020 [US1] Write tests for _combine_results() and _build_user_prompt() in `backend/tests/engineer/test_agents.py`: multiple specialist results merged correctly, summary built from domain summaries, signals_addressed populated (~4 tests)
 
 **Checkpoint**: Core analysis pipeline works end-to-end with mocked LLM. US1 acceptance scenarios verified.
 
@@ -82,10 +82,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T021 [P] [US2] Write system prompt `backend/ac_engineer/engineer/skills/aero.md` — role as aero specialist, domain knowledge (wing angles, ride heights, downforce/drag trade-offs), instructions to propose SetupChanges for aero parameters only
-- [ ] T022 [US2] Add aero agent creation in `_build_specialist_agent()` in `backend/ac_engineer/engineer/agents.py` — aero uses same pattern as balance/tyre but with aero skill prompt
-- [ ] T023 [US2] Write specialist-specific tests in `backend/tests/engineer/test_agents.py` using TestModel: balance agent with understeer signals, tyre agent with temp signals, aero agent with aero-equipped car, technique agent with consistency signal — each produces domain-appropriate SpecialistResult (~4 tests)
-- [ ] T024 [US2] Write routing integration tests in `backend/tests/engineer/test_integration.py`: session with only tyre signals → only tyre specialist runs, session with balance+tyre+consistency → 3 specialists run, car with aero params + balance signal → balance+aero run (~3 tests)
+- [x] T021 [P] [US2] Write system prompt `backend/ac_engineer/engineer/skills/aero.md` — role as aero specialist, domain knowledge (wing angles, ride heights, downforce/drag trade-offs), instructions to propose SetupChanges for aero parameters only
+- [x] T022 [US2] Add aero agent creation in `_build_specialist_agent()` in `backend/ac_engineer/engineer/agents.py` — aero uses same pattern as balance/tyre but with aero skill prompt
+- [x] T023 [US2] Write specialist-specific tests in `backend/tests/engineer/test_agents.py` using TestModel: balance agent with understeer signals, tyre agent with temp signals, aero agent with aero-equipped car, technique agent with consistency signal — each produces domain-appropriate SpecialistResult (~4 tests)
+- [x] T024 [US2] Write routing integration tests in `backend/tests/engineer/test_integration.py`: session with only tyre signals → only tyre specialist runs, session with balance+tyre+consistency → 3 specialists run, car with aero params + balance signal → balance+aero run (~3 tests)
 
 **Checkpoint**: All 4 specialist domains tested independently. Routing verified for all signal combinations.
 
@@ -99,8 +99,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Refine all skill prompts (`backend/ac_engineer/engineer/skills/balance.md`, `tyre.md`, `aero.md`) with explicit instructions: reasoning MUST reference specific corners/laps from the data, expected_effect MUST describe what the driver will feel on track, avoid engineering jargon, explain trade-offs
-- [ ] T026 [US3] Write tests in `backend/tests/engineer/test_agents.py` using FunctionModel that returns SpecialistResults with specific reasoning text — verify EngineerResponse summary is non-empty, all SetupChange.reasoning and expected_effect are non-empty strings (~3 tests)
+- [x] T025 [US3] Refine all skill prompts (`backend/ac_engineer/engineer/skills/balance.md`, `tyre.md`, `aero.md`) with explicit instructions: reasoning MUST reference specific corners/laps from the data, expected_effect MUST describe what the driver will feel on track, avoid engineering jargon, explain trade-offs
+- [x] T026 [US3] Write tests in `backend/tests/engineer/test_agents.py` using FunctionModel that returns SpecialistResults with specific reasoning text — verify EngineerResponse summary is non-empty, all SetupChange.reasoning and expected_effect are non-empty strings (~3 tests)
 
 **Checkpoint**: Educational quality of output verified. US3 acceptance scenarios met.
 
@@ -114,9 +114,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T027 [US4] Enhance `search_kb` tool in `backend/ac_engineer/engineer/tools.py` to format KnowledgeFragment content as structured text with source attribution (source_file, section_title) so the agent sees where the knowledge comes from
-- [ ] T028 [US4] Add pre-loading of knowledge in `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: call `get_knowledge_for_signals()` before running specialists, pass fragments via AgentDeps.knowledge_fragments so they're available in system context
-- [ ] T029 [US4] Write tests in `backend/tests/engineer/test_tools.py`: search_kb returns formatted fragments with source attribution, pre-loaded knowledge passed correctly in AgentDeps (~3 tests)
+- [x] T027 [US4] Enhance `search_kb` tool in `backend/ac_engineer/engineer/tools.py` to format KnowledgeFragment content as structured text with source attribution (source_file, section_title) so the agent sees where the knowledge comes from
+- [x] T028 [US4] Add pre-loading of knowledge in `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: call `get_knowledge_for_signals()` before running specialists, pass fragments via AgentDeps.knowledge_fragments so they're available in system context
+- [x] T029 [US4] Write tests in `backend/tests/engineer/test_tools.py`: search_kb returns formatted fragments with source attribution, pre-loaded knowledge passed correctly in AgentDeps (~3 tests)
 
 **Checkpoint**: Knowledge grounding verified. Agents have access to domain knowledge.
 
@@ -130,9 +130,9 @@
 
 ### Implementation for User Story 5
 
-- [ ] T030 [US5] Add post-validation step in `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: after combining specialist results, call `validate_changes(ranges, all_setup_changes)`, update each SetupChange.value_after with clamped values, append warnings to reasoning
-- [ ] T031 [US5] Implement conflict resolution in `_combine_results()` or a new `_resolve_conflicts()` in `backend/ac_engineer/engineer/agents.py`: detect same section/parameter from multiple specialists, keep higher-priority domain's change per DOMAIN_PRIORITY, note conflict in explanation
-- [ ] T032 [US5] Write tests in `backend/tests/engineer/test_integration.py`: proposed value above max → clamped, proposed value below min → clamped, unknown parameter → warning but included, two specialists change same param → higher priority wins (~4 tests)
+- [x] T030 [US5] Add post-validation step in `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: after combining specialist results, call `validate_changes(ranges, all_setup_changes)`, update each SetupChange.value_after with clamped values, append warnings to reasoning
+- [x] T031 [US5] Implement conflict resolution in `_combine_results()` or a new `_resolve_conflicts()` in `backend/ac_engineer/engineer/agents.py`: detect same section/parameter from multiple specialists, keep higher-priority domain's change per DOMAIN_PRIORITY, note conflict in explanation
+- [x] T032 [US5] Write tests in `backend/tests/engineer/test_integration.py`: proposed value above max → clamped, proposed value below min → clamped, unknown parameter → warning but included, two specialists change same param → higher priority wins (~4 tests)
 
 **Checkpoint**: Parameter safety verified. No out-of-range values possible in output.
 
@@ -146,8 +146,8 @@
 
 ### Implementation for User Story 6
 
-- [ ] T033 [US6] Wire persistence in `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: call `save_recommendation(db_path, session_id, summary, explanation, setup_changes)` before returning EngineerResponse; handle DB errors gracefully (log warning, still return response)
-- [ ] T034 [US6] Write tests in `backend/tests/engineer/test_integration.py`: verify recommendation saved after successful analysis, verify response returned even if DB save fails, verify feedback-only response saved with empty changes (~3 tests)
+- [x] T033 [US6] Wire persistence in `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: call `save_recommendation(db_path, session_id, summary, explanation, setup_changes)` before returning EngineerResponse; handle DB errors gracefully (log warning, still return response)
+- [x] T034 [US6] Write tests in `backend/tests/engineer/test_integration.py`: verify recommendation saved after successful analysis, verify response returned even if DB save fails, verify feedback-only response saved with empty changes (~3 tests)
 
 **Checkpoint**: Persistence verified. Recommendations retrievable from database.
 
@@ -161,8 +161,8 @@
 
 ### Implementation for User Story 7
 
-- [ ] T035 [US7] Implement `apply_recommendation()` in `backend/ac_engineer/engineer/agents.py` per contracts/agents-api.md and research.md R9: load recommendation from DB → read_parameter_ranges → validate_changes → create_backup → apply_changes → update_recommendation_status("applied") → return outcomes. On failure: original file intact, status unchanged
-- [ ] T036 [US7] Write tests in `backend/tests/engineer/test_integration.py`: successful apply → backup + values written + status "applied", apply with invalid recommendation_id → ValueError, write failure mid-operation → original intact + status unchanged (~3 tests)
+- [x] T035 [US7] Implement `apply_recommendation()` in `backend/ac_engineer/engineer/agents.py` per contracts/agents-api.md and research.md R9: load recommendation from DB → read_parameter_ranges → validate_changes → create_backup → apply_changes → update_recommendation_status("applied") → return outcomes. On failure: original file intact, status unchanged
+- [x] T036 [US7] Write tests in `backend/tests/engineer/test_integration.py`: successful apply → backup + values written + status "applied", apply with invalid recommendation_id → ValueError, write failure mid-operation → original intact + status unchanged (~3 tests)
 
 **Checkpoint**: Full write pipeline verified. US7 acceptance scenarios met.
 
@@ -172,9 +172,9 @@
 
 **Purpose**: Public API exports, final validation, documentation
 
-- [ ] T037 Update `backend/ac_engineer/engineer/__init__.py` to export Phase 5.3 public API: analyze_with_engineer, apply_recommendation, route_signals, get_model_string, SpecialistResult, AgentDeps, SIGNAL_DOMAINS, DOMAIN_PRIORITY — per contracts/agents-api.md
-- [ ] T038 Run full test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) — verify all ~500+ tests pass (464 existing + ~40 new)
-- [ ] T039 Validate quickstart.md: verify the usage example from `specs/008-engineer-agents/quickstart.md` is consistent with the implemented API signatures
+- [x] T037 Update `backend/ac_engineer/engineer/__init__.py` to export Phase 5.3 public API: analyze_with_engineer, apply_recommendation, route_signals, get_model_string, SpecialistResult, AgentDeps, SIGNAL_DOMAINS, DOMAIN_PRIORITY — per contracts/agents-api.md
+- [x] T038 Run full test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) — verify all ~500+ tests pass (464 existing + ~40 new)
+- [x] T039 Validate quickstart.md: verify the usage example from `specs/008-engineer-agents/quickstart.md` is consistent with the implemented API signatures
 
 ---
 

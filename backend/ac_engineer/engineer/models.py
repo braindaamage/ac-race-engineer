@@ -1,16 +1,17 @@
 """Pydantic v2 models for the engineer core layer.
 
-Three groups:
+Four groups:
 - Summary models (LapSummary, CornerIssue, StintSummary, SessionSummary)
 - Setup models (ParameterRange, ValidationResult, ChangeOutcome)
 - Response models (SetupChange, DriverFeedback, EngineerResponse)
+- Agent models (SpecialistResult, AgentDeps)
 """
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -177,3 +178,33 @@ class EngineerResponse(BaseModel):
     summary: str
     explanation: str
     confidence: Literal["high", "medium", "low"]
+
+
+# ---------------------------------------------------------------------------
+# Agent models (Phase 5.3)
+# ---------------------------------------------------------------------------
+
+
+class SpecialistResult(BaseModel):
+    """Intermediate output from each specialist agent before combination."""
+
+    setup_changes: list[SetupChange] = []
+    driver_feedback: list[DriverFeedback] = []
+    domain_summary: str
+
+    @model_validator(mode="after")
+    def at_least_one_output(self) -> SpecialistResult:
+        if not self.setup_changes and not self.driver_feedback:
+            raise ValueError(
+                "Specialist must produce at least setup_changes or driver_feedback"
+            )
+        return self
+
+
+class AgentDeps(BaseModel):
+    """Shared context passed to all specialist agents via RunContext."""
+
+    session_summary: SessionSummary
+    parameter_ranges: dict[str, ParameterRange] = {}
+    domain_signals: list[str] = []
+    knowledge_fragments: list[Any] = []
