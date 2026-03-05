@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from fastapi import APIRouter, HTTPException, Request
 
 from ac_engineer.config.io import read_config, update_config
-from ac_engineer.config.models import VALID_LLM_PROVIDERS
+from ac_engineer.config.models import VALID_LLM_PROVIDERS, VALID_UI_THEMES
 
 router = APIRouter()
 
@@ -24,6 +24,7 @@ class ConfigResponse(BaseModel):
     setups_path: str
     llm_provider: str
     llm_model: str
+    ui_theme: str
 
 
 class ConfigUpdateRequest(BaseModel):
@@ -35,6 +36,7 @@ class ConfigUpdateRequest(BaseModel):
     setups_path: str | None = None
     llm_provider: str | None = None
     llm_model: str | None = None
+    ui_theme: str | None = None
 
 
 class ConfigValidationResponse(BaseModel):
@@ -56,6 +58,7 @@ def _config_to_response(config) -> ConfigResponse:
         setups_path=str(config.setups_path) if config.setups_path else "",
         llm_provider=config.llm_provider,
         llm_model=config.llm_model if config.llm_model else "",
+        ui_theme=config.ui_theme,
     )
 
 
@@ -81,6 +84,12 @@ async def patch_config(request: Request, body: ConfigUpdateRequest) -> ConfigRes
             raise HTTPException(
                 status_code=422,
                 detail=f"llm_provider must be one of {VALID_LLM_PROVIDERS}, got {fields['llm_provider']!r}",
+            )
+        # Validate ui_theme before persisting
+        if "ui_theme" in fields and fields["ui_theme"] not in VALID_UI_THEMES:
+            raise HTTPException(
+                status_code=422,
+                detail=f"ui_theme must be one of {VALID_UI_THEMES}, got {fields['ui_theme']!r}",
             )
         config = update_config(config_path, **fields)
     else:

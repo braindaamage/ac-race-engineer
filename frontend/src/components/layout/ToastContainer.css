@@ -1,0 +1,14 @@
+.ace-toast-container {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+  z-index: 300;
+  pointer-events: none;
+}
+
+.ace-toast-container > * {
+  pointer-events: auto;
+}

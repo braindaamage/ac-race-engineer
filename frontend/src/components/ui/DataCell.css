@@ -1,0 +1,29 @@
+.ace-data-cell {
+  font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.ace-data-cell--right {
+  justify-content: flex-end;
+}
+
+/* Delta colors */
+.ace-data-cell__delta--positive {
+  color: var(--color-positive);
+}
+
+.ace-data-cell__delta--negative {
+  color: var(--color-warning);
+}
+
+.ace-data-cell__delta--neutral {
+  color: var(--text-muted);
+}
+
+/* Unit */
+.ace-data-cell__unit {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
