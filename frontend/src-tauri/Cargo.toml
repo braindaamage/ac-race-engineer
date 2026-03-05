@@ -1,0 +1,19 @@
+[package]
+name = "ac-race-engineer"
+version = "0.1.0"
+description = "AC Race Engineer — AI-powered setup assistant for Assetto Corsa"
+authors = ["you"]
+edition = "2021"
+
+[lib]
+name = "ac_race_engineer_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

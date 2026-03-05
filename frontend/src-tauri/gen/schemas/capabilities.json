@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Default capabilities for the AC Race Engineer app","local":true,"windows":["main"],"permissions":["core:default",{"identifier":"shell:allow-spawn","allow":[{"args":["--port",{"validator":"\\d+"}],"name":"binaries/api-server","sidecar":true}]},"shell:allow-kill"]}}

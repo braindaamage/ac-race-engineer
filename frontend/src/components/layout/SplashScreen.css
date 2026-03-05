@@ -1,0 +1,53 @@
+.ace-splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg);
+  gap: var(--space-6);
+}
+
+.ace-splash__title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+}
+
+.ace-splash__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--color-brand);
+  border-radius: 50%;
+  animation: aceSplashSpin 0.8s linear infinite;
+}
+
+@keyframes aceSplashSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ace-splash__message {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.ace-splash__message--error {
+  color: var(--color-error);
+}
+
+.ace-splash__error-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-error);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}

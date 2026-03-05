@@ -21,3 +21,9 @@ Thumbs.db
 .vscode/
 .idea/
 backend/ac_engineer/knowledge/docs/user/*.md
+
+# Frontend (Node.js + Tauri)
+node_modules/
+frontend/dist/
+frontend/src-tauri/target/
+*.tsbuildinfo

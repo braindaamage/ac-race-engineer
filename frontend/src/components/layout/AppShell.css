@@ -1,0 +1,12 @@
+.ace-app-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.ace-app-shell__content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--bg);
+}

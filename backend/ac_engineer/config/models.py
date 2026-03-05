@@ -8,6 +8,7 @@ from pydantic import BaseModel, field_validator, model_serializer
 
 
 VALID_LLM_PROVIDERS = ("anthropic", "openai", "gemini")
+VALID_UI_THEMES = ("dark", "light")
 
 
 class ACConfig(BaseModel):
@@ -17,6 +18,7 @@ class ACConfig(BaseModel):
     setups_path: Path | None = None
     llm_provider: str = "anthropic"
     llm_model: str | None = None
+    ui_theme: str = "dark"
 
     @field_validator("ac_install_path", "setups_path", mode="before")
     @classmethod
@@ -38,6 +40,15 @@ class ACConfig(BaseModel):
         if v not in VALID_LLM_PROVIDERS:
             raise ValueError(
                 f"llm_provider must be one of {VALID_LLM_PROVIDERS}, got {v!r}"
+            )
+        return v
+
+    @field_validator("ui_theme")
+    @classmethod
+    def _validate_ui_theme(cls, v: str) -> str:
+        if v not in VALID_UI_THEMES:
+            raise ValueError(
+                f"ui_theme must be one of {VALID_UI_THEMES}, got {v!r}"
             )
         return v
 
@@ -68,4 +79,5 @@ class ACConfig(BaseModel):
             "setups_path": str(self.setups_path) if self.setups_path else None,
             "llm_provider": self.llm_provider,
             "llm_model": self.llm_model,
+            "ui_theme": self.ui_theme,
         }

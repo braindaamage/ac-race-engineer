@@ -1,0 +1,30 @@
+.ace-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+/* Variants */
+.ace-card--ai {
+  border-left: 3px solid var(--color-ai);
+}
+
+/* Padding */
+.ace-card--padding-sm {
+  padding: var(--space-2);
+}
+
+.ace-card--padding-md {
+  padding: var(--space-4);
+}
+
+.ace-card--padding-lg {
+  padding: var(--space-6);
+}
+
+/* Title */
+.ace-card__title {
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  margin-bottom: var(--space-3);
+}

@@ -1,0 +1,28 @@
+.ace-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  gap: var(--space-4);
+}
+
+.ace-empty-state__icon {
+  font-size: 48px;
+  color: var(--text-muted);
+}
+
+.ace-empty-state__title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ace-empty-state__description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  max-width: 360px;
+  margin: 0;
+}
