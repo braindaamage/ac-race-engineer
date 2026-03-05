@@ -17,9 +17,9 @@
 
 **Purpose**: Create project directory structure and install dependencies
 
-- [ ] T001 Create the `backend/api/` package directory structure with all `__init__.py` files per plan.md: `api/`, `api/jobs/`, `api/routes/`, `api/ws/`, `api/errors/`, and `backend/tests/api/`
-- [ ] T002 Install FastAPI and httpx into the conda env `ac-race-engineer` (`pip install fastapi httpx`); uvicorn 0.41.0 is already present
-- [ ] T003 Create `backend/api/__init__.py` with `__version__ = "0.1.0"` constant (used by health endpoint)
+- [x] T001 Create the `backend/api/` package directory structure with all `__init__.py` files per plan.md: `api/`, `api/jobs/`, `api/routes/`, `api/ws/`, `api/errors/`, and `backend/tests/api/`
+- [x] T002 Install FastAPI and httpx into the conda env `ac-race-engineer` (`pip install fastapi httpx`); uvicorn 0.41.0 is already present
+- [x] T003 Create `backend/api/__init__.py` with `__version__ = "0.1.0"` constant (used by health endpoint)
 
 ---
 
@@ -29,11 +29,11 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 [P] Implement job models in `backend/api/jobs/models.py`: `JobStatus` enum (pending, running, completed, failed), `Job` model (job_id, job_type, status, progress, current_step, result, error, created_at), `JobEvent` model (event, job_id, status, progress, current_step, result, error) per data-model.md
-- [ ] T005 [P] Implement error response model in `backend/api/errors/models.py`: `ErrorDetail` model (type, message, detail) and `ErrorResponse` model (error: ErrorDetail) per contracts/http-endpoints.md error envelope format
-- [ ] T006 [P] Implement `HealthResponse` model (status, version) in `backend/api/routes/health.py` (colocated with the route, per data-model.md)
-- [ ] T007 Implement FastAPI app factory in `backend/api/main.py`: `create_app()` function using `@asynccontextmanager` lifespan pattern (research R1), initializes `JobManager` on `app.state` during startup (research R2), cancels all jobs on shutdown (research R6); include `get_job_manager(request)` dependency function
-- [ ] T008 Create shared test fixtures in `backend/tests/api/conftest.py`: `app` fixture calling `create_app()`, `client` fixture using httpx `AsyncClient` with `ASGITransport`, `manager` fixture returning `app.state.job_manager`
+- [x] T004 [P] Implement job models in `backend/api/jobs/models.py`: `JobStatus` enum (pending, running, completed, failed), `Job` model (job_id, job_type, status, progress, current_step, result, error, created_at), `JobEvent` model (event, job_id, status, progress, current_step, result, error) per data-model.md
+- [x] T005 [P] Implement error response model in `backend/api/errors/models.py`: `ErrorDetail` model (type, message, detail) and `ErrorResponse` model (error: ErrorDetail) per contracts/http-endpoints.md error envelope format
+- [x] T006 [P] Implement `HealthResponse` model (status, version) in `backend/api/routes/health.py` (colocated with the route, per data-model.md)
+- [x] T007 Implement FastAPI app factory in `backend/api/main.py`: `create_app()` function using `@asynccontextmanager` lifespan pattern (research R1), initializes `JobManager` on `app.state` during startup (research R2), cancels all jobs on shutdown (research R6); include `get_job_manager(request)` dependency function
+- [x] T008 Create shared test fixtures in `backend/tests/api/conftest.py`: `app` fixture calling `create_app()`, `client` fixture using httpx `AsyncClient` with `ASGITransport`, `manager` fixture returning `app.state.job_manager`
 
 **Checkpoint**: Foundation ready — app factory creates a working FastAPI app with lifespan and injectable job manager
 
@@ -47,12 +47,12 @@
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] Write health endpoint tests in `backend/tests/api/test_health.py`: test GET /health returns 200 with status "ok" and version matching `api.__version__`, test response content type is JSON
+- [x] T009 [P] [US1] Write health endpoint tests in `backend/tests/api/test_health.py`: test GET /health returns 200 with status "ok" and version matching `api.__version__`, test response content type is JSON
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Implement GET /health route in `backend/api/routes/health.py`: returns `HealthResponse(status="ok", version=api.__version__)` per contracts/http-endpoints.md; register router in `create_app()` in `backend/api/main.py`
-- [ ] T011 [US1] Implement server entry point in `backend/api/server.py`: argparse with `--port` flag (default from `PORT` env var or 57832), call `uvicorn.run()` with host `127.0.0.1` per research R5; make it runnable via `python -m api.server` by adding `backend/api/__main__.py` that imports and calls `server.main()`
+- [x] T010 [US1] Implement GET /health route in `backend/api/routes/health.py`: returns `HealthResponse(status="ok", version=api.__version__)` per contracts/http-endpoints.md; register router in `create_app()` in `backend/api/main.py`
+- [x] T011 [US1] Implement server entry point in `backend/api/server.py`: argparse with `--port` flag (default from `PORT` env var or 57832), call `uvicorn.run()` with host `127.0.0.1` per research R5; make it runnable via `python -m api.server` by adding `backend/api/__main__.py` that imports and calls `server.main()`
 
 **Checkpoint**: `python -m api.server` starts the server; `curl http://localhost:57832/health` returns version — US1 is independently testable
 
@@ -66,18 +66,18 @@
 
 ### Tests for User Story 2
 
-- [ ] T012 [P] [US2] Write JobManager unit tests in `backend/tests/api/test_jobs_manager.py`: test create_job returns Job with pending status and UUID4 id; test update_progress changes progress/step/status; test complete_job sets result and status=completed; test fail_job sets error and status=failed; test get_job returns None for unknown id; test cancel_all cancels running tasks; test asyncio.Event is set on state changes
-- [ ] T013 [P] [US2] Write worker tests in `backend/tests/api/test_jobs_worker.py`: test run_job with a successful mock callable that reports 3 progress steps → job ends completed with result; test run_job with a failing mock callable → job ends failed with error message; test cancellation mid-job → job ends failed
-- [ ] T014 [P] [US2] Write GET /jobs/{job_id} tests in `backend/tests/api/test_jobs_api.py`: test 200 response matches Job model for existing job; test 404 with error envelope for unknown job_id
-- [ ] T015 [P] [US2] Write WebSocket tests in `backend/tests/api/test_ws_jobs.py`: test connect to running job receives progress events then completed event then connection closes with 1000; test connect to failed job receives error event then closes; test connect to already-completed job receives completed event immediately; test connect with unknown job_id closes with 4004; test multiple clients on same job both receive events
+- [x] T012 [P] [US2] Write JobManager unit tests in `backend/tests/api/test_jobs_manager.py`: test create_job returns Job with pending status and UUID4 id; test update_progress changes progress/step/status; test complete_job sets result and status=completed; test fail_job sets error and status=failed; test get_job returns None for unknown id; test cancel_all cancels running tasks; test asyncio.Event is set on state changes
+- [x] T013 [P] [US2] Write worker tests in `backend/tests/api/test_jobs_worker.py`: test run_job with a successful mock callable that reports 3 progress steps → job ends completed with result; test run_job with a failing mock callable → job ends failed with error message; test cancellation mid-job → job ends failed
+- [x] T014 [P] [US2] Write GET /jobs/{job_id} tests in `backend/tests/api/test_jobs_api.py`: test 200 response matches Job model for existing job; test 404 with error envelope for unknown job_id
+- [x] T015 [P] [US2] Write WebSocket tests in `backend/tests/api/test_ws_jobs.py`: test connect to running job receives progress events then completed event then connection closes with 1000; test connect to failed job receives error event then closes; test connect to already-completed job receives completed event immediately; test connect with unknown job_id closes with 4004; test multiple clients on same job both receive events
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implement `JobManager` in `backend/api/jobs/manager.py`: dict-based job store keyed by job_id; `create_job(job_type) → Job`; `get_job(job_id) → Job | None`; `update_progress(job_id, progress, current_step)`; `complete_job(job_id, result)`; `fail_job(job_id, error)`; `cancel_all()`; maintain `asyncio.Event` per job_id, set on every state change (research R3)
-- [ ] T017 [US2] Implement `run_job()` in `backend/api/jobs/worker.py`: accepts async callable with progress callback signature `async def fn(update: Callable[[int, str], Awaitable[None]]) → Any`; creates asyncio task, transitions job pending→running, calls callable, transitions to completed with result or failed with error on exception; handles CancelledError
-- [ ] T018 [US2] Implement GET /jobs/{job_id} route in `backend/api/routes/jobs.py`: inject `JobManager` via `Depends(get_job_manager)`; return Job model on success; raise HTTPException(404) if job not found; register router in `create_app()`
-- [ ] T019 [US2] Implement WebSocket handler in `backend/api/ws/jobs.py`: accept connection at `/ws/jobs/{job_id}`; if job not found close with code 4004 and reason "Job not found"; loop: await `asyncio.Event` with timeout, send `JobEvent` JSON on state change; on terminal state (completed/failed) send final event and close with 1000; handle client disconnect gracefully; register WebSocket route in `create_app()`
-- [ ] T020 [US2] Export public API from `backend/api/jobs/__init__.py`: export `JobManager`, `Job`, `JobStatus`, `JobEvent`, `run_job`
+- [x] T016 [US2] Implement `JobManager` in `backend/api/jobs/manager.py`: dict-based job store keyed by job_id; `create_job(job_type) → Job`; `get_job(job_id) → Job | None`; `update_progress(job_id, progress, current_step)`; `complete_job(job_id, result)`; `fail_job(job_id, error)`; `cancel_all()`; maintain `asyncio.Event` per job_id, set on every state change (research R3)
+- [x] T017 [US2] Implement `run_job()` in `backend/api/jobs/worker.py`: accepts async callable with progress callback signature `async def fn(update: Callable[[int, str], Awaitable[None]]) → Any`; creates asyncio task, transitions job pending→running, calls callable, transitions to completed with result or failed with error on exception; handles CancelledError
+- [x] T018 [US2] Implement GET /jobs/{job_id} route in `backend/api/routes/jobs.py`: inject `JobManager` via `Depends(get_job_manager)`; return Job model on success; raise HTTPException(404) if job not found; register router in `create_app()`
+- [x] T019 [US2] Implement WebSocket handler in `backend/api/ws/jobs.py`: accept connection at `/ws/jobs/{job_id}`; if job not found close with code 4004 and reason "Job not found"; loop: await `asyncio.Event` with timeout, send `JobEvent` JSON on state change; on terminal state (completed/failed) send final event and close with 1000; handle client disconnect gracefully; register WebSocket route in `create_app()`
+- [x] T020 [US2] Export public API from `backend/api/jobs/__init__.py`: export `JobManager`, `Job`, `JobStatus`, `JobEvent`, `run_job`
 
 **Checkpoint**: Full job lifecycle works — create job, track via WS, get via HTTP, reconnect to finished job — US2 is independently testable
 
@@ -91,12 +91,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Write error handling tests in `backend/tests/api/test_errors.py`: test 404 for unknown route returns error envelope with type "not_found"; test 422 for validation error returns envelope with type "validation_error" and field details; test 500 for unhandled exception returns envelope with type "internal_error" and no stack trace
+- [x] T021 [P] [US3] Write error handling tests in `backend/tests/api/test_errors.py`: test 404 for unknown route returns error envelope with type "not_found"; test 422 for validation error returns envelope with type "validation_error" and field details; test 500 for unhandled exception returns envelope with type "internal_error" and no stack trace
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] Implement global exception handlers in `backend/api/errors/handlers.py`: handler for `HTTPException` → maps status to error type (404→"not_found", etc.); handler for `RequestValidationError` → type "validation_error" with field errors in detail; catch-all `Exception` handler → type "internal_error" with generic message (no stack trace); register all handlers in `create_app()` in `backend/api/main.py`
-- [ ] T023 [US3] Export public API from `backend/api/errors/__init__.py`: export `ErrorResponse`, `ErrorDetail`, `register_error_handlers` (or equivalent)
+- [x] T022 [US3] Implement global exception handlers in `backend/api/errors/handlers.py`: handler for `HTTPException` → maps status to error type (404→"not_found", etc.); handler for `RequestValidationError` → type "validation_error" with field errors in detail; catch-all `Exception` handler → type "internal_error" with generic message (no stack trace); register all handlers in `create_app()` in `backend/api/main.py`
+- [x] T023 [US3] Export public API from `backend/api/errors/__init__.py`: export `ErrorResponse`, `ErrorDetail`, `register_error_handlers` (or equivalent)
 
 **Checkpoint**: Every error path returns uniform JSON envelope — US3 is independently testable
 
@@ -110,11 +110,11 @@
 
 ### Tests for User Story 4
 
-- [ ] T024 [P] [US4] Write CORS tests in `backend/tests/api/test_cors.py`: test preflight OPTIONS request from `http://localhost:3000` returns Access-Control-Allow-Origin; test actual request from localhost origin includes CORS headers; test request from non-localhost origin does NOT get CORS headers
+- [x] T024 [P] [US4] Write CORS tests in `backend/tests/api/test_cors.py`: test preflight OPTIONS request from `http://localhost:3000` returns Access-Control-Allow-Origin; test actual request from localhost origin includes CORS headers; test request from non-localhost origin does NOT get CORS headers
 
 ### Implementation for User Story 4
 
-- [ ] T025 [US4] Add CORS middleware in `create_app()` in `backend/api/main.py`: use `CORSMiddleware` with `allow_origin_regex=r"^https?://localhost(:\d+)?$"`, allow all methods, allow common headers (Content-Type, Authorization) per research R4
+- [x] T025 [US4] Add CORS middleware in `create_app()` in `backend/api/main.py`: use `CORSMiddleware` with `allow_origin_regex=r"^https?://localhost(:\d+)?$"`, allow all methods, allow common headers (Content-Type, Authorization) per research R4
 
 **Checkpoint**: Cross-origin requests from any localhost port succeed — US4 is independently testable
 
@@ -124,9 +124,9 @@
 
 **Purpose**: Final validation, graceful shutdown, and full suite confirmation
 
-- [ ] T026 Verify graceful shutdown: add test in `backend/tests/api/test_shutdown.py` that creates a running job, triggers app shutdown via lifespan exit, and confirms jobs are cancelled and no tasks leak (SC-005)
-- [ ] T027 Run the full test suite (`pytest backend/tests/api/ -v`) and confirm all tests pass; verify no import errors, no warnings about deprecated APIs
-- [ ] T028 Validate quickstart.md: manually verify the server starts with `python -m api.server`, health check responds, and tests run as documented
+- [x] T026 Verify graceful shutdown: add test in `backend/tests/api/test_shutdown.py` that creates a running job, triggers app shutdown via lifespan exit, and confirms jobs are cancelled and no tasks leak (SC-005)
+- [x] T027 Run the full test suite (`pytest backend/tests/api/ -v`) and confirm all tests pass; verify no import errors, no warnings about deprecated APIs
+- [x] T028 Validate quickstart.md: manually verify the server starts with `python -m api.server`, health check responds, and tests run as documented
 
 ---
 
