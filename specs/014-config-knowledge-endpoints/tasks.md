@@ -19,8 +19,8 @@
 
 **Purpose**: Create the path resolution module that all other code depends on
 
-- [ ] T001 Create centralized path resolution module with `get_data_dir()`, `get_db_path()`, `get_config_path()`, `get_sessions_dir()` — detecting dev vs frozen (PyInstaller) mode via `getattr(sys, 'frozen', False)` in `backend/api/paths.py`
-- [ ] T002 Create path resolution tests — dev mode paths resolve relative to repo root, frozen mode (mocked `sys.frozen=True` + `sys.executable`) resolves relative to exe dir, all helpers return absolute `Path` objects in `backend/tests/api/test_paths.py`
+- [x] T001 Create centralized path resolution module with `get_data_dir()`, `get_db_path()`, `get_config_path()`, `get_sessions_dir()` — detecting dev vs frozen (PyInstaller) mode via `getattr(sys, 'frozen', False)` in `backend/api/paths.py`
+- [x] T002 Create path resolution tests — dev mode paths resolve relative to repo root, frozen mode (mocked `sys.frozen=True` + `sys.executable`) resolves relative to exe dir, all helpers return absolute `Path` objects in `backend/tests/api/test_paths.py`
 
 **Checkpoint**: `paths.py` tested independently, provides correct paths in both dev and packaged modes
 
@@ -32,8 +32,8 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Modify `backend/api/main.py` — replace `DEFAULT_DB_PATH` and `DEFAULT_SESSIONS_DIR` with imports from `api.paths`, add `app.state.config_path` from `get_config_path()`, import and register config router (prefix `/config`) and knowledge router (no prefix — it has mixed prefixes), update lifespan to use centralized path functions
-- [ ] T004 Update `backend/api/routes/engineer.py` — remove `DEFAULT_CONFIG_PATH` constant (line 40), replace `getattr(request.app.state, "config_path", DEFAULT_CONFIG_PATH)` with `request.app.state.config_path` in `run_engineer` (line 79), `apply_recommendation_endpoint` (line 257), and `send_message` (line 328)
+- [x] T003 Modify `backend/api/main.py` — replace `DEFAULT_DB_PATH` and `DEFAULT_SESSIONS_DIR` with imports from `api.paths`, add `app.state.config_path` from `get_config_path()`, import and register config router (prefix `/config`) and knowledge router (no prefix — it has mixed prefixes), update lifespan to use centralized path functions
+- [x] T004 Update `backend/api/routes/engineer.py` — remove `DEFAULT_CONFIG_PATH` constant (line 40), replace `getattr(request.app.state, "config_path", DEFAULT_CONFIG_PATH)` with `request.app.state.config_path` in `run_engineer` (line 79), `apply_recommendation_endpoint` (line 257), and `send_message` (line 328)
 
 **Checkpoint**: Server starts using centralized paths, existing tests still pass, `app.state.config_path` available to all routes
 
@@ -47,14 +47,14 @@
 
 ### Tests for User Story 1+2
 
-- [ ] T005 [US1] Write config endpoint tests in `backend/tests/api/test_config_routes.py` — tests MUST cover: GET returns defaults with empty strings (never null), GET returns existing config values, PATCH single field leaves others unchanged, PATCH multiple fields at once, PATCH empty body returns current config unchanged, PATCH invalid llm_provider returns 422, PATCH unknown field returns 422, GET validate all valid (mock paths exist), GET validate missing AC path, GET validate missing setups path, GET validate empty config
+- [x] T005 [US1] Write config endpoint tests in `backend/tests/api/test_config_routes.py` — tests MUST cover: GET returns defaults with empty strings (never null), GET returns existing config values, PATCH single field leaves others unchanged, PATCH multiple fields at once, PATCH empty body returns current config unchanged, PATCH invalid llm_provider returns 422, PATCH unknown field returns 422, GET validate all valid (mock paths exist), GET validate missing AC path, GET validate missing setups path, GET validate empty config
 
 ### Implementation for User Story 1+2
 
-- [ ] T006 [US1] Define response/request models in `backend/api/routes/config.py` — `ConfigResponse` (all `str`, never None), `ConfigUpdateRequest` (all `Optional[str]`, `extra="forbid"`), `ConfigValidationResponse` (`ac_path_valid`, `setups_path_valid`, `llm_provider_valid`, `is_valid` — all `bool`)
-- [ ] T007 [US1] Implement `GET /config` in `backend/api/routes/config.py` — call `read_config(config_path)`, coerce `None` paths to `""` in response, coerce `None` llm_model to `""`
-- [ ] T008 [US1] Implement `PATCH /config` in `backend/api/routes/config.py` — extract provided fields via `body.model_dump(exclude_unset=True)`, call `update_config(config_path, **fields)`, return updated config as `ConfigResponse` with same None-to-"" coercion
-- [ ] T009 [US2] Implement `GET /config/validate` in `backend/api/routes/config.py` — call `read_config(config_path)`, check `config.is_ac_configured`, `config.is_setups_configured`, provider in valid list, compute `is_valid` as all-true
+- [x] T006 [US1] Define response/request models in `backend/api/routes/config.py` — `ConfigResponse` (all `str`, never None), `ConfigUpdateRequest` (all `Optional[str]`, `extra="forbid"`), `ConfigValidationResponse` (`ac_path_valid`, `setups_path_valid`, `llm_provider_valid`, `is_valid` — all `bool`)
+- [x] T007 [US1] Implement `GET /config` in `backend/api/routes/config.py` — call `read_config(config_path)`, coerce `None` paths to `""` in response, coerce `None` llm_model to `""`
+- [x] T008 [US1] Implement `PATCH /config` in `backend/api/routes/config.py` — extract provided fields via `body.model_dump(exclude_unset=True)`, call `update_config(config_path, **fields)`, return updated config as `ConfigResponse` with same None-to-"" coercion
+- [x] T009 [US2] Implement `GET /config/validate` in `backend/api/routes/config.py` — call `read_config(config_path)`, check `config.is_ac_configured`, `config.is_setups_configured`, provider in valid list, compute `is_valid` as all-true
 
 **Checkpoint**: Config endpoints fully functional — GET/PATCH/validate all work, 11+ tests passing
 
@@ -68,12 +68,12 @@
 
 ### Tests for User Story 3
 
-- [ ] T010 [US3] Write knowledge search tests in `backend/tests/api/test_knowledge_routes.py` — tests MUST cover: search with matching query returns results with source_file/section_title/content/tags, search with no-match query returns empty list, search with empty query returns empty list, search with whitespace-only query returns empty list, results capped at 10 with total reflecting unfiltered count, response includes query echo
+- [x] T010 [US3] Write knowledge search tests in `backend/tests/api/test_knowledge_routes.py` — tests MUST cover: search with matching query returns results with source_file/section_title/content/tags, search with no-match query returns empty list, search with empty query returns empty list, search with whitespace-only query returns empty list, results capped at 10 with total reflecting unfiltered count, response includes query echo
 
 ### Implementation for User Story 3
 
-- [ ] T011 [US3] Define knowledge response models in `backend/api/routes/knowledge.py` — `KnowledgeFragmentResponse` (`source_file`, `section_title`, `content`, `tags`), `KnowledgeSearchResponse` (`query`, `results: list[KnowledgeFragmentResponse]`, `total: int`)
-- [ ] T012 [US3] Implement `GET /knowledge/search` in `backend/api/routes/knowledge.py` — read `q` query param, call `search_knowledge(q)`, slice first 10, return `KnowledgeSearchResponse` with total = len(all_results)
+- [x] T011 [US3] Define knowledge response models in `backend/api/routes/knowledge.py` — `KnowledgeFragmentResponse` (`source_file`, `section_title`, `content`, `tags`), `KnowledgeSearchResponse` (`query`, `results: list[KnowledgeFragmentResponse]`, `total: int`)
+- [x] T012 [US3] Implement `GET /knowledge/search` in `backend/api/routes/knowledge.py` — read `q` query param, call `search_knowledge(q)`, slice first 10, return `KnowledgeSearchResponse` with total = len(all_results)
 
 **Checkpoint**: Knowledge search works — queries return ranked, capped results, 6+ tests passing
 
@@ -87,12 +87,12 @@
 
 ### Tests for User Story 4
 
-- [ ] T013 [US4] Write session knowledge tests in `backend/tests/api/test_knowledge_routes.py` — tests MUST cover: returns fragments for analyzed session (mock AnalyzedSession + cache), returns fragments for engineered session, returns 404 for nonexistent session, returns 409 for discovered (unanalyzed) session, returns 409 with re-process message when cache missing, returns signals list alongside fragments, returns empty signals/fragments when no signals detected
+- [x] T013 [US4] Write session knowledge tests in `backend/tests/api/test_knowledge_routes.py` — tests MUST cover: returns fragments for analyzed session (mock AnalyzedSession + cache), returns fragments for engineered session, returns 404 for nonexistent session, returns 409 for discovered (unanalyzed) session, returns 409 with re-process message when cache missing, returns signals list alongside fragments, returns empty signals/fragments when no signals detected
 
 ### Implementation for User Story 4
 
-- [ ] T014 [US4] Add `SessionKnowledgeResponse` model in `backend/api/routes/knowledge.py` — fields: `session_id: str`, `signals: list[str]`, `fragments: list[KnowledgeFragmentResponse]`
-- [ ] T015 [US4] Implement `GET /sessions/{session_id}/knowledge` in `backend/api/routes/knowledge.py` — guard: 404 if session not in DB, 409 if state not in ("analyzed", "engineered"), load AnalyzedSession via `load_analyzed_session()`, 409 if cache missing, run `detect_signals()`, call `get_knowledge_for_signals()`, return response with signals and fragments
+- [x] T014 [US4] Add `SessionKnowledgeResponse` model in `backend/api/routes/knowledge.py` — fields: `session_id: str`, `signals: list[str]`, `fragments: list[KnowledgeFragmentResponse]`
+- [x] T015 [US4] Implement `GET /sessions/{session_id}/knowledge` in `backend/api/routes/knowledge.py` — guard: 404 if session not in DB, 409 if state not in ("analyzed", "engineered"), load AnalyzedSession via `load_analyzed_session()`, 409 if cache missing, run `detect_signals()`, call `get_knowledge_for_signals()`, return response with signals and fragments
 
 **Checkpoint**: Session knowledge endpoint works — returns signals + fragments for analyzed sessions, guards reject invalid states, 7+ tests passing
 
@@ -104,8 +104,8 @@
 
 **Independent Test**: Build docs are complete, spec file references correct entry point and data files
 
-- [ ] T016 [P] [US5] Create PyInstaller spec file in `build/ac_engineer.spec` — entry point `backend/api/server.py`, include data files (`backend/ac_engineer/knowledge/docs/`, `backend/ac_engineer/engineer/skills/`), hidden imports (`pydantic_ai`, `anthropic`, `openai`, `watchdog`, `google.generativeai`), recommend `--onedir` mode
-- [ ] T017 [P] [US5] Create build documentation in `build/README_build.md` — prerequisites (conda env, PyInstaller install), step-by-step build commands for both `--onedir` and `--onefile`, expected output structure, how Tauri launches the sidecar, troubleshooting common issues (missing hidden imports, data files not found)
+- [x] T016 [P] [US5] Create PyInstaller spec file in `build/ac_engineer.spec` — entry point `backend/api/server.py`, include data files (`backend/ac_engineer/knowledge/docs/`, `backend/ac_engineer/engineer/skills/`), hidden imports (`pydantic_ai`, `anthropic`, `openai`, `watchdog`, `google.generativeai`), recommend `--onedir` mode
+- [x] T017 [P] [US5] Create build documentation in `build/README_build.md` — prerequisites (conda env, PyInstaller install), step-by-step build commands for both `--onedir` and `--onefile`, expected output structure, how Tauri launches the sidecar, troubleshooting common issues (missing hidden imports, data files not found)
 
 **Checkpoint**: Build artifacts documented, developer can follow README to produce a working .exe
 
@@ -115,9 +115,9 @@
 
 **Purpose**: Final validation across all stories
 
-- [ ] T018 Run full test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and verify all existing + new tests pass
-- [ ] T019 Verify server starts from a non-project working directory (e.g., `cd /tmp && python -m api.server`) and all endpoints respond correctly
-- [ ] T020 Run quickstart.md manual validation — test each curl command listed in `specs/014-config-knowledge-endpoints/quickstart.md`
+- [x] T018 Run full test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and verify all existing + new tests pass
+- [x] T019 Verify server starts from a non-project working directory (e.g., `cd /tmp && python -m api.server`) and all endpoints respond correctly
+- [x] T020 Run quickstart.md manual validation — test each curl command listed in `specs/014-config-knowledge-endpoints/quickstart.md`
 
 ---
 

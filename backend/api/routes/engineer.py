@@ -7,6 +7,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
 
+
 from ac_engineer.config.io import read_config
 from ac_engineer.engineer.agents import apply_recommendation
 from ac_engineer.storage.messages import clear_messages, get_messages, save_message
@@ -35,9 +36,6 @@ from api.engineer.serializers import (
 from api.jobs.worker import run_job
 
 router = APIRouter()
-
-
-DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data" / "config.json"
 
 
 def _require_analyzed_session(db_path, session_id: str) -> SessionRecord:
@@ -76,7 +74,7 @@ async def run_engineer(request: Request, session_id: str) -> EngineerJobResponse
             detail=f"Engineer job already running for session: {session_id}",
         )
 
-    config_path = getattr(request.app.state, "config_path", DEFAULT_CONFIG_PATH)
+    config_path = request.app.state.config_path
     config = read_config(config_path)
 
     job = manager.create_job("run_engineer")
@@ -254,7 +252,7 @@ async def apply_recommendation_endpoint(
             detail=f"Setup file not found: {body.setup_path}",
         )
 
-    config_path = getattr(request.app.state, "config_path", DEFAULT_CONFIG_PATH)
+    config_path = request.app.state.config_path
     config = read_config(config_path)
 
     outcomes = await apply_recommendation(
@@ -325,7 +323,7 @@ async def send_message(
     # Save user message first
     user_msg = save_message(db_path, session_id, "user", body.content)
 
-    config_path = getattr(request.app.state, "config_path", DEFAULT_CONFIG_PATH)
+    config_path = request.app.state.config_path
     config = read_config(config_path)
 
     job = manager.create_job("chat_response")
