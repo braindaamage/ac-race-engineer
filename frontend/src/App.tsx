@@ -1,11 +1,14 @@
 import { useEffect } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { useBackendStatus } from "./hooks/useBackendStatus";
+import { useConfig } from "./hooks/useConfig";
 import { SplashScreen } from "./components/layout/SplashScreen";
 import { AppShell } from "./components/layout/AppShell";
+import { OnboardingWizard } from "./components/onboarding/OnboardingWizard";
 
 export function App() {
   const { status, retry, shutdown } = useBackendStatus();
+  const { config, isLoading: configLoading, error: configError } = useConfig();
   useTheme();
 
   useEffect(() => {
@@ -38,6 +41,21 @@ export function App() {
 
   if (status === "polling" || status === "error") {
     return <SplashScreen status={status} onRetry={retry} />;
+  }
+
+  if (configLoading) {
+    return <SplashScreen status="polling" onRetry={retry} />;
+  }
+
+  // If config fetch fails or onboarding not completed, show wizard
+  if (configError || !config?.onboarding_completed) {
+    return (
+      <OnboardingWizard
+        onComplete={() => {
+          // Config will be refetched automatically via TanStack Query invalidation
+        }}
+      />
+    );
   }
 
   return <AppShell />;

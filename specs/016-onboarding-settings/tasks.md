@@ -19,10 +19,10 @@
 
 **Purpose**: Install Tauri dialog plugin and prepare project for new components
 
-- [ ] T001 Install @tauri-apps/plugin-dialog: run `npm install @tauri-apps/plugin-dialog` in frontend/
-- [ ] T002 Add tauri-plugin-dialog to Rust dependencies in frontend/src-tauri/Cargo.toml and register plugin in frontend/src-tauri/src/lib.rs with `.plugin(tauri_plugin_dialog::init())`
-- [ ] T003 Add `"dialog:allow-open"` permission to frontend/src-tauri/capabilities/default.json
-- [ ] T004 Create frontend/src/components/onboarding/ directory structure
+- [x] T001 Install @tauri-apps/plugin-dialog: run `npm install @tauri-apps/plugin-dialog` in frontend/
+- [x] T002 Add tauri-plugin-dialog to Rust dependencies in frontend/src-tauri/Cargo.toml and register plugin in frontend/src-tauri/src/lib.rs with `.plugin(tauri_plugin_dialog::init())`
+- [x] T003 Add `"dialog:allow-open"` permission to frontend/src-tauri/capabilities/default.json
+- [x] T004 Create frontend/src/components/onboarding/ directory structure
 
 ---
 
@@ -34,18 +34,18 @@
 
 ### Backend model & endpoint changes
 
-- [ ] T005 Add `api_key: str | None = None` and `onboarding_completed: bool = False` fields to ACConfig in backend/ac_engineer/config/models.py — include empty-string-to-None validator for api_key and update `_serialize` method
-- [ ] T006 Update ConfigResponse and ConfigUpdateRequest in backend/api/routes/config.py — add `api_key: str` (masked), `onboarding_completed: bool` fields; update `_config_to_response` helper to mask api_key (show first 4 + last 4 chars, `****` in between, or empty string if None)
-- [ ] T007 Add PathValidationResult Pydantic model (`status: str`, `message: str`) and `POST /config/validate-path` endpoint in backend/api/routes/config.py — implement ac_install validation (check content/cars, content/tracks subfolders) and setups validation (check directory exists) per contracts/config-endpoints.md rules
-- [ ] T008 Enhance `GET /config/validate` endpoint in backend/api/routes/config.py — replace flat-boolean ConfigValidationResponse with nested per-field PathValidationResult objects, add onboarding_completed field; update response model per contracts/config-endpoints.md
-- [ ] T009 Update existing backend tests in backend/tests/api/test_config_routes.py — fix assertions broken by ConfigResponse new fields (api_key, onboarding_completed) and ConfigValidationResponse structural change (flat booleans → nested objects)
-- [ ] T010 [P] Add backend tests for POST /config/validate-path in backend/tests/api/test_config_routes.py — test all 5 ac_install conditions (empty, not_found, no content, partial content, valid) and all 3 setups conditions (empty, not_found, valid)
-- [ ] T011 [P] Add backend tests for api_key and onboarding_completed in PATCH /config in backend/tests/api/test_config_routes.py — test saving api_key, reading it back masked, setting onboarding_completed to true, default false on fresh config
+- [x] T005 Add `api_key: str | None = None` and `onboarding_completed: bool = False` fields to ACConfig in backend/ac_engineer/config/models.py — include empty-string-to-None validator for api_key and update `_serialize` method
+- [x] T006 Update ConfigResponse and ConfigUpdateRequest in backend/api/routes/config.py — add `api_key: str` (masked), `onboarding_completed: bool` fields; update `_config_to_response` helper to mask api_key (show first 4 + last 4 chars, `****` in between, or empty string if None)
+- [x] T007 Add PathValidationResult Pydantic model (`status: str`, `message: str`) and `POST /config/validate-path` endpoint in backend/api/routes/config.py — implement ac_install validation (check content/cars, content/tracks subfolders) and setups validation (check directory exists) per contracts/config-endpoints.md rules
+- [x] T008 Enhance `GET /config/validate` endpoint in backend/api/routes/config.py — replace flat-boolean ConfigValidationResponse with nested per-field PathValidationResult objects, add onboarding_completed field; update response model per contracts/config-endpoints.md
+- [x] T009 Update existing backend tests in backend/tests/api/test_config_routes.py — fix assertions broken by ConfigResponse new fields (api_key, onboarding_completed) and ConfigValidationResponse structural change (flat booleans → nested objects)
+- [x] T010 [P] Add backend tests for POST /config/validate-path in backend/tests/api/test_config_routes.py — test all 5 ac_install conditions (empty, not_found, no content, partial content, valid) and all 3 setups conditions (empty, not_found, valid)
+- [x] T011 [P] Add backend tests for api_key and onboarding_completed in PATCH /config in backend/tests/api/test_config_routes.py — test saving api_key, reading it back masked, setting onboarding_completed to true, default false on fresh config
 
 ### Frontend shared infrastructure
 
-- [ ] T012 [P] Create TypeScript types for config API responses in frontend/src/lib/validation.ts — PathValidationResult, ConnectionTestResult, ConfigResponse (with api_key and onboarding_completed), ConfigUpdateRequest, ValidatePathRequest
-- [ ] T013 Create useConfig hook in frontend/src/hooks/useConfig.ts — TanStack Query wrapper: GET /config with queryKey ["config"] and staleTime 60_000; PATCH /config mutation that invalidates ["config"] on success; export config, isLoading, error, updateConfig, isUpdating
+- [x] T012 [P] Create TypeScript types for config API responses in frontend/src/lib/validation.ts — PathValidationResult, ConnectionTestResult, ConfigResponse (with api_key and onboarding_completed), ConfigUpdateRequest, ValidatePathRequest
+- [x] T013 Create useConfig hook in frontend/src/hooks/useConfig.ts — TanStack Query wrapper: GET /config with queryKey ["config"] and staleTime 60_000; PATCH /config mutation that invalidates ["config"] on success; export config, isLoading, error, updateConfig, isUpdating
 
 **Checkpoint**: Foundation ready — backend serves new fields, frontend can fetch/update config
 
@@ -59,16 +59,16 @@
 
 ### Implementation
 
-- [ ] T014 [P] [US1+US2] Create PathInput component in frontend/src/components/onboarding/PathInput.tsx — text input + "Browse" button (calls Tauri `open({ directory: true })`); debounced (500ms) POST /config/validate-path on value change; display inline validation result (success/warning/error icons + colored message using design tokens); fire onValidationChange callback; hide Browse button in non-Tauri environments; CSS class prefix `ace-path-input`
-- [ ] T015 [P] [US1+US2] Create StepAcPath component in frontend/src/components/onboarding/StepAcPath.tsx — heading "Where is Assetto Corsa installed?", explanation text, PathInput with pathType="ac_install", Next button (always enabled, validation is advisory)
-- [ ] T016 [P] [US1+US2] Create StepSetupsPath component in frontend/src/components/onboarding/StepSetupsPath.tsx — heading "Where are your setup files?", explanation text, PathInput with pathType="setups", pre-fill with `{acInstallPath}/setups` when acInstallPath is set, Next and Back buttons
-- [ ] T017 [P] [US1] Create StepReview component in frontend/src/components/onboarding/StepReview.tsx — heading "Review your configuration", summary cards for AC path, setups path, and AI provider; re-validate paths on mount via PathInput with onValidationChange and show amber warnings if status is "warning" or "not_found"; "Edit" links to navigate back to relevant step; "Finish" button with isSaving loading state; Back button
-- [ ] T018 [US1] Create OnboardingWizard component in frontend/src/components/onboarding/OnboardingWizard.tsx — manage WizardState via useState (step 1-4, acInstallPath, setupsPath, llmProvider, apiKey, skippedAiStep); render step components based on current step; on "Finish" call PATCH /config via useConfig.updateConfig with all fields + onboarding_completed: true; call onComplete prop on success
-- [ ] T019 [US1] Create OnboardingWizard.css in frontend/src/components/onboarding/OnboardingWizard.css — styles for wizard container, step layout, navigation buttons, progress indicator; use design tokens only (no hardcoded colors); ace-onboarding prefix
-- [ ] T020 [US1] Modify App.tsx in frontend/src/App.tsx — after backend is ready, fetch config via useConfig; if onboarding_completed is false render OnboardingWizard with onComplete that triggers config refetch; if true render AppShell; show brief loading state while config is being fetched
-- [ ] T021 [P] [US1+US2] Add frontend tests for PathInput in frontend/src/components/onboarding/__tests__/PathInput.test.tsx — test: renders input and browse button; fires onChange on input; calls POST /config/validate-path (mocked) on debounced input; displays validation success/warning/error messages; fires onValidationChange callback
-- [ ] T022 [P] [US1] Add frontend tests for OnboardingWizard in frontend/src/components/onboarding/__tests__/OnboardingWizard.test.tsx — test: renders Step 1 initially; navigates forward/backward preserving state; "Finish" calls PATCH /config with onboarding_completed: true; calls onComplete on success
-- [ ] T023 [P] [US1] Add frontend tests for App onboarding gate in frontend/src/__tests__/App.test.tsx — test: shows wizard when onboarding_completed is false; shows AppShell when onboarding_completed is true; transitions from wizard to AppShell after completion
+- [x] T014 [P] [US1+US2] Create PathInput component in frontend/src/components/onboarding/PathInput.tsx — text input + "Browse" button (calls Tauri `open({ directory: true })`); debounced (500ms) POST /config/validate-path on value change; display inline validation result (success/warning/error icons + colored message using design tokens); fire onValidationChange callback; hide Browse button in non-Tauri environments; CSS class prefix `ace-path-input`
+- [x] T015 [P] [US1+US2] Create StepAcPath component in frontend/src/components/onboarding/StepAcPath.tsx — heading "Where is Assetto Corsa installed?", explanation text, PathInput with pathType="ac_install", Next button (always enabled, validation is advisory)
+- [x] T016 [P] [US1+US2] Create StepSetupsPath component in frontend/src/components/onboarding/StepSetupsPath.tsx — heading "Where are your setup files?", explanation text, PathInput with pathType="setups", pre-fill with `{acInstallPath}/setups` when acInstallPath is set, Next and Back buttons
+- [x] T017 [P] [US1] Create StepReview component in frontend/src/components/onboarding/StepReview.tsx — heading "Review your configuration", summary cards for AC path, setups path, and AI provider; re-validate paths on mount via PathInput with onValidationChange and show amber warnings if status is "warning" or "not_found"; "Edit" links to navigate back to relevant step; "Finish" button with isSaving loading state; Back button
+- [x] T018 [US1] Create OnboardingWizard component in frontend/src/components/onboarding/OnboardingWizard.tsx — manage WizardState via useState (step 1-4, acInstallPath, setupsPath, llmProvider, apiKey, skippedAiStep); render step components based on current step; on "Finish" call PATCH /config via useConfig.updateConfig with all fields + onboarding_completed: true; call onComplete prop on success
+- [x] T019 [US1] Create OnboardingWizard.css in frontend/src/components/onboarding/OnboardingWizard.css — styles for wizard container, step layout, navigation buttons, progress indicator; use design tokens only (no hardcoded colors); ace-onboarding prefix
+- [x] T020 [US1] Modify App.tsx in frontend/src/App.tsx — after backend is ready, fetch config via useConfig; if onboarding_completed is false render OnboardingWizard with onComplete that triggers config refetch; if true render AppShell; show brief loading state while config is being fetched
+- [x] T021 [P] [US1+US2] Add frontend tests for PathInput in frontend/tests/components/onboarding/PathInput.test.tsx — test: renders input and browse button; fires onChange on input; calls POST /config/validate-path (mocked) on debounced input; displays validation success/warning/error messages; fires onValidationChange callback
+- [x] T022 [P] [US1] Add frontend tests for OnboardingWizard in frontend/tests/components/onboarding/OnboardingWizard.test.tsx — test: renders Step 1 initially; navigates forward/backward preserving state; "Finish" calls PATCH /config with onboarding_completed: true; calls onComplete on success
+- [x] T023 [P] [US1] Add frontend tests for App onboarding gate in frontend/tests/App.test.tsx — test: shows wizard when onboarding_completed is false; shows AppShell when onboarding_completed is true; transitions from wizard to AppShell after completion
 
 **Checkpoint**: Fresh install shows wizard → user configures paths → finishes → sees Sessions view. Restart does not show wizard again. Path validation shows specific messages for all conditions.
 
@@ -82,14 +82,14 @@
 
 ### Backend
 
-- [ ] T024 [US3] Add ConnectionTestResult model and POST /config/validate-api-key endpoint in backend/api/routes/config.py — accept provider + api_key; make minimal GET request to provider's list-models endpoint (Anthropic: /v1/models with x-api-key header, OpenAI: /v1/models with Bearer auth, Gemini: /v1beta/models?key=); 10s timeout; return valid/message distinguishing auth failure (401/403), network error, rate limit (429), and other errors per contracts/config-endpoints.md
-- [ ] T025 [P] [US3] Add backend tests for POST /config/validate-api-key in backend/tests/api/test_config_routes.py — mock httpx/aiohttp calls; test: valid key returns valid=true, 401 returns valid=false with auth message, timeout returns valid=false with network message, 429 returns valid=false with rate limit message, invalid provider returns valid=false
+- [x] T024 [US3] Add ConnectionTestResult model and POST /config/validate-api-key endpoint in backend/api/routes/config.py — accept provider + api_key; make minimal GET request to provider's list-models endpoint (Anthropic: /v1/models with x-api-key header, OpenAI: /v1/models with Bearer auth, Gemini: /v1beta/models?key=); 10s timeout; return valid/message distinguishing auth failure (401/403), network error, rate limit (429), and other errors per contracts/config-endpoints.md
+- [x] T025 [P] [US3] Add backend tests for POST /config/validate-api-key in backend/tests/api/test_config_routes.py — mock httpx/aiohttp calls; test: valid key returns valid=true, 401 returns valid=false with auth message, timeout returns valid=false with network message, 429 returns valid=false with rate limit message, invalid provider returns valid=false
 
 ### Frontend
 
-- [ ] T026 [US3] Create StepAiProvider component in frontend/src/components/onboarding/StepAiProvider.tsx — heading "Connect an AI provider", explanation text, provider selector (Anthropic Claude / OpenAI / Google Gemini), masked API key input with show/hide toggle, "Test Connection" button calling POST /config/validate-api-key with loading state and result display, "Skip for now" button with notice text, Next and Back buttons
-- [ ] T027 [US3] Wire StepAiProvider into OnboardingWizard in frontend/src/components/onboarding/OnboardingWizard.tsx — render StepAiProvider for step 3; pass provider, apiKey, onProviderChange, onApiKeyChange, onSkip (sets skippedAiStep=true and advances to step 4); update StepReview to show amber notice when skippedAiStep is true ("Engineer feature won't work without AI configuration")
-- [ ] T028 [P] [US3] Add frontend tests for StepAiProvider in frontend/src/components/onboarding/__tests__/StepAiProvider.test.tsx — test: renders provider selector and key input; key is masked by default; toggle reveals key text; "Test Connection" calls POST /config/validate-api-key (mocked) and shows result; "Skip" calls onSkip
+- [x] T026 [US3] Create StepAiProvider component in frontend/src/components/onboarding/StepAiProvider.tsx — heading "Connect an AI provider", explanation text, provider selector (Anthropic Claude / OpenAI / Google Gemini), masked API key input with show/hide toggle, "Test Connection" button calling POST /config/validate-api-key with loading state and result display, "Skip for now" button with notice text, Next and Back buttons
+- [x] T027 [US3] Wire StepAiProvider into OnboardingWizard in frontend/src/components/onboarding/OnboardingWizard.tsx — render StepAiProvider for step 3; pass provider, apiKey, onProviderChange, onApiKeyChange, onSkip (sets skippedAiStep=true and advances to step 4); update StepReview to show amber notice when skippedAiStep is true ("Engineer feature won't work without AI configuration")
+- [x] T028 [P] [US3] Add frontend tests for StepAiProvider in frontend/src/components/onboarding/__tests__/StepAiProvider.test.tsx — test: renders provider selector and key input; key is masked by default; toggle reveals key text; "Test Connection" calls POST /config/validate-api-key (mocked) and shows result; "Skip" calls onSkip
 
 **Checkpoint**: Wizard has all 4 steps functional. AI provider can be configured or skipped. Test Connection validates keys against providers.
 
@@ -103,11 +103,11 @@
 
 ### Implementation
 
-- [ ] T029 [US4] Replace SettingsView in frontend/src/views/settings/index.tsx — full settings form with 4 sections: (1) Assetto Corsa (AC install path + setups path via PathInput), (2) AI Provider (provider selector + masked API key input + Test Connection button), (3) Appearance (theme toggle preserved from Phase 7.1), (4) Advanced ("Re-run onboarding" button); initialize form from useConfig; track dirty state by comparing form values to fetched config
-- [ ] T030 [US4] Create Settings.css in frontend/src/views/settings/Settings.css — styles for settings layout, section cards, form fields, save button; use design tokens only; ace-settings prefix
-- [ ] T031 [US4] Add Save button and unsaved-changes guard in frontend/src/views/settings/index.tsx — "Save" button at bottom (disabled when not dirty, shows loading while saving); on save call useConfig.updateConfig with changed fields; show success toast via notificationStore; if user navigates to another sidebar section while dirty, show Modal confirmation ("You have unsaved changes. Discard?")
-- [ ] T032 [US4] Add "Re-run onboarding" in frontend/src/views/settings/index.tsx — button in Advanced section; on click, sets app-level state to show OnboardingWizard pre-filled with current config values; wizard onComplete returns to Settings; if user cancels (goes back on step 1), return to Settings without saving
-- [ ] T033 [P] [US4] Add frontend tests for SettingsView in frontend/src/views/settings/__tests__/SettingsView.test.tsx — test: renders all 4 sections with current config values; Save calls PATCH /config; dirty state tracked correctly; theme toggle still works; "Re-run onboarding" shows wizard
+- [x] T029 [US4] Replace SettingsView in frontend/src/views/settings/index.tsx — full settings form with 4 sections: (1) Assetto Corsa (AC install path + setups path via PathInput), (2) AI Provider (provider selector + masked API key input + Test Connection button), (3) Appearance (theme toggle preserved from Phase 7.1), (4) Advanced ("Re-run onboarding" button); initialize form from useConfig; track dirty state by comparing form values to fetched config
+- [x] T030 [US4] Create Settings.css in frontend/src/views/settings/Settings.css — styles for settings layout, section cards, form fields, save button; use design tokens only; ace-settings prefix
+- [x] T031 [US4] Add Save button and unsaved-changes guard in frontend/src/views/settings/index.tsx — "Save" button at bottom (disabled when not dirty, shows loading while saving); on save call useConfig.updateConfig with changed fields; show success toast via notificationStore; if user navigates to another sidebar section while dirty, show Modal confirmation ("You have unsaved changes. Discard?")
+- [x] T032 [US4] Add "Re-run onboarding" in frontend/src/views/settings/index.tsx — button in Advanced section; on click, sets app-level state to show OnboardingWizard pre-filled with current config values; wizard onComplete returns to Settings; if user cancels (goes back on step 1), return to Settings without saving
+- [x] T033 [P] [US4] Add frontend tests for SettingsView in frontend/src/views/settings/__tests__/SettingsView.test.tsx — test: renders all 4 sections with current config values; Save calls PATCH /config; dirty state tracked correctly; theme toggle still works; "Re-run onboarding" shows wizard
 
 **Checkpoint**: Settings screen fully functional. All config values editable, saveable, and persistent. Re-run onboarding works. Theme toggle preserved.
 
@@ -117,10 +117,10 @@
 
 **Purpose**: Final validation across all stories, edge cases, and quality gates
 
-- [ ] T034 Handle corrupted/missing config edge case in frontend/src/App.tsx — if GET /config fails or returns unexpected shape, treat as onboarding_completed: false and show wizard; ensure no crash on missing fields
-- [ ] T035 Run TypeScript strict check (`npx tsc --noEmit` in frontend/) — fix any type errors; ensure zero explicit `any` without justification
-- [ ] T036 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) — ensure all existing + new tests pass, no regressions from ConfigValidationResponse structural change
-- [ ] T037 Run full frontend test suite (`cd frontend && npm run test`) — ensure all existing + new tests pass
+- [x] T034 Handle corrupted/missing config edge case in frontend/src/App.tsx — if GET /config fails or returns unexpected shape, treat as onboarding_completed: false and show wizard; ensure no crash on missing fields
+- [x] T035 Run TypeScript strict check (`npx tsc --noEmit` in frontend/) — fix any type errors; ensure zero explicit `any` without justification
+- [x] T036 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) — ensure all existing + new tests pass, no regressions from ConfigValidationResponse structural change
+- [x] T037 Run full frontend test suite (`cd frontend && npm run test`) — ensure all existing + new tests pass
 
 ---
 

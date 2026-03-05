@@ -1,0 +1,160 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SettingsView } from "../../../src/views/settings";
+
+// Mock api
+vi.mock("../../../src/lib/api", () => ({
+  apiGet: vi.fn(),
+  apiPatch: vi.fn(),
+  apiPost: vi.fn(),
+}));
+
+// Mock useTheme
+vi.mock("../../../src/hooks/useTheme", () => ({
+  useTheme: () => ({ theme: "dark", toggleTheme: vi.fn() }),
+}));
+
+import { apiGet, apiPatch, apiPost } from "../../../src/lib/api";
+
+const mockedApiGet = vi.mocked(apiGet);
+const mockedApiPatch = vi.mocked(apiPatch);
+const mockedApiPost = vi.mocked(apiPost);
+
+const defaultConfig = {
+  ac_install_path: "C:\\Games\\AC",
+  setups_path: "C:\\Games\\AC\\setups",
+  llm_provider: "anthropic",
+  llm_model: "",
+  ui_theme: "dark",
+  api_key: "sk-a****7890",
+  onboarding_completed: true,
+};
+
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+  );
+}
+
+describe("SettingsView", () => {
+  beforeEach(() => {
+    mockedApiGet.mockResolvedValue(defaultConfig);
+    mockedApiPatch.mockResolvedValue(defaultConfig);
+    mockedApiPost.mockResolvedValue({ status: "valid", message: "OK" });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renders all 4 sections", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Settings")).toBeDefined();
+      expect(screen.getByText("Assetto Corsa")).toBeDefined();
+      expect(screen.getByText("AI Provider")).toBeDefined();
+      expect(screen.getByText("Appearance")).toBeDefined();
+      expect(screen.getByText("Advanced")).toBeDefined();
+    });
+  });
+
+  it("populates form with config values", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      const inputs = screen.getAllByRole("textbox");
+      // AC path and setups path should be present
+      const acInput = inputs.find(
+        (i) => (i as HTMLInputElement).value === "C:\\Games\\AC",
+      );
+      expect(acInput).toBeDefined();
+    });
+  });
+
+  it("Save button is disabled when not dirty", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      const saveBtn = screen.getByText("Save");
+      expect(saveBtn).toBeDisabled();
+    });
+  });
+
+  it("Save calls PATCH /config when path is changed", async () => {
+    mockedApiPatch.mockResolvedValue({
+      ...defaultConfig,
+      ac_install_path: "C:\\NewPath",
+    });
+
+    renderWithQuery(<SettingsView />);
+
+    // Wait for form to populate (AC path appears)
+    await waitFor(() => {
+      const inputs = screen.getAllByRole("textbox");
+      const acInput = inputs.find(
+        (i) => (i as HTMLInputElement).value === "C:\\Games\\AC",
+      );
+      expect(acInput).toBeDefined();
+    });
+
+    // Change the AC path to make form dirty
+    const inputs = screen.getAllByRole("textbox");
+    const acInput = inputs.find(
+      (i) => (i as HTMLInputElement).value === "C:\\Games\\AC",
+    )!;
+    fireEvent.change(acInput, { target: { value: "C:\\NewPath" } });
+
+    // Save button should now be enabled
+    await waitFor(() => {
+      expect(screen.getByText("Save")).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByText("Save"));
+
+    await waitFor(() => {
+      expect(mockedApiPatch).toHaveBeenCalledWith(
+        "/config",
+        expect.objectContaining({ ac_install_path: "C:\\NewPath" }),
+      );
+    });
+  });
+
+  it("theme toggle buttons render", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Night Grid")).toBeDefined();
+      expect(screen.getByText("Garage Floor")).toBeDefined();
+    });
+  });
+
+  it("Re-run onboarding button shows wizard", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Re-run onboarding wizard")).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("Re-run onboarding wizard"));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Where is Assetto Corsa installed?"),
+      ).toBeDefined();
+    });
+  });
+
+  it("Test Connection button is disabled without api key", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      const testBtn = screen.getByText("Test Connection");
+      expect(testBtn).toBeDisabled();
+    });
+  });
+});

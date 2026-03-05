@@ -1,0 +1,230 @@
+/* OnboardingWizard — ace-onboarding prefix */
+
+.ace-onboarding {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: var(--space-6);
+}
+
+.ace-onboarding__container {
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Progress indicator */
+.ace-onboarding__progress {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-bottom: var(--space-2);
+}
+
+.ace-onboarding__progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background var(--transition-fast);
+}
+
+.ace-onboarding__progress-dot--active {
+  background: var(--brand);
+}
+
+.ace-onboarding__step-label {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-6);
+}
+
+/* Step content */
+.ace-onboarding__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ace-onboarding__heading {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ace-onboarding__text {
+  color: var(--text-secondary);
+  font-size: var(--font-size-md);
+  margin: 0;
+  line-height: var(--line-height-relaxed);
+}
+
+/* Navigation */
+.ace-onboarding__nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* PathInput */
+.ace-path-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ace-path-input__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.ace-path-input__help {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.ace-path-input__row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ace-path-input__field {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.ace-path-input__field:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
+.ace-path-input__browse {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.ace-path-input__browse:hover {
+  background: var(--bg-hover);
+}
+
+/* Validation status */
+.ace-path-input__status {
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.ace-path-input__status--validating {
+  color: var(--text-muted);
+}
+
+.ace-path-input__status--valid {
+  color: var(--success);
+}
+
+.ace-path-input__status--warning {
+  color: var(--warning);
+}
+
+.ace-path-input__status--not_found {
+  color: var(--error);
+}
+
+.ace-path-input__status--empty {
+  color: var(--text-muted);
+}
+
+/* Review */
+.ace-onboarding__review-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.ace-onboarding__review-row .ace-path-input {
+  flex: 1;
+}
+
+.ace-onboarding__edit-link {
+  background: none;
+  border: none;
+  color: var(--brand);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2);
+  white-space: nowrap;
+}
+
+.ace-onboarding__edit-link:hover {
+  text-decoration: underline;
+}
+
+.ace-onboarding__warning {
+  color: var(--warning);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+/* Skip */
+.ace-onboarding__skip-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  padding: var(--space-2);
+  margin-right: auto;
+}
+
+.ace-onboarding__skip-btn:hover {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+.ace-onboarding__skip-notice {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Nav buttons (used in Step 3 placeholder) */
+.ace-onboarding__nav-btn {
+  padding: var(--space-2) var(--space-4);
+  background: var(--brand);
+  color: var(--text-on-brand, #fff);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.ace-onboarding__nav-btn:hover {
+  opacity: 0.9;
+}
+
+.ace-onboarding__nav-btn--secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
