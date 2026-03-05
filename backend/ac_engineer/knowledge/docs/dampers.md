@@ -14,9 +14,25 @@ Damper velocity refers to the speed at which the suspension shaft moves, not the
 
 These two operating regimes are physically independent in a two-way adjustable damper that uses separate shim stacks or bypass circuits. A damper that is correct in slow-speed but wrong in fast-speed will be comfortable on smooth circuits and brutal on bumpy ones — and vice versa.
 
+**AC's Bilineal Damping Model**
+
+Assetto Corsa models dampers using a bilineal (two-slope) force-velocity curve with the following parameters per corner: DAMP_BUMP (slow-speed compression damping), DAMP_FAST_BUMP (fast-speed compression damping), DAMP_FAST_BUMPTHRESHOLD (the knee-point velocity where the curve transitions from slow to fast slope), and the rebound equivalents DAMP_REBOUND, DAMP_FAST_REBOUND, and DAMP_FAST_REBOUNDTHRESHOLD. Below the threshold velocity, damper force increases at the slow-speed rate; above it, force increases at the lower fast-speed rate. This two-slope model approximates the digressive damper curves used in motorsport, where stiff low-speed damping provides body control while softer high-speed damping prevents harshness over bumps. All damper values in AC are expressed at the wheel (consistent with spring wheel rates), not at the damper shaft — the motion ratio conversion is already applied. Custom Shaders Patch (CSP) with "cosmic suspension" extends this model to support full lookup-table (LUT) damper curves for even more realistic response.
+
+**Velocity Domain Framework**
+
+Damper behavior can be understood through three velocity domains that correspond to different driving events. Low-speed damping (0–50 mm/s at the wheel) governs body motions: roll, pitch, and heave driven by aerodynamic loads, steady-state cornering, braking, and acceleration. This is the most critical domain for driver feel and balance — it is where the damper's influence on transient weight transfer is most apparent and where front-rear damper balance shapes the character of turn-in, mid-corner transitions, and corner exit. Mid-speed damping (50–200 mm/s) covers transitions: directional changes, kerb rides at moderate speed, and surface undulations. High-speed damping (200+ mm/s) addresses sharp impacts: aggressive kerb strikes, sudden surface changes, and large bumps. High-speed damping must be soft enough to allow the wheel to absorb these inputs without losing contact with the road surface — excessive high-speed damping transmits the impact energy into the chassis and can momentarily unload the tyre.
+
 **Critical Damping and Damping Ratio**
 
 The critical damping coefficient is the value at which the spring-mass system returns to equilibrium in the shortest time without oscillation. The damping ratio (zeta) is the ratio of actual damping to critical damping. Values below 1.0 produce underdamping (oscillation), values above 1.0 produce overdamping (sluggish return), and exactly 1.0 produces critical damping. Race cars typically run 0.25–0.60 in bump and 0.50–0.80 in rebound, prioritising quick transient response over complete oscillation elimination.
+
+**Damping Ratio Targets**
+
+For most race cars, the optimal damping ratio target is approximately zeta = 0.65–0.7. This value minimizes settling time after a disturbance (the suspension returns to equilibrium faster than at any other damping ratio) while allowing only minimal overshoot — typically one small oscillation before settling. At zeta = 1.0 (critical damping), there is zero overshoot but the return to equilibrium is actually slower than at 0.7. Street cars typically run zeta = 0.2–0.5, prioritizing ride comfort over transient response speed. The damping ratio can be calculated from the damper coefficient and the spring rate: zeta = c / (2 x sqrt(K_wheel x m_corner)), where c is the damping coefficient at the wheel, K_wheel is the wheel rate, and m_corner is the sprung corner mass. When springs are changed, the damping ratio changes automatically — stiffer springs with the same damper setting produce a lower damping ratio, potentially introducing unwanted oscillation.
+
+**Rebound-to-Compression Ratio**
+
+The ratio of rebound damping to compression damping is a fundamental damper setup parameter. Typical competition ratios range from 1.5:1 to 3:1 (rebound firmer than bump). The physical justification: rebound controls the rate at which load is released from a compressed wheel — how quickly the chassis rises after a compression event. Firmer rebound keeps the chassis low longer, maintaining aerodynamic consistency and preventing the chassis from "bouncing" off the springs. However, excessive rebound causes packing down — the suspension fails to fully extend between consecutive compression events, causing a progressive reduction in ride height over a bumpy section. Packing down degrades handling because the suspension starts each new compression event from a partially compressed position, reducing available travel and potentially engaging bump stops prematurely. The opposite pathology — jacking up — occurs when rebound is too soft relative to bump, allowing the chassis to rise progressively.
 
 **Transient vs Steady-State Load Transfer**
 
@@ -50,6 +66,10 @@ Fast-speed rebound governs how quickly the wheel drops into a depression after b
 
 The ratio of front to rear damping directly influences transient handling balance. More front bump relative to rear slows front load transfer, making the car initially more understeer during turn-in as the front loads more slowly. More rear bump relative to front does the opposite. More front rebound relative to rear keeps the front chassis elevated longer after a corner, which can reduce front roll and shift balance toward oversteer on exit. Engineers adjust the front-rear damper balance to tune the character of transitions without changing the car's steady-state mechanical balance.
 
+**Wheel Load Variation as Performance Metric**
+
+The primary function of dampers in pure performance terms is minimizing the variation of vertical load at each tyre contact patch. Through tire load sensitivity (the concave Fy-Fz relationship), a tyre with steady load generates more average grip than one with fluctuating load of the same mean value. Dampers that allow excessive load oscillation sacrifice grip even if the driver cannot feel the difference. Wheel load coefficient of variation (standard deviation divided by mean, per wheel) is the quantitative metric: lower is better. On aero cars, dampers also serve a platform control function — maintaining consistent ride height across the speed range so that the aerodynamic balance remains stable. Stiffer low-speed damping in both bump and rebound resists ride height changes driven by aero load variation, at the cost of reduced compliance over surface irregularities.
+
 **Damper Curve Shape**
 
 Many modern dampers have a digressive curve — steep force rise at low velocities (for good slow-speed body control) that flattens progressively at higher velocities (for absorption of fast inputs without harshness). A linear curve produces proportional force at all velocities. A progressive curve increases stiffness with velocity. The shape affects whether the damper feels well-controlled at low shaft speeds while still compliant on kerbs, or whether it trades one operating regime for another. When available as an adjustment (via shim stack tuning in motorsport dampers), curve shape is as important as absolute magnitude settings.
@@ -65,6 +85,14 @@ Raw suspension position data from telemetry can be differentiated with respect t
 **Damper Histograms**
 
 A damper velocity histogram plots the frequency distribution of suspension shaft velocities, separated by bump and rebound directions. The histogram is the primary diagnostic tool for damper setup. A well-set damper shows a smooth distribution centred around low velocities with a gradual tail toward high velocities. Key patterns to identify: a peak at zero velocity indicates the damper may be too stiff (suspension is being locked at ride height); excessive population at high velocities suggests the damper is underworked in that range; asymmetry between bump and rebound reveals imbalance in the compression-extension cycle. Comparing histograms between front and rear helps diagnose whether handling issues arise from a specific axle's damper behaviour.
+
+**Damper Velocity Domain Distribution**
+
+Beyond the standard histogram, analyzing the time distribution across the three velocity domains (low: 0–50 mm/s, mid: 50–200 mm/s, high: 200+ mm/s) per corner reveals the damper's operational profile for a specific circuit. A smooth circuit with gentle undulations might show 70% of time in the low-speed domain, while a bumpy street circuit might show 40% in mid and high-speed domains. This distribution directly informs which damper adjustments will have the most impact: if the majority of time is spent in the low-speed domain, fast-speed adjustments will have minimal effect, and vice versa.
+
+**Wheel Load Coefficient of Variation**
+
+The coefficient of variation of wheel load (standard deviation / mean) per wheel is the most direct metric of damper effectiveness. Lower values indicate more consistent tyre loading and better average grip utilization. Comparing this metric between setup configurations quantifies whether a damper change improved tyre contact quality, even when lap time differences are within noise. Comparing front versus rear values reveals which axle has more load variation — typically the stiffer axle shows higher variation on bumpy surfaces, suggesting the dampers at that end may benefit from softer fast-speed settings.
 
 **Wheel Load Fluctuation Frequency**
 
