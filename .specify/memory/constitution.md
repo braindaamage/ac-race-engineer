@@ -1,33 +1,29 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.2.0 → 1.3.0 (MINOR: structural update to Technical
-Boundaries reflecting config/ and storage/ modules from Phase 5.1.
-No principles added or removed, no existing principle redefined.)
+Version change: 1.3.0 -> 1.4.0 (MINOR: Principle VII redefined from
+CLI-First MVP to Desktop App as Primary Interface, reflecting Phase 6
+completion and Phase 7 beginning. Project Structure updated with build/.)
 
-Modified principles: None
+Modified principles:
+- VII: "CLI-First MVP" -> "Desktop App as Primary Interface"
 
 Modified sections:
-- Technical Boundaries → Technology Stack: Storage line expanded to
-  include SQLite (stdlib sqlite3)
-- Technical Boundaries → Project Structure: added config/ and storage/
-  under ac_engineer/, added config.json and ac_engineer.db under data/
-- Technical Boundaries → Data Flow Constraints: added bullet on local
-  SQLite and config.json persistence
+- Technical Boundaries -> Project Structure: added build/ directory
+  (ac_engineer.spec, README_build.md)
 
+Added principles: None
+Removed principles: None
 Added sections: None
 Removed sections: None
 
 Templates requiring updates:
-- .specify/templates/plan-template.md: ✅ No updates needed (generic)
-- .specify/templates/spec-template.md: ✅ No updates needed (generic)
-- .specify/templates/tasks-template.md: ✅ No updates needed (generic)
-- .specify/templates/agent-file-template.md: ✅ No updates needed (generic)
+- .specify/templates/plan-template.md: No updates needed (generic)
+- .specify/templates/spec-template.md: No updates needed (generic)
+- .specify/templates/tasks-template.md: No updates needed (generic)
+- No command templates exist (.specify/templates/commands/ is empty)
 
-Follow-up TODOs:
-- Principle VII (CLI-First MVP) may need revisiting in a future amendment
-  once Phase 7 begins — the CLI-first constraint still applies through
-  Phase 6, but the eventual end-user interface is Tauri + React.
+Follow-up TODOs: None
 ==================
 -->
 
@@ -86,7 +82,7 @@ go through Pydantic AI agents and MUST NOT call provider SDKs directly.
 - The LLM MUST NOT perform calculations (averages, deltas, physics formulas)
 - Metrics passed to the LLM MUST be fully computed with clear labels and units
 - Setup change suggestions MUST come via Pydantic AI tool calls, not free text
-- The LLM's role is interpretation: "tire temps show understeer" not "avg 92.3°C"
+- The LLM's role is interpretation: "tire temps show understeer" not "avg 92.3C"
 - Deterministic code MUST be testable independent of LLM behavior
 - All LLM calls MUST be made via Pydantic AI agents (see Principle XI for
   provider abstraction details)
@@ -118,24 +114,34 @@ setups.
 - Each change set MUST be independently testable on track
 - Changes MUST be prioritized by expected impact on the identified problem
 - The system MUST track change history to correlate adjustments with outcomes
-- Driver feedback loop: change → test → report back → refine
+- Driver feedback loop: change -> test -> report back -> refine
 
 **Rationale**: Small changes let drivers feel and understand each modification.
 Large rewrites make it impossible to know what helped or hurt.
 
-### VII. CLI-First MVP
+### VII. Desktop App as Primary Interface
 
-The backend implementation (Phases 2–6) MUST be fully usable via CLI before any
-desktop GUI is introduced (Phase 7).
+The Tauri + React desktop app (Phase 7) is the primary user interface. It wraps
+the proven FastAPI backend without duplicating logic.
 
-- Core functionality MUST be fully usable via CLI commands through Phase 6
-- CLI MUST support: analyze session, suggest changes, apply changes, compare setups
-- Output MUST be both human-readable and machine-parseable (JSON option)
-- No desktop GUI work until CLI covers all core workflows
-- CLI design MUST enable future GUI integration without architectural changes
+- The desktop app MUST communicate with the backend exclusively via the localhost
+  HTTP API
+- The frontend MUST NOT contain analysis logic, setup file access, or LLM calls
+  of any kind
+- All user-facing workflows (session list, lap analysis, setup compare, engineer
+  chat, apply setup) MUST be driven by API responses, not locally derived data
+- The app MUST handle background job progress via WebSocket streaming (job_id
+  pattern from Phase 6.1)
+- UI state MUST reflect data returned from the API—no client-side recalculation
+  of metrics
+- The backend MUST be launched as a Tauri sidecar subprocess
+  (python -m api.server --port 57832) and terminated cleanly on app exit
 
-**Rationale**: CLI-first ensures the core logic is solid and testable. The Tauri +
-React desktop app (Phase 7) wraps proven functionality rather than driving architecture.
+**Rationale**: The CLI-first constraint (previous Principle VII) ensured the
+backend was solid before any UI work began. That goal is achieved: Phase 6
+delivered 26 HTTP endpoints + 1 WebSocket with 744 tests passing. The desktop
+app now defines the user experience, and its architecture must be governed to
+prevent logic duplication or direct file access from the frontend.
 
 ### VIII. API-First Design
 
@@ -168,8 +174,8 @@ responsibilities and prohibited cross-layer concerns.
 - **`frontend/`**: Visualization and user interaction only. Permitted: HTTP calls
   to `api/` endpoints, UI state management. Prohibited: analysis logic, direct
   data file access, LLM calls of any kind
-- Cross-layer imports MUST flow in one direction: `api/` → `ac_engineer/`;
-  `frontend/` → `api/` (via HTTP only)
+- Cross-layer imports MUST flow in one direction: `api/` -> `ac_engineer/`;
+  `frontend/` -> `api/` (via HTTP only)
 - Reverse imports (e.g., `ac_engineer/` importing from `api/`) are FORBIDDEN
 
 **Rationale**: Clear layer boundaries make each component independently testable,
@@ -221,11 +227,11 @@ switching providers as models improve or pricing changes.
 
 Three-component architecture:
 
-1. **AC In-Game App** (Phases 1–1.5, completed):
+1. **AC In-Game App** (Phases 1-1.5, completed):
    - Python ~3.3 (AC embedded runtime; conda does not apply)
-   - Captures telemetry to CSV at 20–30Hz
+   - Captures telemetry to CSV at 20-30Hz
 
-2. **Backend** (Phases 2–6):
+2. **Backend** (Phases 2-6):
    - Python 3.11+ in conda env `ac-race-engineer`
    - FastAPI for HTTP API server
    - pandas, numpy, scipy for telemetry analysis
@@ -263,11 +269,14 @@ data/
   setups/                # Setup .ini files
   config.json            # User configuration (ac_install_path, llm_provider, llm_model)
   ac_engineer.db         # SQLite database (sessions, recommendations, setup_changes, messages)
+build/
+  ac_engineer.spec       # PyInstaller spec for standalone .exe
+  README_build.md        # Build and distribution documentation
 ```
 
 ### Data Flow Constraints
 
-- Telemetry capture runs in-game at 20–30Hz via AC Python app
+- Telemetry capture runs in-game at 20-30Hz via AC Python app
 - Post-session analysis only—no real-time setup changes
 - All analysis is local; LLM provider calls are the only external dependency
 - Session metadata, engineer recommendations, setup change history, and conversation messages are persisted locally in SQLite (data/ac_engineer.db). User configuration is persisted in data/config.json. Both files are created automatically on first run.
@@ -355,4 +364,4 @@ these principles.
 - **MINOR**: New principle added or existing principle materially expanded
 - **PATCH**: Clarifications, wording improvements, non-semantic changes
 
-**Version**: 1.3.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-04
+**Version**: 1.4.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-05

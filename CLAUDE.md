@@ -40,7 +40,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 5.1 ✅ Config + Storage (ACConfig, SQLite CRUD) — 62 tests
 - Fase 5.2 ✅ Engineer Core (summarizer, setup reader/writer) — 68 tests
 - Fase 5.3 ✅ Engineer Agents (Pydantic AI specialists, tools, conflict resolution) — 66 tests
-- Fase 6: Backend API (FastAPI wrapping fases 2-5 como endpoints HTTP)
+- Fase 6 ✅ Backend API (FastAPI: 26 endpoints + 1 WebSocket, job system, file watcher) — 201 tests
 - Fase 7: Desktop App (Tauri + React: session list, lap analysis, setup compare, engineer chat)
 
 ## Reglas de desarrollo
@@ -60,4 +60,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 5 completadas (530 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 66). Próxima: Fase 6 (Backend API — FastAPI).
+Fases 1 a 6 completadas (744 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 81, API 201). Próxima: Fase 7 (Desktop App — Tauri + React).
