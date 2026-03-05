@@ -23,6 +23,7 @@ DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "ac_e
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.job_manager = JobManager()
+    app.state.active_processing_jobs: dict[str, str] = {}
 
     db_path = getattr(app.state, "db_path", DEFAULT_DB_PATH)
     sessions_dir = getattr(app.state, "sessions_dir", DEFAULT_SESSIONS_DIR)
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     from fastapi.middleware.cors import CORSMiddleware
 
+    from api.routes.analysis import router as analysis_router
     from api.routes.health import router as health_router
     from api.routes.jobs import router as jobs_router
     from api.routes.sessions import router as sessions_router
@@ -73,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(jobs_router)
     app.include_router(sessions_router)
+    app.include_router(analysis_router, prefix="/sessions")
     app.include_router(ws_jobs_router)
     register_error_handlers(app)
 
