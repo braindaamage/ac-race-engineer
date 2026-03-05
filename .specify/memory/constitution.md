@@ -1,21 +1,31 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.3.0 -> 1.4.0 (MINOR: Principle VII redefined from
-CLI-First MVP to Desktop App as Primary Interface, reflecting Phase 6
-completion and Phase 7 beginning. Project Structure updated with build/.)
+Version change: 1.4.0 -> 1.5.0 (MINOR: new Principle XII added, Principle X
+expanded with sidecar launch/health-check/shutdown rules, Quality Gates and
+Development Environment updated for frontend tooling.)
 
 Modified principles:
-- VII: "CLI-First MVP" -> "Desktop App as Primary Interface"
+- X: "Desktop App Stack" -> expanded with sidecar lifecycle rules (port 57832,
+  health poll, splash screen, shutdown endpoint)
+
+Added principles:
+- XII: "Frontend Architecture Constraints" (state management layers, design
+  system tokens, font rules, storage prohibition, TypeScript strict, component
+  reuse mandate)
+
+Added sections:
+- Quality Gates: 4 frontend quality requirements
+- Development Environment: Node.js tooling requirements (Node 20 LTS, npm,
+  dev/build commands)
+
+Removed principles: None
+Removed sections: None
 
 Modified sections:
-- Technical Boundaries -> Project Structure: added build/ directory
-  (ac_engineer.spec, README_build.md)
-
-Added principles: None
-Removed principles: None
-Added sections: None
-Removed sections: None
+- Quality Gates: added frontend TypeScript strict, design system tests,
+  no explicit any, API integration tests
+- Development Environment: added Node.js 20 LTS, npm, dev/build commands
 
 Templates requiring updates:
 - .specify/templates/plan-template.md: No updates needed (generic)
@@ -28,6 +38,8 @@ Follow-up TODOs: None
 -->
 
 # AC Race Engineer AI Constitution
+
+**Version**: 1.5.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-05
 
 ## Core Principles
 
@@ -197,10 +209,23 @@ HTTP.
 - The frontend MUST NOT duplicate any logic already present in `ac_engineer/`
   modules
 - UI state MUST reflect data returned from the API, not locally derived analysis
+- The backend sidecar MUST be launched as `python -m api.server --port 57832`
+  and bound exclusively to `http://127.0.0.1:57832`
+- The frontend MUST NOT hardcode any other port; the canonical port is 57832
+- On app launch, the frontend MUST poll `GET /health` (max 30 retries x 500ms
+  = 15s timeout) before rendering any UI
+- During the health check wait, a splash screen MUST be shown—no other UI is
+  accessible
+- If the backend fails to respond within 15 seconds, an error state MUST be
+  shown with a "Retry" button; the app MUST NOT crash silently
+- On app exit, the frontend MUST call `POST /shutdown` before terminating the
+  sidecar process
 
 **Rationale**: Tauri provides native Windows integration without Electron's overhead.
 Starting the backend as a subprocess keeps the distribution self-contained while
-preserving the API-first architecture from Principle VIII.
+preserving the API-first architecture from Principle VIII. The health-check gate
+ensures the UI never renders against an unavailable backend, preventing confusing
+error states during startup.
 
 ### XI. LLM Provider Abstraction
 
@@ -220,6 +245,39 @@ FORBIDDEN in application code.
 **Rationale**: Vendor lock-in to a single LLM provider creates dependency risk and
 limits model selection. Pydantic AI provides a stable abstraction layer that allows
 switching providers as models improve or pricing changes.
+
+### XII. Frontend Architecture Constraints
+
+The React frontend (Phase 7) MUST follow these structural rules across all subfases
+(7.1 through 7.6). Violations in any subfase are automatic rejections during review.
+
+- **State management layers**: Server/API state MUST be managed exclusively with
+  TanStack Query v5. Zustand v5 MUST be used for global UI state (selected session,
+  active view, job progress). React `useState` is permitted for component-local
+  state only. These three layers MUST NOT be mixed
+- **Immutable analysis data**: Telemetry analysis data (laps, corners, stints,
+  consistency) is immutable once fetched and MUST use `staleTime: Infinity` in
+  TanStack Query to prevent unnecessary refetches
+- **Design system tokens**: The CSS custom properties defined in Phase 7.1
+  (`--color-red`, `--color-blue-ai`, `--color-green`, `--color-amber`, `--bg`,
+  `--surface`, `--text-primary`, `--text-secondary`, `--border`) are the ONLY
+  permitted source of color values. Hardcoded hex values in component files are
+  FORBIDDEN
+- **Numeric font**: JetBrains Mono MUST be used for all numeric data: lap times,
+  telemetry values, setup parameter values, deltas. Using Inter or any other font
+  for numeric data is FORBIDDEN
+- **No browser storage**: `localStorage` and `sessionStorage` MUST NOT be used
+  anywhere in the frontend. All state is in-memory (TanStack Query cache + Zustand
+  store) and rehydrated from the API on app launch
+- **TypeScript strict mode**: TypeScript strict mode MUST be enabled. Explicit
+  `any` type annotations are FORBIDDEN without a documented justification comment
+- **Component reuse**: All design system components (Button, Card, Badge, DataCell,
+  etc.) defined in Phase 7.1 MUST be used. Inline one-off styled elements that
+  duplicate component behavior are FORBIDDEN
+
+**Rationale**: These constraints ensure visual and behavioral consistency across all
+6 subfases, prevent state management chaos, and guarantee the design system is the
+single source of truth for the UI.
 
 ## Technical Boundaries
 
@@ -290,6 +348,11 @@ build/
 - Integration tests MUST verify end-to-end API workflows
 - Parser tests MUST cover malformed .ini handling
 - `ac_engineer/` modules MUST be testable without starting the FastAPI server
+- Frontend MUST have TypeScript strict mode enabled with zero type errors on build
+- Design system components MUST have unit tests covering all variants and states
+- No explicit `any` in TypeScript without a justification comment
+- All API integration points MUST be covered by integration tests using mock
+  API responses
 
 ### Development Environment
 
@@ -307,6 +370,13 @@ the project's conda environment.
   FastAPI server
 - SOLE EXCEPTION: Code running inside AC's embedded Python app (telemetry
   capture), which uses AC's own Python ~3.3 runtime with no conda access
+
+All frontend development MUST use Node.js with the following requirements:
+
+- Node.js 20 LTS or higher MUST be used for all frontend development
+- Package manager: npm (the project's existing lock file format MUST be respected)
+- Frontend development server runs via `npm run dev` from the `frontend/` directory
+- Frontend builds via `npm run build` before Tauri packaging
 
 **Rationale**: Consistent environment management prevents dependency conflicts
 and ensures reproducible builds across all development phases.
@@ -363,5 +433,3 @@ these principles.
 - **MAJOR**: Principle removal or incompatible redefinition
 - **MINOR**: New principle added or existing principle materially expanded
 - **PATCH**: Clarifications, wording improvements, non-semantic changes
-
-**Version**: 1.4.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-05
