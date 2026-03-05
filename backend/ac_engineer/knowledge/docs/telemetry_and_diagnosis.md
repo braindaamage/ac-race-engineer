@@ -4,7 +4,7 @@
 
 ### Data Structure and Sampling
 
-Telemetry data is a collection of time-series channels recorded at a fixed sample rate during a driving session. In Assetto Corsa, the in-game app The physics engine runs internally at approximately 333 Hz. Telemetry capture tools log data at rates ranging from 30 to 200 Hz depending on the tool and its configuration — ACTI (a legacy tool) logs at approximately 20 Hz, while modern tools like Telemetrick capture at 30–200 Hz with over 180 channels available. Each sample is a scalar value associated with a timestamp, so the complete dataset is a two-dimensional structure: time on one axis and channel value on the other.
+Telemetry data is a collection of time-series channels recorded at a fixed sample rate during a driving session. The physics engine in Assetto Corsa runs internally at approximately 333 Hz. Telemetry capture tools log data at rates ranging from 30 to 200 Hz depending on the tool and its configuration — ACTI (a legacy tool) logs at approximately 20 Hz, while modern tools like Telemetrick capture at 30–200 Hz with over 180 channels available. Each sample is a scalar value associated with a timestamp, so the complete dataset is a two-dimensional structure: time on one axis and channel value on the other.
 
 Because the sample rate is finite, rapid transients — such as a kerb strike or an abrupt steering correction — may be captured at lower fidelity than they occur in reality. Events shorter than the sampling interval (5–33 ms at 30–200 Hz) cannot be resolved individually and will appear blurred or averaged across adjacent samples. This is an important limitation when diagnosing very brief phenomena such as ABS pulses or single-wheel lock-up events.
 
