@@ -1,0 +1,112 @@
+/* Settings view — ace-settings prefix */
+
+.ace-settings {
+  padding: var(--space-6);
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.ace-settings__title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.ace-settings__section-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.ace-settings__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ace-settings__field + .ace-settings__field {
+  margin-top: var(--space-4);
+}
+
+.ace-settings__label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.ace-settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ace-settings__theme-buttons {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ace-settings__provider-select {
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  width: 100%;
+}
+
+.ace-settings__key-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ace-settings__key-input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.ace-settings__key-input:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
+.ace-settings__test-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.ace-settings__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.ace-settings__rerun-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.ace-settings__rerun-btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+}

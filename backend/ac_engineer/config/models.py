@@ -19,6 +19,8 @@ class ACConfig(BaseModel):
     llm_provider: str = "anthropic"
     llm_model: str | None = None
     ui_theme: str = "dark"
+    api_key: str | None = None
+    onboarding_completed: bool = False
 
     @field_validator("ac_install_path", "setups_path", mode="before")
     @classmethod
@@ -27,7 +29,7 @@ class ACConfig(BaseModel):
             return None
         return v
 
-    @field_validator("llm_model", mode="before")
+    @field_validator("llm_model", "api_key", mode="before")
     @classmethod
     def _empty_model_to_none(cls, v: object) -> object:
         if isinstance(v, str) and v.strip() == "":
@@ -80,4 +82,6 @@ class ACConfig(BaseModel):
             "llm_provider": self.llm_provider,
             "llm_model": self.llm_model,
             "ui_theme": self.ui_theme,
+            "api_key": self.api_key,
+            "onboarding_completed": self.onboarding_completed,
         }
