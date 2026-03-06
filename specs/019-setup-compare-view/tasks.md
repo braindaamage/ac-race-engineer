@@ -17,9 +17,9 @@
 
 **Purpose**: TypeScript types and data-fetching hooks shared by all user stories
 
-- [ ] T001 Add stint and comparison TypeScript interfaces (StintMetrics, AggregatedStintMetrics, StintTrends, SetupParameterDelta, MetricDeltas, StintComparison, StintListResponse, StintComparisonResponse) to `frontend/src/lib/types.ts`
-- [ ] T002 Create `useStints(sessionId)` and `useStintComparison(sessionId, stintA, stintB)` TanStack Query hooks in `frontend/src/hooks/useStints.ts` — both with `staleTime: Infinity`, comparison enabled only when both stints non-null
-- [ ] T003 Create formatting utility functions in `frontend/src/views/compare/utils.ts` — `formatDelta(value, precision)` with sign prefix, `formatLapTime(seconds)`, `deltaDirection(value)` returning "increase"/"decrease"/"unchanged", `isImprovement(metricKey, delta)` returning boolean (negative lap_time = good, positive peak_lat_g = good)
+- [x] T001 Add stint and comparison TypeScript interfaces (StintMetrics, AggregatedStintMetrics, StintTrends, SetupParameterDelta, MetricDeltas, StintComparison, StintListResponse, StintComparisonResponse) to `frontend/src/lib/types.ts`
+- [x] T002 Create `useStints(sessionId)` and `useStintComparison(sessionId, stintA, stintB)` TanStack Query hooks in `frontend/src/hooks/useStints.ts` — both with `staleTime: Infinity`, comparison enabled only when both stints non-null
+- [x] T003 Create formatting utility functions in `frontend/src/views/compare/utils.ts` — `formatDelta(value, precision)` with sign prefix, `formatLapTime(seconds)`, `deltaDirection(value)` returning "increase"/"decrease"/"unchanged", `isImprovement(metricKey, delta)` returning boolean (negative lap_time = good, positive peak_lat_g = good)
 
 ---
 
@@ -29,7 +29,7 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create `frontend/src/views/compare/CompareView.css` with layout styles: `ace-compare` (grid layout with sidebar + main), `ace-compare__sidebar`, `ace-compare__main`, stint selector item styles (`ace-stint-item`, `ace-stint-item--selected`), setup diff styles (`ace-diff-section`, `ace-diff-row`, `ace-diff-arrow`), metrics panel styles (`ace-metrics-panel`, `ace-metrics-delta`, `ace-metrics-delta--positive`, `ace-metrics-delta--negative`). All colors via design tokens, all numerics use `var(--font-mono)`
+- [x] T004 Create `frontend/src/views/compare/CompareView.css` with layout styles: `ace-compare` (grid layout with sidebar + main), `ace-compare__sidebar`, `ace-compare__main`, stint selector item styles (`ace-stint-item`, `ace-stint-item--selected`), setup diff styles (`ace-diff-section`, `ace-diff-row`, `ace-diff-arrow`), metrics panel styles (`ace-metrics-panel`, `ace-metrics-delta`, `ace-metrics-delta--positive`, `ace-metrics-delta--negative`). All colors via design tokens, all numerics use `var(--font-mono)`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -45,18 +45,18 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T005 [P] [US1] Create test file `frontend/tests/views/compare/utils.test.ts` — test `formatDelta` (positive/negative/zero/null), `formatLapTime`, `deltaDirection`, `isImprovement` for each metric type
-- [ ] T006 [P] [US1] Create test file `frontend/tests/views/compare/StintSelector.test.tsx` — test: renders all stints with 1-indexed labels and metadata (setup filename, lap count, avg time), highlights selected stints, clicking a stint calls onSelect, shows "no setup" when setup_filename is null
-- [ ] T007 [P] [US1] Create test file `frontend/tests/views/compare/SetupDiff.test.tsx` — test: groups parameters by section, shows value_a → value_b with directional arrow for numerics, renders "No setup changes" when changes array is empty, handles mixed numeric/string values, shows "—" for missing values
-- [ ] T008 [P] [US1] Create test file `frontend/tests/views/compare/MetricsPanel.test.tsx` — test: displays each metric delta with sign prefix, applies green color for improvements (negative lap_time_delta), applies red for degradations, shows "N/A" for null values, renders tyre/slip deltas per wheel position
-- [ ] T009 [P] [US1] Create test file `frontend/tests/views/compare/CompareView.test.tsx` — test: renders stint list and comparison when session has 2+ stints, defaults selection to first two stints, fetches comparison when both stints selected, shows setup diff and metrics panel with comparison data
+- [x] T005 [P] [US1] Create test file `frontend/tests/views/compare/utils.test.ts` — test `formatDelta` (positive/negative/zero/null), `formatLapTime`, `deltaDirection`, `isImprovement` for each metric type
+- [x] T006 [P] [US1] Create test file `frontend/tests/views/compare/StintSelector.test.tsx` — test: renders all stints with 1-indexed labels and metadata (setup filename, lap count, avg time), highlights selected stints, clicking a stint calls onSelect, shows "no setup" when setup_filename is null
+- [x] T007 [P] [US1] Create test file `frontend/tests/views/compare/SetupDiff.test.tsx` — test: groups parameters by section, shows value_a → value_b with directional arrow for numerics, renders "No setup changes" when changes array is empty, handles mixed numeric/string values, shows "—" for missing values
+- [x] T008 [P] [US1] Create test file `frontend/tests/views/compare/MetricsPanel.test.tsx` — test: displays each metric delta with sign prefix, applies green color for improvements (negative lap_time_delta), applies red for degradations, shows "N/A" for null values, renders tyre/slip deltas per wheel position
+- [x] T009 [P] [US1] Create test file `frontend/tests/views/compare/CompareView.test.tsx` — test: renders stint list and comparison when session has 2+ stints, defaults selection to first two stints, fetches comparison when both stints selected, shows setup diff and metrics panel with comparison data
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Create `StintSelector` component in `frontend/src/views/compare/StintSelector.tsx` — props: `stints: StintMetrics[]`, `selectedStints: [number, number | null]`, `onSelect: (index: number) => void`. Render each stint as a selectable row showing stint number (1-indexed), setup filename (or "No setup"), flying lap count, average lap time (formatted). Highlight up to 2 selected stints with `ace-stint-item--selected` class
-- [ ] T011 [P] [US1] Create `SetupDiff` component in `frontend/src/views/compare/SetupDiff.tsx` — props: `changes: SetupParameterDelta[]`, `stintAIndex: number`, `stintBIndex: number`. Group changes by `section` field, render each section as a collapsible group (default expanded). Each row: parameter name, value A, directional arrow (up/down unicode for numeric deltas, dash for string changes), value B. If changes is empty, show "No setup changes between these stints" message
-- [ ] T012 [P] [US1] Create `MetricsPanel` component in `frontend/src/views/compare/MetricsPanel.tsx` — props: `deltas: MetricDeltas`, `stintAIndex: number`, `stintBIndex: number`. Display lap_time_delta_s, peak_lat_g_delta as primary metrics. Display tyre_temp_delta, slip_angle_delta, slip_ratio_delta as per-wheel grids. Format with sign prefix and color coding (green = improvement, red = degradation per `isImprovement`). Null values render as "N/A"
-- [ ] T013 [US1] Replace placeholder in `frontend/src/views/compare/index.tsx` with full `CompareView` component — read `selectedSessionId` from `sessionStore`, fetch stints via `useStints`, manage stint selection with `useState<[number, number | null]>` defaulting to `[0, 1]` when 2+ stints load, fetch comparison via `useStintComparison` when both selected. Selection logic: clicking selected stint deselects it, clicking new stint when 2 selected replaces the oldest. Render: StintSelector sidebar + SetupDiff + MetricsPanel main area. Import CompareView.css
+- [x] T010 [P] [US1] Create `StintSelector` component in `frontend/src/views/compare/StintSelector.tsx` — props: `stints: StintMetrics[]`, `selectedStints: [number, number | null]`, `onSelect: (index: number) => void`. Render each stint as a selectable row showing stint number (1-indexed), setup filename (or "No setup"), flying lap count, average lap time (formatted). Highlight up to 2 selected stints with `ace-stint-item--selected` class
+- [x] T011 [P] [US1] Create `SetupDiff` component in `frontend/src/views/compare/SetupDiff.tsx` — props: `changes: SetupParameterDelta[]`, `stintAIndex: number`, `stintBIndex: number`. Group changes by `section` field, render each section as a collapsible group (default expanded). Each row: parameter name, value A, directional arrow (up/down unicode for numeric deltas, dash for string changes), value B. If changes is empty, show "No setup changes between these stints" message
+- [x] T012 [P] [US1] Create `MetricsPanel` component in `frontend/src/views/compare/MetricsPanel.tsx` — props: `deltas: MetricDeltas`, `stintAIndex: number`, `stintBIndex: number`. Display lap_time_delta_s, peak_lat_g_delta as primary metrics. Display tyre_temp_delta, slip_angle_delta, slip_ratio_delta as per-wheel grids. Format with sign prefix and color coding (green = improvement, red = degradation per `isImprovement`). Null values render as "N/A"
+- [x] T013 [US1] Replace placeholder in `frontend/src/views/compare/index.tsx` with full `CompareView` component — read `selectedSessionId` from `sessionStore`, fetch stints via `useStints`, manage stint selection with `useState<[number, number | null]>` defaulting to `[0, 1]` when 2+ stints load, fetch comparison via `useStintComparison` when both selected. Selection logic: clicking selected stint deselects it, clicking new stint when 2 selected replaces the oldest. Render: StintSelector sidebar + SetupDiff + MetricsPanel main area. Import CompareView.css
 
 **Checkpoint**: User Story 1 fully functional — driver can compare any two stints and see setup diff + metric deltas
 
@@ -70,11 +70,11 @@
 
 ### Tests for User Story 2
 
-- [ ] T014 [US2] Add tests to `frontend/tests/views/compare/CompareView.test.tsx` — test: shows "select a session" EmptyState when no session is selected, shows "analysis required" EmptyState when session state is not "analyzed"/"engineered", shows "comparison needs two stints" EmptyState when session has only 1 stint, shows Skeleton loading state while stints are loading
+- [x] T014 [US2] Add tests to `frontend/tests/views/compare/CompareView.test.tsx` — test: shows "select a session" EmptyState when no session is selected, shows "analysis required" EmptyState when session state is not "analyzed"/"engineered", shows "comparison needs two stints" EmptyState when session has only 1 stint, shows Skeleton loading state while stints are loading
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Add empty state handling to `CompareView` in `frontend/src/views/compare/index.tsx` — add early returns (following AnalysisView pattern): (1) no selectedSessionId → EmptyState with "Go to Sessions" action, (2) session not analyzed → EmptyState explaining analysis required, (3) stints loading → Skeleton placeholders, (4) single stint → EmptyState explaining comparison requires 2+ stints. Use `useSessions()` to check session state, `useUIStore` for navigation
+- [x] T015 [US2] Add empty state handling to `CompareView` in `frontend/src/views/compare/index.tsx` — add early returns (following AnalysisView pattern): (1) no selectedSessionId → EmptyState with "Go to Sessions" action, (2) session not analyzed → EmptyState explaining analysis required, (3) stints loading → Skeleton placeholders, (4) single stint → EmptyState explaining comparison requires 2+ stints. Use `useSessions()` to check session state, `useUIStore` for navigation
 
 **Checkpoint**: All empty/edge states handled gracefully with informative messages
 
@@ -88,7 +88,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Add a "Showing changed parameters only" informational label below the SetupDiff header in `frontend/src/views/compare/SetupDiff.tsx` — styled as subtle secondary text. This communicates to the user that they are seeing a focused diff, not the full setup
+- [x] T016 [US3] Add a "Showing changed parameters only" informational label below the SetupDiff header in `frontend/src/views/compare/SetupDiff.tsx` — styled as subtle secondary text. This communicates to the user that they are seeing a focused diff, not the full setup
 
 **Checkpoint**: User understands they're seeing changes only; full toggle deferred to future backend enhancement
 
@@ -98,9 +98,9 @@
 
 **Purpose**: Final validation and cleanup
 
-- [ ] T017 Run `cd frontend && npx tsc --noEmit` to verify zero TypeScript errors
-- [ ] T018 Run `cd frontend && npm run test` to verify all tests pass (existing + new)
-- [ ] T019 Verify CSS uses only design token variables (no hardcoded colors), `ace-` prefix on all classes, `var(--font-mono)` on all numeric values
+- [x] T017 Run `cd frontend && npx tsc --noEmit` to verify zero TypeScript errors
+- [x] T018 Run `cd frontend && npm run test` to verify all tests pass (existing + new)
+- [x] T019 Verify CSS uses only design token variables (no hardcoded colors), `ace-` prefix on all classes, `var(--font-mono)` on all numeric values
 
 ---
 

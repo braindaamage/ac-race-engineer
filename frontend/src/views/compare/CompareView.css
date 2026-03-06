@@ -1,0 +1,219 @@
+/* ==========================================================================
+   CompareView — Setup Compare layout
+   ========================================================================== */
+
+.ace-compare {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--spacing-md);
+  height: 100%;
+  overflow: hidden;
+  padding: var(--spacing-lg);
+}
+
+.ace-compare__sidebar {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.ace-compare__sidebar h2 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.ace-compare__main {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* Stint selector items */
+
+.ace-stint-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.ace-stint-item:hover {
+  background: var(--bg-elevated);
+}
+
+.ace-stint-item--selected {
+  background: var(--bg-elevated);
+  border-color: var(--color-brand);
+}
+
+.ace-stint-item__number {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  min-width: 28px;
+  color: var(--text-primary);
+}
+
+.ace-stint-item__setup {
+  flex: 1;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ace-stint-item__meta {
+  display: flex;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Setup diff */
+
+.ace-diff-section {
+  margin-bottom: var(--spacing-md);
+}
+
+.ace-diff-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.ace-diff-section__toggle {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.ace-diff-section__toggle--collapsed {
+  transform: rotate(-90deg);
+}
+
+.ace-diff-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--font-size-sm);
+}
+
+.ace-diff-row:hover {
+  background: var(--bg-elevated);
+}
+
+.ace-diff-row__name {
+  color: var(--text-secondary);
+}
+
+.ace-diff-row__value {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  text-align: right;
+  min-width: 60px;
+}
+
+.ace-diff-arrow {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-align: center;
+  min-width: 24px;
+}
+
+.ace-diff-info {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  padding: var(--spacing-xs) 0;
+  font-style: italic;
+}
+
+/* Metrics panel */
+
+.ace-metrics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ace-metrics-panel h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.ace-metrics-primary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.ace-metrics-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ace-metrics-item__label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ace-metrics-item__value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-lg);
+  color: var(--text-primary);
+}
+
+.ace-metrics-delta--positive {
+  color: var(--color-success);
+}
+
+.ace-metrics-delta--negative {
+  color: var(--color-error);
+}
+
+.ace-metrics-wheels {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.ace-metrics-wheel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  text-align: center;
+}
+
+.ace-metrics-wheel__label {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.ace-metrics-wheel__value {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+}
