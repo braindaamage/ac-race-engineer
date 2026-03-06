@@ -82,8 +82,8 @@ describe("App", () => {
     renderWithQuery(<App />);
 
     await waitFor(() => {
-      // AppShell renders Sidebar which contains "Sessions"
-      expect(screen.getByText("Sessions")).toBeDefined();
+      // AppShell renders Sidebar which contains "Sessions" and the view title
+      expect(screen.getAllByText("Sessions").length).toBeGreaterThanOrEqual(1);
     });
   });
 

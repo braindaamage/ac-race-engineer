@@ -1,0 +1,110 @@
+.ace-sessions {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.ace-sessions__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.ace-sessions__header h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
+}
+
+.ace-sessions__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ace-session-card {
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.ace-session-card--selected .ace-card {
+  border-left: 3px solid var(--color-brand);
+  background: var(--bg-elevated);
+}
+
+.ace-session-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ace-session-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ace-session-card__car {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.ace-session-card__track {
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.ace-session-card__meta {
+  display: flex;
+  gap: var(--spacing-md);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.ace-session-card__actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.ace-session-card__delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--font-size-lg);
+  line-height: 1;
+  padding: var(--spacing-xs);
+  transition: color 0.15s ease;
+}
+
+.ace-session-card__delete:hover {
+  color: var(--text-primary);
+}
+
+.ace-session-card__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.ace-session-card__step {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.ace-session-card__error-area {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.ace-session-card__error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
