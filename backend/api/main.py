@@ -23,9 +23,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.active_processing_jobs: dict[str, str] = {}
     app.state.active_engineer_jobs: dict[str, str] = {}
 
-    db_path = getattr(app.state, "db_path", get_db_path())
-    sessions_dir = getattr(app.state, "sessions_dir", get_sessions_dir())
+    app.state.db_path = getattr(app.state, "db_path", get_db_path())
+    app.state.sessions_dir = getattr(app.state, "sessions_dir", get_sessions_dir())
     app.state.config_path = getattr(app.state, "config_path", get_config_path())
+
+    db_path = app.state.db_path
+    sessions_dir = app.state.sessions_dir
 
     init_db(db_path)
 
