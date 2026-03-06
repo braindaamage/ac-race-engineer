@@ -172,3 +172,64 @@ export interface LapDetailResponse {
   metrics: LapMetrics;
   corners: CornerMetrics[];
 }
+
+// ---------------------------------------------------------------------------
+// Stint comparison types
+// ---------------------------------------------------------------------------
+
+export interface AggregatedStintMetrics {
+  lap_time_mean_s: number | null;
+  lap_time_stddev_s: number | null;
+  tyre_temp_avg: Record<string, number>;
+  slip_angle_avg: Record<string, number>;
+  slip_ratio_avg: Record<string, number>;
+  peak_lat_g_avg: number | null;
+}
+
+export interface StintTrends {
+  lap_time_slope: number;
+  tyre_temp_slope: Record<string, number>;
+  fuel_consumption_slope: number | null;
+}
+
+export interface StintMetrics {
+  stint_index: number;
+  setup_filename: string | null;
+  lap_numbers: number[];
+  flying_lap_count: number;
+  aggregated: AggregatedStintMetrics;
+  trends: StintTrends | null;
+}
+
+export interface SetupParameterDelta {
+  section: string;
+  name: string;
+  value_a: number | string;
+  value_b: number | string;
+}
+
+export interface MetricDeltas {
+  lap_time_delta_s: number | null;
+  tyre_temp_delta: Record<string, number>;
+  slip_angle_delta: Record<string, number>;
+  slip_ratio_delta: Record<string, number>;
+  peak_lat_g_delta: number | null;
+}
+
+export interface StintComparison {
+  stint_a_index: number;
+  stint_b_index: number;
+  setup_changes: SetupParameterDelta[];
+  metric_deltas: MetricDeltas;
+}
+
+export interface StintListResponse {
+  session_id: string;
+  stint_count: number;
+  stints: StintMetrics[];
+}
+
+export interface StintComparisonResponse {
+  session_id: string;
+  comparison: StintComparison;
+}

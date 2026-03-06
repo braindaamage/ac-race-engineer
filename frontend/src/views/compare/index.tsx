@@ -1,16 +1,148 @@
-import { EmptyState } from "../../components/ui";
+import { useState, useCallback, useEffect } from "react";
+import { EmptyState, Skeleton } from "../../components/ui";
+import { useSessionStore } from "../../store/sessionStore";
 import { useUIStore } from "../../store/uiStore";
+import { useSessions } from "../../hooks/useSessions";
+import { useStints, useStintComparison } from "../../hooks/useStints";
+import { StintSelector } from "./StintSelector";
+import { SetupDiff } from "./SetupDiff";
+import { MetricsPanel } from "./MetricsPanel";
+import "./CompareView.css";
 
 export function CompareView() {
+  const selectedSessionId = useSessionStore((s) => s.selectedSessionId);
+  const { sessions } = useSessions();
+  const [selectedStints, setSelectedStints] = useState<[number, number | null]>([0, null]);
+
+  const { data: stintData, isLoading: stintsLoading } = useStints(selectedSessionId);
+
+  const stints = stintData?.stints ?? [];
+
+  // Default to first two stints when data loads
+  useEffect(() => {
+    if (stints.length >= 2) {
+      setSelectedStints([0, 1]);
+    } else if (stints.length === 1) {
+      setSelectedStints([0, null]);
+    }
+  }, [stints.length]);
+
+  const stintA = selectedStints[0];
+  const stintB = selectedStints[1];
+
+  const { data: comparisonData } = useStintComparison(
+    selectedSessionId,
+    stintA,
+    stintB,
+  );
+
+  const handleSelectStint = useCallback((stintIndex: number) => {
+    setSelectedStints((prev) => {
+      const [a, b] = prev;
+      // Deselect if already selected
+      if (a === stintIndex) return [b ?? stintIndex, null];
+      if (b === stintIndex) return [a, null];
+      // If two already selected, replace oldest (first)
+      if (b != null) return [b, stintIndex];
+      // Add as second
+      return [a, stintIndex];
+    });
+  }, []);
+
+  // Empty state: no session selected
+  if (!selectedSessionId) {
+    return (
+      <EmptyState
+        icon={<span>&#128260;</span>}
+        title="Select a session to compare setups"
+        description="Go to Sessions and select a session to compare setup configurations."
+        action={{
+          label: "Go to Sessions",
+          onClick: () => useUIStore.getState().setActiveSection("sessions"),
+        }}
+      />
+    );
+  }
+
+  // Check session state
+  const session = sessions.find((s) => s.session_id === selectedSessionId);
+  if (session && session.state !== "analyzed" && session.state !== "engineered") {
+    return (
+      <EmptyState
+        icon={<span>&#9888;</span>}
+        title="Analysis required"
+        description="This session needs to be processed and analyzed before setup comparison is available."
+        action={{
+          label: "Go to Sessions",
+          onClick: () => useUIStore.getState().setActiveSection("sessions"),
+        }}
+      />
+    );
+  }
+
+  // Loading
+  if (stintsLoading) {
+    return (
+      <div className="ace-compare">
+        <div className="ace-compare__sidebar">
+          <Skeleton height="24px" width="100px" />
+          <Skeleton height="40px" />
+          <Skeleton height="40px" />
+          <Skeleton height="40px" />
+        </div>
+        <div className="ace-compare__main">
+          <Skeleton height="200px" />
+        </div>
+      </div>
+    );
+  }
+
+  // Single stint
+  if (stints.length < 2) {
+    return (
+      <EmptyState
+        icon={<span>&#128260;</span>}
+        title="Not enough stints"
+        description="Setup comparison requires at least 2 stints in the session. Run more stints with different setups."
+      />
+    );
+  }
+
+  const comparison = comparisonData?.comparison;
+
   return (
-    <EmptyState
-      icon={<span>&#128260;</span>}
-      title="Select a session to compare setups"
-      description="Go to Sessions and select a session to compare setup configurations."
-      action={{
-        label: "Go to Sessions",
-        onClick: () => useUIStore.getState().setActiveSection("sessions"),
-      }}
-    />
+    <div className="ace-compare">
+      <StintSelector
+        stints={stints}
+        selectedStints={selectedStints}
+        onSelect={handleSelectStint}
+      />
+      <div className="ace-compare__main">
+        {comparison ? (
+          <>
+            <SetupDiff
+              changes={comparison.setup_changes}
+              stintAIndex={comparison.stint_a_index}
+              stintBIndex={comparison.stint_b_index}
+            />
+            <MetricsPanel
+              deltas={comparison.metric_deltas}
+              stintAIndex={comparison.stint_a_index}
+              stintBIndex={comparison.stint_b_index}
+            />
+          </>
+        ) : stintB != null ? (
+          <div className="ace-compare__main">
+            <Skeleton height="200px" />
+          </div>
+        ) : (
+          <EmptyState
+            icon={<span>&#128260;</span>}
+            title="Select two stints"
+            description="Select a second stint from the sidebar to compare setup configurations."
+          />
+        )}
+      </div>
+    </div>
   );
 }
