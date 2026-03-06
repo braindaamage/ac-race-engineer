@@ -10,6 +10,7 @@ import httpx
 
 from ac_engineer.analyzer import analyze_session
 from ac_engineer.analyzer.models import AnalyzedSession
+from ac_engineer.parser.cache import save_session as save_parsed_session
 from ac_engineer.storage.db import init_db
 from ac_engineer.storage.models import SessionRecord
 from ac_engineer.storage.sessions import save_session
@@ -425,3 +426,175 @@ class TestConsistencyEndpoint:
         save_session(db_path, _session(state="discovered"))
         resp = await client.get("/sessions/test_session/consistency")
         assert resp.status_code == 409
+
+
+# ---------------------------------------------------------------------------
+# Extended field tests (Phase 7.4)
+# ---------------------------------------------------------------------------
+
+
+class TestLapSummaryExtendedFields:
+    @pytest.mark.asyncio
+    async def test_lap_summary_includes_max_speed(self, client, db_path, sessions_dir) -> None:
+        analyzed = _make_multi_lap_analyzed()
+        _setup_analyzed_session(db_path, sessions_dir, analyzed)
+        resp = await client.get("/sessions/test_session/laps")
+        assert resp.status_code == 200
+        for lap in resp.json()["laps"]:
+            assert "max_speed" in lap
+            assert isinstance(lap["max_speed"], (int, float))
+
+    @pytest.mark.asyncio
+    async def test_lap_summary_includes_sector_times(self, client, db_path, sessions_dir) -> None:
+        analyzed = _make_multi_lap_analyzed()
+        _setup_analyzed_session(db_path, sessions_dir, analyzed)
+        resp = await client.get("/sessions/test_session/laps")
+        assert resp.status_code == 200
+        for lap in resp.json()["laps"]:
+            assert "sector_times_s" in lap
+            # sector_times_s may be null or a list
+            if lap["sector_times_s"] is not None:
+                assert isinstance(lap["sector_times_s"], list)
+
+
+class TestLapDetailCorners:
+    @pytest.mark.asyncio
+    async def test_lap_detail_includes_corners(self, client, db_path, sessions_dir) -> None:
+        analyzed = _make_multi_lap_analyzed()
+        _setup_analyzed_session(db_path, sessions_dir, analyzed)
+        resp = await client.get("/sessions/test_session/laps/1")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "corners" in data
+        assert isinstance(data["corners"], list)
+        assert len(data["corners"]) == 2  # flying lap 1 has 2 corners
+
+    @pytest.mark.asyncio
+    async def test_lap_detail_corners_structure(self, client, db_path, sessions_dir) -> None:
+        analyzed = _make_multi_lap_analyzed()
+        _setup_analyzed_session(db_path, sessions_dir, analyzed)
+        resp = await client.get("/sessions/test_session/laps/1")
+        corner = resp.json()["corners"][0]
+        assert "corner_number" in corner
+        assert "performance" in corner
+        assert "grip" in corner
+        assert "technique" in corner
+        assert "entry_speed_kmh" in corner["performance"]
+        assert "understeer_ratio" in corner["grip"]
+
+    @pytest.mark.asyncio
+    async def test_lap_detail_no_corners_for_outlap(self, client, db_path, sessions_dir) -> None:
+        analyzed = _make_multi_lap_analyzed()
+        _setup_analyzed_session(db_path, sessions_dir, analyzed)
+        resp = await client.get("/sessions/test_session/laps/0")
+        assert resp.status_code == 200
+        assert resp.json()["corners"] == []
+
+
+# ---------------------------------------------------------------------------
+# GET /sessions/{session_id}/laps/{lap_number}/telemetry
+# ---------------------------------------------------------------------------
+
+
+def _setup_with_parquet(
+    db_path: Path,
+    sessions_dir: Path,
+    session_id: str = "test_session",
+) -> AnalyzedSession:
+    """Save session record, parsed parquet, and analyzed cache."""
+    analyzed_data = _make_multi_lap_analyzed()
+    save_session(db_path, _session(session_id=session_id))
+    cache_dir = get_cache_dir(sessions_dir, session_id)
+
+    # Save analyzed.json
+    save_analyzed_session(cache_dir, analyzed_data)
+
+    # Build a ParsedSession and save parquet
+    base_ts = BASE_TIMESTAMP
+    outlap = make_lap_segment(
+        lap_number=0, classification="outlap", n_samples=100,
+        base_ts=base_ts, active_setup=SETUP_A,
+    )
+    base_ts += 100 * SAMPLE_INTERVAL
+    flying1 = make_lap_segment(
+        lap_number=1, classification="flying", n_samples=200,
+        base_ts=base_ts, active_setup=SETUP_A,
+        corners=[make_corner(1), make_corner(2, entry_norm_pos=0.50, apex_norm_pos=0.55, exit_norm_pos=0.60)],
+        throttle=0.8, g_lat=0.6, g_lon=0.4,
+    )
+    base_ts += 200 * SAMPLE_INTERVAL
+    flying2 = make_lap_segment(
+        lap_number=2, classification="flying", n_samples=200,
+        base_ts=base_ts, active_setup=SETUP_A,
+        corners=[make_corner(1), make_corner(2, entry_norm_pos=0.50, apex_norm_pos=0.55, exit_norm_pos=0.60)],
+        throttle=0.8, g_lat=0.6, g_lon=0.4,
+    )
+    base_ts += 200 * SAMPLE_INTERVAL
+    inlap = make_lap_segment(
+        lap_number=3, classification="inlap", n_samples=100,
+        base_ts=base_ts, active_setup=SETUP_A,
+    )
+    parsed = make_parsed_session(
+        laps=[outlap, flying1, flying2, inlap],
+        setups=[SETUP_A],
+    )
+    save_parsed_session(parsed, cache_dir)
+    return analyzed_data
+
+
+class TestTelemetryEndpoint:
+    @pytest.mark.asyncio
+    async def test_telemetry_200(self, client, db_path, sessions_dir) -> None:
+        _setup_with_parquet(db_path, sessions_dir)
+        resp = await client.get("/sessions/test_session/laps/1/telemetry")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["session_id"] == "test_session"
+        assert data["lap_number"] == 1
+        assert data["sample_count"] > 0
+        channels = data["channels"]
+        assert "normalized_position" in channels
+        assert "throttle" in channels
+        assert "brake" in channels
+        assert "steering" in channels
+        assert "speed_kmh" in channels
+        assert "gear" in channels
+
+    @pytest.mark.asyncio
+    async def test_telemetry_channels_same_length(self, client, db_path, sessions_dir) -> None:
+        _setup_with_parquet(db_path, sessions_dir)
+        resp = await client.get("/sessions/test_session/laps/1/telemetry")
+        channels = resp.json()["channels"]
+        lengths = {len(v) for v in channels.values()}
+        assert len(lengths) == 1  # all channels same length
+
+    @pytest.mark.asyncio
+    async def test_telemetry_downsample(self, client, db_path, sessions_dir) -> None:
+        _setup_with_parquet(db_path, sessions_dir)
+        resp = await client.get("/sessions/test_session/laps/1/telemetry?max_samples=50")
+        assert resp.status_code == 200
+        assert resp.json()["sample_count"] == 50
+
+    @pytest.mark.asyncio
+    async def test_telemetry_no_downsample(self, client, db_path, sessions_dir) -> None:
+        _setup_with_parquet(db_path, sessions_dir)
+        resp = await client.get("/sessions/test_session/laps/1/telemetry?max_samples=0")
+        assert resp.status_code == 200
+        assert resp.json()["sample_count"] == 200  # flying lap has 200 samples
+
+    @pytest.mark.asyncio
+    async def test_telemetry_404_invalid_lap(self, client, db_path, sessions_dir) -> None:
+        _setup_with_parquet(db_path, sessions_dir)
+        resp = await client.get("/sessions/test_session/laps/999/telemetry")
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_telemetry_409_unanalyzed_session(self, client, db_path) -> None:
+        save_session(db_path, _session(state="discovered"))
+        resp = await client.get("/sessions/test_session/laps/1/telemetry")
+        assert resp.status_code == 409
+
+    @pytest.mark.asyncio
+    async def test_telemetry_404_nonexistent_session(self, client) -> None:
+        resp = await client.get("/sessions/nonexistent/laps/1/telemetry")
+        assert resp.status_code == 404
