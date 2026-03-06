@@ -32,6 +32,8 @@ class LapSummary(BaseModel):
     peak_lon_g: float
     full_throttle_pct: float
     braking_pct: float
+    max_speed: float
+    sector_times_s: list[float] | None = None
 
 
 class LapListResponse(BaseModel):
@@ -50,6 +52,7 @@ class LapDetailResponse(BaseModel):
     classification: str
     is_invalid: bool
     metrics: LapMetrics
+    corners: list[CornerMetrics] = []
 
 
 class AggregatedCorner(BaseModel):
@@ -109,3 +112,23 @@ class ConsistencyResponse(BaseModel):
 
     session_id: str
     consistency: ConsistencyMetrics
+
+
+class LapTelemetryChannels(BaseModel):
+    """Columnar telemetry channels for one lap."""
+
+    normalized_position: list[float]
+    throttle: list[float]
+    brake: list[float]
+    steering: list[float]
+    speed_kmh: list[float]
+    gear: list[float]
+
+
+class LapTelemetryResponse(BaseModel):
+    """Response for GET /sessions/{session_id}/laps/{lap_number}/telemetry."""
+
+    session_id: str
+    lap_number: int
+    sample_count: int
+    channels: LapTelemetryChannels

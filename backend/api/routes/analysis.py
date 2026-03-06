@@ -1,8 +1,9 @@
-"""Analysis endpoints — POST /process + 7 metric GET endpoints."""
+"""Analysis endpoints — POST /process + 8 metric GET endpoints."""
 
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 from starlette.responses import JSONResponse
@@ -17,12 +18,18 @@ from api.analysis.models import (
     CornerListResponse,
     LapDetailResponse,
     LapListResponse,
+    LapTelemetryResponse,
     ProcessResponse,
     StintComparisonResponse,
     StintListResponse,
 )
 from api.analysis.pipeline import make_processing_job
-from api.analysis.serializers import aggregate_corners, get_corner_by_lap, summarize_all_laps
+from api.analysis.serializers import (
+    aggregate_corners,
+    get_corner_by_lap,
+    summarize_all_laps,
+    telemetry_for_lap,
+)
 from api.jobs.worker import run_job
 
 router = APIRouter()
@@ -129,8 +136,53 @@ async def get_lap_detail(request: Request, session_id: str, lap_number: int) -> 
                 classification=lap.classification,
                 is_invalid=lap.is_invalid,
                 metrics=lap.metrics,
+                corners=lap.corners,
             )
     raise HTTPException(status_code=404, detail=f"Lap {lap_number} not found in session: {session_id}")
+
+
+# ---------------------------------------------------------------------------
+# GET /sessions/{session_id}/laps/{lap_number}/telemetry
+# ---------------------------------------------------------------------------
+
+
+def _find_parquet(sessions_dir: str | Path, session_id: str) -> Path:
+    """Find telemetry.parquet inside the session cache directory."""
+    cache_dir = Path(sessions_dir) / session_id
+    parquet_files = list(cache_dir.rglob("telemetry.parquet"))
+    if not parquet_files:
+        raise FileNotFoundError(f"telemetry.parquet not found for session: {session_id}")
+    return parquet_files[0]
+
+
+@router.get(
+    "/{session_id}/laps/{lap_number}/telemetry",
+    response_model=LapTelemetryResponse,
+)
+async def get_lap_telemetry(
+    request: Request,
+    session_id: str,
+    lap_number: int,
+    max_samples: int = Query(default=500, ge=0),
+) -> LapTelemetryResponse:
+    # Reuse the analyzed-session guard to verify session exists & is analyzed
+    await _get_analyzed_session(request, session_id)
+
+    sessions_dir = request.app.state.sessions_dir
+    try:
+        parquet_path = _find_parquet(sessions_dir, session_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Telemetry data not found for session")
+
+    try:
+        return await asyncio.to_thread(
+            telemetry_for_lap, parquet_path, session_id, lap_number, max_samples,
+        )
+    except ValueError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Lap {lap_number} not found in session: {session_id}",
+        )
 
 
 # ---------------------------------------------------------------------------

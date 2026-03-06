@@ -2,8 +2,19 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
 from ac_engineer.analyzer.models import AnalyzedSession, AnalyzedLap
-from api.analysis.models import AggregatedCorner, CornerLapEntry, LapSummary
+from api.analysis.models import (
+    AggregatedCorner,
+    CornerLapEntry,
+    LapSummary,
+    LapTelemetryChannels,
+    LapTelemetryResponse,
+)
 
 
 def summarize_lap(lap: AnalyzedLap) -> LapSummary:
@@ -22,6 +33,8 @@ def summarize_lap(lap: AnalyzedLap) -> LapSummary:
         peak_lon_g=lap.metrics.grip.peak_lon_g,
         full_throttle_pct=lap.metrics.driver_inputs.full_throttle_pct,
         braking_pct=lap.metrics.driver_inputs.braking_pct,
+        max_speed=lap.metrics.speed.max_speed,
+        sector_times_s=lap.metrics.timing.sector_times_s,
     )
 
 
@@ -83,3 +96,48 @@ def get_corner_by_lap(analyzed: AnalyzedSession, corner_number: int) -> list[Cor
                     metrics=corner,
                 ))
     return entries
+
+
+TELEMETRY_CHANNELS = [
+    "normalized_position", "throttle", "brake", "steering", "speed_kmh", "gear",
+]
+
+
+def telemetry_for_lap(
+    parquet_path: Path,
+    session_id: str,
+    lap_number: int,
+    max_samples: int = 500,
+) -> LapTelemetryResponse:
+    """Read telemetry from Parquet, filter to one lap, downsample, return response.
+
+    Raises:
+        FileNotFoundError: If the parquet file does not exist.
+        ValueError: If the lap number is not found in the data.
+    """
+    df = pd.read_parquet(parquet_path, columns=["lap_number"] + TELEMETRY_CHANNELS)
+    lap_df = df[df["lap_number"] == lap_number].drop(columns=["lap_number"])
+
+    if lap_df.empty:
+        raise ValueError(f"Lap {lap_number} not found in telemetry data")
+
+    # Downsample if needed
+    if max_samples > 0 and len(lap_df) > max_samples:
+        indices = np.linspace(0, len(lap_df) - 1, max_samples, dtype=int)
+        lap_df = lap_df.iloc[indices]
+
+    channels = LapTelemetryChannels(
+        normalized_position=lap_df["normalized_position"].tolist(),
+        throttle=lap_df["throttle"].tolist(),
+        brake=lap_df["brake"].tolist(),
+        steering=lap_df["steering"].tolist(),
+        speed_kmh=lap_df["speed_kmh"].tolist(),
+        gear=lap_df["gear"].tolist(),
+    )
+
+    return LapTelemetryResponse(
+        session_id=session_id,
+        lap_number=lap_number,
+        sample_count=len(lap_df),
+        channels=channels,
+    )
