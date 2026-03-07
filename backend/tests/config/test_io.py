@@ -93,7 +93,7 @@ class TestGetEffectiveModel:
         [
             ("anthropic", "claude-sonnet-4-5"),
             ("openai", "gpt-4o"),
-            ("gemini", "gemini-1.5-pro"),
+            ("gemini", "gemini-2.5-flash"),
         ],
     )
     def test_default_per_provider(self, provider: str, expected: str) -> None:

@@ -391,6 +391,87 @@ class TestApplyRecommendationEndpoint:
         assert resp.status_code == 400
         assert "not found" in resp.json()["error"]["message"]
 
+    @pytest.mark.asyncio
+    async def test_apply_auto_resolves_setup_path(self, client, db_path, tmp_path, config_path) -> None:
+        """Empty setup_path auto-resolves from session meta.json and config."""
+        setups_dir = tmp_path / "setups"
+        car_track_dir = setups_dir / "bmw_m235i_racing" / "mugello"
+        car_track_dir.mkdir(parents=True)
+        setup_file = car_track_dir / "my_setup.ini"
+        setup_file.write_text("[ARB]\nFRONT=5\n", encoding="utf-8")
+
+        # Write config with setups_path
+        config_path.write_text(json.dumps({
+            "llm_provider": "anthropic",
+            "setups_path": str(setups_dir),
+        }), encoding="utf-8")
+
+        # Create meta.json with setup_history
+        meta_file = tmp_path / "session.meta.json"
+        meta_file.write_text(json.dumps({
+            "setup_history": [
+                {"trigger": "session_start", "filename": "my_setup.ini", "lap": 0},
+            ],
+            "track_name": "mugello",
+        }), encoding="utf-8")
+
+        save_session(db_path, _session(meta_path=str(meta_file)))
+        rec = save_recommendation(
+            db_path, "test_session", "Fix understeer",
+            [StorageSetupChange(section="ARB", parameter="FRONT", old_value="5", new_value="3", reasoning="test")],
+        )
+
+        from ac_engineer.engineer.models import ChangeOutcome
+        mock_outcomes = [
+            ChangeOutcome(section="ARB", parameter="FRONT", old_value="5", new_value="3")
+        ]
+
+        with patch(
+            "api.routes.engineer.apply_recommendation",
+            new_callable=AsyncMock,
+            return_value=mock_outcomes,
+        ):
+            resp = await client.post(
+                f"/sessions/test_session/recommendations/{rec.recommendation_id}/apply",
+                json={"setup_path": ""},
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "applied"
+        assert data["changes_applied"] == 1
+
+    @pytest.mark.asyncio
+    async def test_apply_no_setup_history_returns_400(self, client, db_path, tmp_path, config_path) -> None:
+        """Empty setup_path with empty setup_history returns 400."""
+        setups_dir = tmp_path / "setups"
+        setups_dir.mkdir()
+
+        config_path.write_text(json.dumps({
+            "llm_provider": "anthropic",
+            "setups_path": str(setups_dir),
+        }), encoding="utf-8")
+
+        # Create meta.json with empty setup_history
+        meta_file = tmp_path / "session.meta.json"
+        meta_file.write_text(json.dumps({
+            "setup_history": [],
+            "track_name": "mugello",
+        }), encoding="utf-8")
+
+        save_session(db_path, _session(meta_path=str(meta_file)))
+        rec = save_recommendation(
+            db_path, "test_session", "Fix understeer",
+            [StorageSetupChange(section="ARB", parameter="FRONT", old_value="5", new_value="3", reasoning="test")],
+        )
+
+        resp = await client.post(
+            f"/sessions/test_session/recommendations/{rec.recommendation_id}/apply",
+            json={"setup_path": ""},
+        )
+        assert resp.status_code == 400
+        assert "No setup file found" in resp.json()["error"]["message"]
+
 
 # ---------------------------------------------------------------------------
 # GET /sessions/{session_id}/messages

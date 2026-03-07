@@ -109,9 +109,10 @@ class TestAnalyzeWithEngineer:
 
         real_agent = _build_specialist_agent("balance", "test")
         with real_agent.override(model=_make_function_model("balance")):
-            with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
-                with patch("ac_engineer.storage.recommendations.save_recommendation"):
-                    response = await analyze_with_engineer(summary, config, db_path)
+            with patch("ac_engineer.engineer.agents.build_model", return_value="test"):
+                with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
+                    with patch("ac_engineer.storage.recommendations.save_recommendation"):
+                        response = await analyze_with_engineer(summary, config, db_path)
 
         assert isinstance(response, EngineerResponse)
         assert response.session_id == summary.session_id
@@ -143,11 +144,12 @@ class TestAnalyzeWithEngineer:
         config = ACConfig(ac_install_path=tmp_path)
         db_path = tmp_path / "test.db"
 
-        with patch(
-            "ac_engineer.engineer.agents._build_specialist_agent",
-            side_effect=RuntimeError("Agent creation failed"),
-        ):
-            response = await analyze_with_engineer(summary, config, db_path)
+        with patch("ac_engineer.engineer.agents.build_model", return_value="test"):
+            with patch(
+                "ac_engineer.engineer.agents._build_specialist_agent",
+                side_effect=RuntimeError("Agent creation failed"),
+            ):
+                response = await analyze_with_engineer(summary, config, db_path)
 
         assert response.confidence == "low"
         assert "error" in response.summary.lower() or "could not" in response.summary.lower()
@@ -460,8 +462,9 @@ class TestPersistence:
 
         real_agent = _build_specialist_agent("balance", "test")
         with real_agent.override(model=_make_function_model("balance")):
-            with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
-                response = await analyze_with_engineer(summary, config, db_path)
+            with patch("ac_engineer.engineer.agents.build_model", return_value="test"):
+                with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
+                    response = await analyze_with_engineer(summary, config, db_path)
 
         assert isinstance(response, EngineerResponse)
         # Verify recommendation was saved
@@ -482,8 +485,9 @@ class TestPersistence:
 
         real_agent = _build_specialist_agent("balance", "test")
         with real_agent.override(model=_make_function_model("balance")):
-            with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
-                response = await analyze_with_engineer(summary, config, db_path)
+            with patch("ac_engineer.engineer.agents.build_model", return_value="test"):
+                with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
+                    response = await analyze_with_engineer(summary, config, db_path)
 
         # Should still return a valid response
         assert isinstance(response, EngineerResponse)
@@ -517,8 +521,9 @@ class TestPersistence:
 
         real_agent = _build_specialist_agent("technique", "test")
         with real_agent.override(model=_make_function_model("technique")):
-            with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
-                response = await analyze_with_engineer(summary, config, db_path)
+            with patch("ac_engineer.engineer.agents.build_model", return_value="test"):
+                with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=real_agent):
+                    response = await analyze_with_engineer(summary, config, db_path)
 
         assert isinstance(response, EngineerResponse)
         from ac_engineer.storage import get_recommendations

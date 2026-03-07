@@ -9,6 +9,7 @@ from .agents import (
     SpecialistResult,
     analyze_with_engineer,
     apply_recommendation,
+    build_model,
     get_model_string,
     route_signals,
 )
@@ -41,6 +42,7 @@ __all__ = [
     "apply_recommendation",
     "route_signals",
     "get_model_string",
+    "build_model",
     # Models — Phase 5.2
     "SessionSummary",
     "LapSummary",

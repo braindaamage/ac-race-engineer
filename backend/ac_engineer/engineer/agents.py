@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic_ai import Agent
+from pydantic_ai.models import Model
 
 from ac_engineer.config.io import get_effective_model
 from ac_engineer.knowledge import search_knowledge as kb_search
@@ -124,12 +125,45 @@ def get_model_string(config: ACConfig) -> str:
     Maps provider names to Pydantic AI prefixes:
     - 'anthropic' → 'anthropic:model'
     - 'openai' → 'openai:model'
-    - 'gemini' → 'google:model'
+    - 'gemini' → 'google-gla:model'
     """
     provider = config.llm_provider
     model = get_effective_model(config)
-    prefix = "google" if provider == "gemini" else provider
+    prefix = "google-gla" if provider == "gemini" else provider
     return f"{prefix}:{model}"
+
+
+def build_model(config: ACConfig) -> Model:
+    """Build a Pydantic AI Model with the API key from config.
+
+    Creates the appropriate provider with explicit api_key so the agent
+    doesn't rely on environment variables being set.
+    """
+    from pydantic_ai.models import infer_model
+    from pydantic_ai.providers import infer_provider
+
+    model_name = get_effective_model(config)
+    api_key = config.api_key
+    provider_name = config.llm_provider
+
+    if provider_name == "gemini":
+        from pydantic_ai.providers.google import GoogleProvider
+
+        provider = GoogleProvider(api_key=api_key)
+        return infer_model(f"google-gla:{model_name}", provider_factory=lambda _: provider)
+    elif provider_name == "anthropic":
+        from pydantic_ai.providers.anthropic import AnthropicProvider
+
+        provider = AnthropicProvider(api_key=api_key)
+        return infer_model(f"anthropic:{model_name}", provider_factory=lambda _: provider)
+    elif provider_name == "openai":
+        from pydantic_ai.providers.openai import OpenAIProvider
+
+        provider = OpenAIProvider(api_key=api_key)
+        return infer_model(f"openai:{model_name}", provider_factory=lambda _: provider)
+    else:
+        # Fallback: let Pydantic AI infer the provider (may use env vars)
+        return infer_model(get_model_string(config))
 
 
 # ---------------------------------------------------------------------------
@@ -137,12 +171,12 @@ def get_model_string(config: ACConfig) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _build_specialist_agent(domain: str, model_string: str) -> Agent[AgentDeps, SpecialistResult]:
+def _build_specialist_agent(domain: str, model: str | Model) -> Agent[AgentDeps, SpecialistResult]:
     """Create a specialist Pydantic AI agent for the given domain."""
     system_prompt = _load_skill_prompt(domain)
 
     agent: Agent[AgentDeps, SpecialistResult] = Agent(
-        model_string,
+        model,
         deps_type=AgentDeps,
         output_type=SpecialistResult,
         system_prompt=system_prompt,
@@ -226,6 +260,20 @@ def _build_user_prompt(summary: SessionSummary, domain_signals: list[str]) -> st
         for section, params in summary.active_setup_parameters.items():
             for param, value in params.items():
                 lines.append(f"- {section}.{param} = {value}")
+        lines.append(f"")
+        lines.append(
+            "IMPORTANT: SetupChange.section must be one of the exact section names "
+            "listed above. SetupChange.parameter is always 'VALUE'. "
+            "Range data may not be available for all sections — if tools return no "
+            "range data, propose small incremental changes based on the current "
+            "values shown above."
+        )
+    else:
+        lines.append(f"")
+        lines.append(
+            "WARNING: No setup parameters available. "
+            "Do not propose SetupChanges — provide analysis only."
+        )
 
     lines.append(f"")
     lines.append("Analyze this data and provide your specialist recommendations.")
@@ -397,8 +445,8 @@ async def analyze_with_engineer(
             if frag not in all_knowledge:
                 all_knowledge.append(frag)
 
-    # Build model string
-    model_string = get_model_string(config)
+    # Build model with API key
+    model = build_model(config)
 
     # Run specialist agents
     specialist_results: dict[str, SpecialistResult] = {}
@@ -424,7 +472,7 @@ async def analyze_with_engineer(
         )
 
         try:
-            agent = _build_specialist_agent(domain, model_string)
+            agent = _build_specialist_agent(domain, model)
             user_prompt = _build_user_prompt(summary, domain_signals)
             result = await agent.run(user_prompt, deps=deps)
             specialist_results[domain] = result.output

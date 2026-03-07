@@ -233,3 +233,93 @@ export interface StintComparisonResponse {
   session_id: string;
   comparison: StintComparison;
 }
+
+// ---------------------------------------------------------------------------
+// Engineer chat types
+// ---------------------------------------------------------------------------
+
+export interface MessageResponse {
+  message_id: string;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
+export interface MessageListResponse {
+  session_id: string;
+  messages: MessageResponse[];
+}
+
+export interface ChatRequest {
+  content: string;
+}
+
+export interface ChatJobResponse {
+  job_id: string;
+  message_id: string;
+}
+
+export interface RecommendationSummary {
+  recommendation_id: string;
+  session_id: string;
+  status: "proposed" | "applied" | "rejected";
+  summary: string;
+  change_count: number;
+  created_at: string;
+}
+
+export interface RecommendationListResponse {
+  session_id: string;
+  recommendations: RecommendationSummary[];
+}
+
+export interface SetupChangeDetail {
+  section: string;
+  parameter: string;
+  old_value: string;
+  new_value: string;
+  reasoning: string;
+  expected_effect: string;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface DriverFeedbackDetail {
+  area: string;
+  observation: string;
+  suggestion: string;
+  corners_affected: number[];
+  severity: "high" | "medium" | "low";
+}
+
+export interface RecommendationDetailResponse {
+  recommendation_id: string;
+  session_id: string;
+  status: "proposed" | "applied" | "rejected";
+  summary: string;
+  explanation: string;
+  confidence: "high" | "medium" | "low";
+  signals_addressed: string[];
+  setup_changes: SetupChangeDetail[];
+  driver_feedback: DriverFeedbackDetail[];
+  created_at: string;
+}
+
+export interface EngineerJobResponse {
+  job_id: string;
+  session_id: string;
+}
+
+export interface ApplyRequest {
+  setup_path: string;
+}
+
+export interface ApplyResponse {
+  recommendation_id: string;
+  status: "applied";
+  backup_path: string;
+  changes_applied: number;
+}
+
+export type FeedItem =
+  | { type: "message"; data: MessageResponse }
+  | { type: "recommendation"; data: RecommendationDetailResponse };

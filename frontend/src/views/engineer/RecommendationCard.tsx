@@ -1,0 +1,108 @@
+import { Card, Badge, Button } from "../../components/ui";
+import { DriverFeedbackCard } from "./DriverFeedbackCard";
+import type { RecommendationDetailResponse } from "../../lib/types";
+
+interface RecommendationCardProps {
+  recommendation: RecommendationDetailResponse;
+  onApply: (recommendationId: string) => void;
+}
+
+const CONFIDENCE_VARIANT: Record<string, "success" | "warning" | "info"> = {
+  high: "success",
+  medium: "warning",
+  low: "info",
+};
+
+const STATUS_VARIANT: Record<string, "info" | "success" | "neutral"> = {
+  proposed: "info",
+  applied: "success",
+  rejected: "neutral",
+};
+
+export function RecommendationCard({
+  recommendation,
+  onApply,
+}: RecommendationCardProps) {
+  const isApplied = recommendation.status === "applied";
+
+  return (
+    <div
+      className={`ace-recommendation-card ace-recommendation-card--${recommendation.status}`}
+    >
+      <Card variant="ai">
+        <div className="ace-recommendation-card__header">
+          <span className="ace-recommendation-card__summary">
+            {recommendation.summary}
+          </span>
+          <Badge
+            variant={
+              CONFIDENCE_VARIANT[recommendation.confidence] ?? "info"
+            }
+          >
+            {recommendation.confidence}
+          </Badge>
+          <Badge
+            variant={STATUS_VARIANT[recommendation.status] ?? "neutral"}
+          >
+            {recommendation.status === "proposed"
+              ? "Proposed"
+              : recommendation.status === "applied"
+                ? "Applied"
+                : "Rejected"}
+          </Badge>
+        </div>
+
+        {recommendation.setup_changes.length > 0 && (
+          <div className="ace-recommendation-card__changes">
+            {recommendation.setup_changes.map((change, i) => (
+              <div key={i} className="ace-setup-change">
+                <div className="ace-setup-change__header">
+                  <span className="ace-setup-change__param">
+                    [{change.section}] {change.parameter}
+                  </span>
+                  <Badge
+                    variant={
+                      CONFIDENCE_VARIANT[change.confidence] ?? "info"
+                    }
+                  >
+                    {change.confidence}
+                  </Badge>
+                </div>
+                <div className="ace-setup-change__values">
+                  {change.old_value}
+                  <span className="ace-setup-change__arrow">&rarr;</span>
+                  {change.new_value}
+                </div>
+                <div className="ace-setup-change__reasoning">
+                  {change.reasoning}
+                </div>
+                <div className="ace-setup-change__effect">
+                  {change.expected_effect}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {recommendation.driver_feedback.length > 0 && (
+          <div className="ace-recommendation-card__feedback">
+            {recommendation.driver_feedback.map((fb, i) => (
+              <DriverFeedbackCard key={i} feedback={fb} />
+            ))}
+          </div>
+        )}
+
+        <div className="ace-recommendation-card__actions">
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={isApplied}
+            onClick={() => onApply(recommendation.recommendation_id)}
+          >
+            {isApplied ? "Applied" : "Apply"}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}

@@ -273,10 +273,11 @@ class TestMakeChatJob:
         mock_result = MagicMock()
         mock_result.output = "Because reducing the front ARB allows more front grip."
 
-        with patch("api.engineer.pipeline.Agent") as MockAgent:
-            instance = MockAgent.return_value
-            instance.run = AsyncMock(return_value=mock_result)
-            result = await chat_pipeline(track_progress)
+        with patch("api.engineer.pipeline.build_model", return_value="test"):
+            with patch("api.engineer.pipeline.Agent") as MockAgent:
+                instance = MockAgent.return_value
+                instance.run = AsyncMock(return_value=mock_result)
+                result = await chat_pipeline(track_progress)
 
         assert result["session_id"] == session_id
         assert len(progress_calls) >= 4

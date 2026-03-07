@@ -128,17 +128,30 @@ def apply_changes(
         change_map[c.section] = c
 
     # Apply and collect outcomes
+    existing_sections = set(cp.sections())
     outcomes: list[ChangeOutcome] = []
     for section, vr in change_map.items():
+        # Skip sections that don't exist in the target file
+        if section not in existing_sections:
+            logger.warning(
+                "Section '%s' not found in setup file, skipping change", section
+            )
+            outcomes.append(ChangeOutcome(
+                section=section,
+                parameter="VALUE",
+                old_value="",
+                new_value=str(vr.clamped_value if (not vr.is_valid and vr.clamped_value is not None) else vr.proposed_value),
+                status="skipped",
+                reason=f"Section '{section}' not found in setup file",
+            ))
+            continue
+
         # Determine effective value
         effective = vr.clamped_value if (not vr.is_valid and vr.clamped_value is not None) else vr.proposed_value
 
         old_value = ""
-        if cp.has_section(section) and cp.has_option(section, "VALUE"):
+        if cp.has_option(section, "VALUE"):
             old_value = cp.get(section, "VALUE")
-
-        if not cp.has_section(section):
-            cp.add_section(section)
 
         new_val_str = str(effective)
         cp.set(section, "VALUE", new_val_str)
