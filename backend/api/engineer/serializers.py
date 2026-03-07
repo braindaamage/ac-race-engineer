@@ -70,7 +70,7 @@ class RecommendationDetailResponse(BaseModel):
 class ApplyRequest(BaseModel):
     """Body for POST /recommendations/{rec_id}/apply."""
 
-    setup_path: str
+    setup_path: str = ""
 
 
 class ApplyResponse(BaseModel):

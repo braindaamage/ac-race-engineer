@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import configparser
+import io
 import logging
 from typing import TYPE_CHECKING
 
@@ -33,6 +35,7 @@ def summarize_session(
     config: ACConfig,
     *,
     max_corner_issues: int = 5,
+    setup_ini_contents: str | None = None,
 ) -> SessionSummary:
     """Compress an analyzed session into a compact, token-efficient summary.
 
@@ -71,6 +74,10 @@ def summarize_session(
     if session.stints:
         last_stint = session.stints[-1]
         active_setup_filename = last_stint.setup_filename
+
+    # Populate active_setup_parameters from .ini contents if provided
+    if setup_ini_contents and active_setup_parameters is None:
+        active_setup_parameters = _parse_setup_ini(setup_ini_contents)
 
     # Average understeer ratio across all flying lap corners
     avg_understeer = _compute_avg_understeer(flying_laps)
@@ -341,3 +348,28 @@ def _compute_session_averages(
         return result if result else None
 
     return _avg(temp_sums), _avg(pressure_sums), _avg(slip_sums)
+
+
+def _parse_setup_ini(contents: str) -> dict[str, dict[str, float | str]] | None:
+    """Parse raw .ini contents into {section: {param: value}} dict.
+
+    Only includes sections that have a ``VALUE`` key, filtering out
+    metadata sections like ``ABOUT``, ``CAR``, ``__EXT_PATCH``.
+    """
+    try:
+        cp = configparser.ConfigParser()
+        cp.optionxform = str
+        cp.read_string(contents)
+        result: dict[str, dict[str, float | str]] = {}
+        for section in cp.sections():
+            if not cp.has_option(section, "VALUE"):
+                continue
+            val = cp.get(section, "VALUE")
+            try:
+                result[section] = {"VALUE": float(val)}
+            except ValueError:
+                result[section] = {"VALUE": val}
+        return result if result else None
+    except Exception:
+        logger.warning("Failed to parse setup .ini contents")
+        return None

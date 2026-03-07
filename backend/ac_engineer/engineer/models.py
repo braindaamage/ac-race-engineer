@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -139,6 +139,8 @@ class ChangeOutcome(BaseModel):
     parameter: str
     old_value: str
     new_value: str
+    status: Literal["applied", "skipped"] = "applied"
+    reason: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -149,8 +151,12 @@ class ChangeOutcome(BaseModel):
 class SetupChange(BaseModel):
     """A fully described setup modification proposed by the AI engineer."""
 
-    section: str
-    parameter: str
+    section: str = Field(
+        description="Exact section name from the setup .ini file (e.g. 'CAMBER_RF', 'PRESSURE_LF', 'SPRING_RATE_FR'). Must match a section listed in Current Setup Parameters exactly.",
+    )
+    parameter: str = Field(
+        description="Parameter name within the section. In AC setup files this is always 'VALUE'.",
+    )
     value_before: float | None = None
     value_after: float
     reasoning: str

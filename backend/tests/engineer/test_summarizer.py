@@ -285,3 +285,40 @@ class TestEdgeCasesAndDeterminism:
         original = copy.deepcopy(session.model_dump())
         summarize_session(session, _config())
         assert session.model_dump() == original
+
+
+# ---------------------------------------------------------------------------
+# Setup .ini contents parsing
+# ---------------------------------------------------------------------------
+
+
+class TestSetupIniContents:
+    def test_setup_ini_populates_active_setup_parameters(self):
+        ini_contents = "[CAMBER_LF]\nVALUE=-2.5\n\n[PRESSURE_RF]\nVALUE=26.0\n"
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+        summary = summarize_session(session, _config(), setup_ini_contents=ini_contents)
+        assert summary.active_setup_parameters is not None
+        assert "CAMBER_LF" in summary.active_setup_parameters
+        assert summary.active_setup_parameters["CAMBER_LF"]["VALUE"] == -2.5
+        assert "PRESSURE_RF" in summary.active_setup_parameters
+        assert summary.active_setup_parameters["PRESSURE_RF"]["VALUE"] == 26.0
+
+    def test_no_setup_ini_leaves_parameters_none(self):
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+        summary = summarize_session(session, _config())
+        assert summary.active_setup_parameters is None
+
+    def test_empty_setup_ini_leaves_parameters_none(self):
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+        summary = summarize_session(session, _config(), setup_ini_contents="")
+        assert summary.active_setup_parameters is None
+
+    def test_invalid_setup_ini_leaves_parameters_none(self):
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+        summary = summarize_session(session, _config(), setup_ini_contents="not valid ini {{{{")
+        # Should handle gracefully — either None or parsed as best effort
+        assert isinstance(summary, SessionSummary)

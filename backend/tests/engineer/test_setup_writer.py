@@ -216,3 +216,43 @@ class TestApplyChanges:
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
         assert cp.get("CAMBER_LF", "VALUE") == "-5.0"
+
+    def test_nonexistent_section_skipped(self, sample_setup_ini: Path):
+        """A change targeting a section not in the .ini is skipped, not added."""
+        ranges = _make_ranges()
+        changes = validate_changes(ranges, [
+            _make_change("CAMBER_LF", -3.0),
+            _make_change("NONEXISTENT_SECTION", 42.0),
+        ])
+        outcomes = apply_changes(sample_setup_ini, changes)
+        assert len(outcomes) == 2
+
+        applied = [o for o in outcomes if o.status == "applied"]
+        skipped = [o for o in outcomes if o.status == "skipped"]
+        assert len(applied) == 1
+        assert applied[0].section == "CAMBER_LF"
+        assert len(skipped) == 1
+        assert skipped[0].section == "NONEXISTENT_SECTION"
+        assert "not found" in skipped[0].reason
+
+        # Verify the nonexistent section was NOT added to the file
+        import configparser
+        cp = configparser.ConfigParser()
+        cp.optionxform = str
+        cp.read(str(sample_setup_ini))
+        assert not cp.has_section("NONEXISTENT_SECTION")
+
+    def test_all_sections_nonexistent_skipped(self, sample_setup_ini: Path):
+        """When all changes target nonexistent sections, all are skipped."""
+        changes = [
+            ValidationResult(
+                section="FAKE_A", parameter="VALUE",
+                proposed_value=1.0, is_valid=True,
+            ),
+            ValidationResult(
+                section="FAKE_B", parameter="VALUE",
+                proposed_value=2.0, is_valid=True,
+            ),
+        ]
+        outcomes = apply_changes(sample_setup_ini, changes)
+        assert all(o.status == "skipped" for o in outcomes)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request
@@ -52,6 +53,58 @@ def _require_analyzed_session(db_path, session_id: str) -> SessionRecord:
             ),
         )
     return session
+
+
+def _resolve_setup_path(
+    session: SessionRecord,
+    sessions_dir: str | Path,
+    config,
+) -> Path:
+    """Auto-resolve setup file path from session metadata and config.
+
+    Reads the .meta.json, finds the last setup_history entry with a filename,
+    and constructs the full path: {config.setups_path}/{car}/{track}/{filename}.
+    """
+    if not config.setups_path:
+        raise HTTPException(
+            status_code=400,
+            detail="No setups_path configured. Set it in Settings.",
+        )
+
+    # Load meta.json to get setup_history
+    meta_path = session.meta_path
+    if not meta_path or not Path(meta_path).is_file():
+        raise HTTPException(
+            status_code=400,
+            detail="No setup file found in session history. Please specify a setup_path.",
+        )
+
+    try:
+        meta = json.loads(Path(meta_path).read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        raise HTTPException(
+            status_code=400,
+            detail="No setup file found in session history. Please specify a setup_path.",
+        )
+
+    setup_history = meta.get("setup_history", [])
+
+    # Find last entry with a non-null filename
+    filename = None
+    for entry in reversed(setup_history):
+        fn = entry.get("filename")
+        if fn:
+            filename = fn
+            break
+
+    if not filename:
+        raise HTTPException(
+            status_code=400,
+            detail="No setup file found in session history. Please specify a setup_path.",
+        )
+
+    track = meta.get("track_name", session.track)
+    return Path(config.setups_path) / session.car / track / filename
 
 
 # ---------------------------------------------------------------------------
@@ -245,15 +298,24 @@ async def apply_recommendation_endpoint(
             detail=f"Recommendation already applied: {recommendation_id}",
         )
 
-    setup_path = Path(body.setup_path)
+    config_path = request.app.state.config_path
+    config = read_config(config_path)
+
+    # Resolve setup_path: use provided value or auto-resolve from session metadata
+    if body.setup_path.strip():
+        setup_path = Path(body.setup_path)
+    else:
+        setup_path = _resolve_setup_path(
+            session=session,
+            sessions_dir=request.app.state.sessions_dir,
+            config=config,
+        )
+
     if not setup_path.is_file():
         raise HTTPException(
             status_code=400,
-            detail=f"Setup file not found: {body.setup_path}",
+            detail=f"Setup file not found: {setup_path}",
         )
-
-    config_path = request.app.state.config_path
-    config = read_config(config_path)
 
     outcomes = await apply_recommendation(
         recommendation_id=recommendation_id,

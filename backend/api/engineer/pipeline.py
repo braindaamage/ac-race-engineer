@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -15,7 +16,7 @@ from pydantic_ai.messages import (
 
 from ac_engineer.config.models import ACConfig
 from ac_engineer.engineer.agents import analyze_with_engineer
-from ac_engineer.engineer.agents import get_model_string
+from ac_engineer.engineer.agents import build_model
 from ac_engineer.engineer.models import SessionSummary
 from ac_engineer.engineer.summarizer import summarize_session
 from ac_engineer.storage.messages import get_messages, save_message
@@ -43,8 +44,11 @@ def make_engineer_job(
             cache_dir = get_cache_dir(sessions_dir, session_id)
             analyzed = load_analyzed_session(cache_dir)
 
+            await update(15, "Loading setup contents...")
+            setup_ini_contents = _load_setup_contents(cache_dir)
+
             await update(20, "Summarizing session for AI engineer...")
-            summary = summarize_session(analyzed, config)
+            summary = summarize_session(analyzed, config, setup_ini_contents=setup_ini_contents)
 
             await update(30, "Running AI engineer analysis...")
             response = await analyze_with_engineer(
@@ -54,11 +58,22 @@ def make_engineer_job(
                 ac_install_path=config.ac_install_path,
             )
 
+            # Detect total failure: no changes, no feedback, low confidence
+            analysis_failed = (
+                not response.setup_changes
+                and not response.driver_feedback
+                and response.confidence == "low"
+            )
+
             await update(85, "Caching engineer response...")
             recs = get_recommendations(db_path, session_id)
             if recs:
                 rec_id = recs[-1].recommendation_id
                 save_engineer_response(cache_dir, rec_id, response)
+
+            if analysis_failed:
+                # Keep session at "analyzed" so the user can retry
+                return {"session_id": session_id, "state": "analyzed", "error": response.explanation}
 
             await update(95, "Updating session state...")
             update_session_state(db_path, session_id, "engineered")
@@ -87,8 +102,11 @@ def make_chat_job(
         cache_dir = get_cache_dir(sessions_dir, session_id)
         analyzed = load_analyzed_session(cache_dir)
 
+        await update(10, "Loading setup contents...")
+        setup_ini_contents = _load_setup_contents(cache_dir)
+
         await update(15, "Summarizing session for context...")
-        summary = summarize_session(analyzed, config)
+        summary = summarize_session(analyzed, config, setup_ini_contents=setup_ini_contents)
 
         await update(20, "Loading conversation history...")
         messages = get_messages(db_path, session_id)
@@ -112,9 +130,9 @@ def make_chat_job(
                     ModelResponse(parts=[TextPart(content=msg.content)])
                 )
 
-        model_string = get_model_string(config)
+        model = build_model(config)
         agent: Agent[None, str] = Agent(
-            model_string,
+            model,
             system_prompt=system_prompt,
         )
 
@@ -155,3 +173,21 @@ def _build_chat_system_prompt(summary: SessionSummary) -> str:
         f"Answer the driver's questions about this session. "
         f"Be specific and reference data from the session context."
     )
+
+
+def _load_setup_contents(cache_dir: Path) -> str | None:
+    """Load the last setup .ini contents from the session's .meta.json."""
+    meta_path = cache_dir.parent / f"{cache_dir.name}.meta.json"
+    meta_files = [meta_path] if meta_path.is_file() else []
+    if not meta_files:
+        return None
+    try:
+        meta = json.loads(meta_files[0].read_text(encoding="utf-8"))
+        setup_history = meta.get("setup_history", [])
+        for entry in reversed(setup_history):
+            contents = entry.get("contents")
+            if contents:
+                return contents
+    except (json.JSONDecodeError, OSError):
+        pass
+    return None

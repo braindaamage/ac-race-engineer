@@ -107,7 +107,7 @@ class TestGetModelString:
     def test_gemini_google_prefix(self):
         config = ACConfig(llm_provider="gemini")
         result = get_model_string(config)
-        assert result.startswith("google:")
+        assert result.startswith("google-gla:")
         assert "gemini" in result
 
     def test_custom_model_override(self):
