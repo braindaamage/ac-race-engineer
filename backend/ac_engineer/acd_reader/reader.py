@@ -42,10 +42,12 @@ def _decrypt_bytes(data: bytes, key: bytes) -> bytes:
     return bytes((b - key[i % len(key)]) & 0xFF for i, b in enumerate(data))
 
 
-def _parse_archive(data: bytes, key: bytes) -> dict[str, bytes]:
-    """Parse the sequential ACD binary archive format."""
+_V2_SENTINEL = -1111
+
+
+def _parse_entries_v1(data: bytes, offset: int, key: bytes) -> dict[str, bytes]:
+    """Parse standard ACD entries: 1 byte per content byte on disk."""
     files: dict[str, bytes] = {}
-    offset = 0
     while offset < len(data):
         # Read filename length
         if offset + 4 > len(data):
@@ -77,6 +79,58 @@ def _parse_archive(data: bytes, key: bytes) -> dict[str, bytes]:
         files[filename] = _decrypt_bytes(encrypted, key)
 
     return files
+
+
+def _parse_entries_v2(data: bytes, offset: int, key: bytes) -> dict[str, bytes]:
+    """Parse -1111 format entries: each content byte stored as 4-byte int32-LE."""
+    files: dict[str, bytes] = {}
+    while offset < len(data):
+        # Read filename length
+        if offset + 4 > len(data):
+            raise ValueError("Corrupted archive: unexpected end of data")
+        (fname_len,) = struct.unpack("<i", data[offset : offset + 4])
+        offset += 4
+        if fname_len < 0:
+            raise ValueError("Corrupted archive: invalid entry size")
+
+        # Read filename (single-byte chars, same as v1)
+        if offset + fname_len > len(data):
+            raise ValueError("Corrupted archive: unexpected end of data")
+        filename = data[offset : offset + fname_len].decode("utf-8")
+        offset += fname_len
+
+        # Read content size (number of logical bytes)
+        if offset + 4 > len(data):
+            raise ValueError("Corrupted archive: unexpected end of data")
+        (content_size,) = struct.unpack("<i", data[offset : offset + 4])
+        offset += 4
+        if content_size < 0:
+            raise ValueError("Corrupted archive: invalid entry size")
+
+        # Each byte stored as int32-LE → 4 bytes per logical byte on disk
+        disk_size = content_size * 4
+        if offset + disk_size > len(data):
+            raise ValueError("Corrupted archive: unexpected end of data")
+
+        # Extract encrypted bytes from int32 values
+        encrypted = bytes(
+            struct.unpack("<i", data[offset + i * 4 : offset + i * 4 + 4])[0] & 0xFF
+            for i in range(content_size)
+        )
+        offset += disk_size
+        files[filename] = _decrypt_bytes(encrypted, key)
+
+    return files
+
+
+def _parse_archive(data: bytes, key: bytes) -> dict[str, bytes]:
+    """Parse an ACD binary archive, auto-detecting v1 vs v2 (-1111) format."""
+    if len(data) >= 4:
+        (sentinel,) = struct.unpack("<i", data[0:4])
+        if sentinel == _V2_SENTINEL:
+            # Skip 8-byte header (4-byte sentinel + 4-byte unknown field)
+            return _parse_entries_v2(data, 8, key)
+    return _parse_entries_v1(data, 0, key)
 
 
 def _is_readable(content: bytes) -> bool:

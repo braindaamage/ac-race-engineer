@@ -220,3 +220,45 @@ class TestReadAcdDiverse:
         acd_path.write_bytes(acd_data)
         result = read_acd(acd_path, name)
         assert result.ok is True
+
+
+class TestReadAcdV2Format:
+    """Tests for the -1111 header ACD format variant."""
+
+    def test_v2_single_file_extracts(self, tmp_path, sample_car_name):
+        entries = {"setup.ini": b"[CAMBER_LF]\nMIN=-5\nMAX=0\nSTEP=0.1\n"}
+        acd_data = build_acd(entries, sample_car_name, format="v2")
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert result.error is None
+        assert "setup.ini" in result.files
+        assert result.files["setup.ini"] == entries["setup.ini"]
+
+    def test_v2_multiple_files_decrypt(self, tmp_path, sample_car_name, sample_entries):
+        acd_data = build_acd(sample_entries, sample_car_name, format="v2")
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert set(result.files.keys()) == set(sample_entries.keys())
+        for name, content in sample_entries.items():
+            assert result.files[name] == content, f"Content mismatch for {name}"
+
+    def test_v1_still_works_after_v2_support(self, tmp_path, sample_car_name, sample_entries):
+        """Regression: standard v1 format must still parse correctly."""
+        acd_data = build_acd(sample_entries, sample_car_name, format="v1")
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert set(result.files.keys()) == set(sample_entries.keys())
+        for name, content in sample_entries.items():
+            assert result.files[name] == content

@@ -5,21 +5,38 @@ import struct
 import pytest
 
 
-def build_acd(entries: dict[str, bytes], car_name: str) -> bytes:
+def build_acd(entries: dict[str, bytes], car_name: str, *, format: str = "v1") -> bytes:
     """Build a valid ACD binary archive from filename->content mapping.
 
     Derives the encryption key from car_name and encrypts each entry,
     then packs them in sequential ACD format.
+
+    Args:
+        format: "v1" for standard format, "v2" for -1111 header format
+                where each content byte is stored as an int32-LE.
     """
     key = _derive_key_for_test(car_name)
     parts: list[bytes] = []
+
+    if format == "v2":
+        # 8-byte header: sentinel (-1111) + padding (0)
+        parts.append(struct.pack("<i", -1111))
+        parts.append(struct.pack("<i", 0))
+
     for filename, content in entries.items():
         fname_bytes = filename.encode("utf-8")
         encrypted = _encrypt_bytes(content, key)
         parts.append(struct.pack("<i", len(fname_bytes)))
         parts.append(fname_bytes)
         parts.append(struct.pack("<i", len(encrypted)))
-        parts.append(encrypted)
+
+        if format == "v2":
+            # Each encrypted byte stored as int32-LE
+            for b in encrypted:
+                parts.append(struct.pack("<i", b))
+        else:
+            parts.append(encrypted)
+
     return b"".join(parts)
 
 
