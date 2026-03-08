@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _parse_setup_ini(content: str) -> dict[str, ParameterRange]:
     """Parse setup.ini content into parameter ranges."""
-    cp = configparser.ConfigParser()
+    cp = configparser.ConfigParser(comment_prefixes=(";", "#", "/"))
     cp.optionxform = str
     cp.read_file(io.StringIO(content))
 
