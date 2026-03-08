@@ -6,8 +6,6 @@ from pathlib import Path
 
 from ac_engineer.acd_reader import AcdResult, read_acd
 
-# build_acd is imported from conftest via sys.path manipulation by pytest
-# We access it through a fixture instead
 from tests.acd_reader.conftest import build_acd
 
 
@@ -50,20 +48,10 @@ class TestReadAcdSuccess:
 
     def test_empty_archive(self, tmp_path, sample_car_name):
         acd_path = tmp_path / "data.acd"
-        # An empty archive is just a file with no entries but nonzero size
-        # Write a single null byte so it's not empty (empty file is a different error)
-        # Actually, build_acd with empty dict produces b"" which is 0 bytes.
-        # We need the file to be non-empty for it to pass the size check.
-        # Per task: "empty bytes or just EOF" → but the file must not be 0 bytes
-        # since that triggers "File is empty". Let's write a minimal non-empty
-        # file that has no valid entries. Actually, let's test build_acd({}).
         acd_data = build_acd({}, sample_car_name)
         if len(acd_data) == 0:
-            # Empty archive produces 0 bytes, which hits "File is empty".
-            # This is correct behavior — an empty file IS empty.
             acd_path.write_bytes(b"\x00")
             result = read_acd(acd_path, sample_car_name)
-            # A single null byte can't be parsed as a valid entry
             assert result.ok is False
             return
 
@@ -220,3 +208,80 @@ class TestReadAcdDiverse:
         acd_path.write_bytes(acd_data)
         result = read_acd(acd_path, name)
         assert result.ok is True
+
+
+class TestReadAcdSentinel:
+    """Tests for the -1111 sentinel header variant."""
+
+    def test_sentinel_single_file_extracts(self, tmp_path, sample_car_name):
+        entries = {"setup.ini": b"[CAMBER_LF]\nMIN=-5\nMAX=0\nSTEP=0.1\n"}
+        acd_data = build_acd(entries, sample_car_name, sentinel=True)
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert result.error is None
+        assert "setup.ini" in result.files
+        assert result.files["setup.ini"] == entries["setup.ini"]
+
+    def test_sentinel_multiple_files_decrypt(self, tmp_path, sample_car_name, sample_entries):
+        acd_data = build_acd(sample_entries, sample_car_name, sentinel=True)
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert set(result.files.keys()) == set(sample_entries.keys())
+        for name, content in sample_entries.items():
+            assert result.files[name] == content, f"Content mismatch for {name}"
+
+    def test_without_sentinel_header(self, tmp_path, sample_car_name, sample_entries):
+        """Standard archive without -1111 header still parses correctly."""
+        acd_data = build_acd(sample_entries, sample_car_name, sentinel=False)
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert set(result.files.keys()) == set(sample_entries.keys())
+        for name, content in sample_entries.items():
+            assert result.files[name] == content
+
+    def test_sentinel_and_plain_produce_same_output(self, tmp_path, sample_car_name, sample_entries):
+        """Both sentinel variants produce identical decrypted output."""
+        plain_data = build_acd(sample_entries, sample_car_name, sentinel=False)
+        sentinel_data = build_acd(sample_entries, sample_car_name, sentinel=True)
+
+        plain_path = tmp_path / "plain.acd"
+        plain_path.write_bytes(plain_data)
+        sentinel_path = tmp_path / "sentinel.acd"
+        sentinel_path.write_bytes(sentinel_data)
+
+        plain_result = read_acd(plain_path, sample_car_name)
+        sentinel_result = read_acd(sentinel_path, sample_car_name)
+
+        assert plain_result.ok is True
+        assert sentinel_result.ok is True
+        assert plain_result.files == sentinel_result.files
+
+
+class TestReadAcdNullBytes:
+    """Tests for null-byte handling in decryption."""
+
+    def test_null_byte_passthrough(self, tmp_path, sample_car_name):
+        """Null bytes in content are preserved without advancing the key."""
+        # Content with embedded null bytes (long enough to pass readability check)
+        content = b"[HEADER]\nVERSION=1\n\x00EXTRA=value\n"
+        entries = {"test.ini": content}
+        acd_data = build_acd(entries, sample_car_name)
+        acd_path = tmp_path / "data.acd"
+        acd_path.write_bytes(acd_data)
+
+        result = read_acd(acd_path, sample_car_name)
+
+        assert result.ok is True
+        assert result.files["test.ini"] == content

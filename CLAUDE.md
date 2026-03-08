@@ -5,12 +5,14 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 
 ## Arquitectura
 - ac_app/ → App in-game para AC: captura telemetría a CSV (20-30Hz), Python ~3.3 embebido, Fases 1-1.5 COMPLETADAS
-- backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/, config/, storage/
+- backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/, config/, storage/, acd_reader/, resolver/
   - config/   → ACConfig model + read_config / write_config / update_config
   - storage/  → SQLite init + CRUD functions para sessions, recommendations, setup_changes, messages
   - engineer/ → summarizer, setup_reader/writer, agents (Pydantic AI specialists), tools, skills/ (markdown prompts)
+  - acd_reader/ → Descifrado de archivos data.acd (propietario AC), zero-dependency
+  - resolver/ → Resolución de parámetros en 3 tiers (open data → ACD → session fallback), caché SQLite
 - backend/api/ → Servidor FastAPI que expone los módulos de ac_engineer como endpoints HTTP
-  - routes/ → 7 routers: health, jobs, sessions, analysis, engineer, config, knowledge
+  - routes/ → 8 routers: health, jobs, sessions, analysis, engineer, config, knowledge, cars
   - jobs/ → JobManager in-memory + async worker + WebSocket streaming
   - engineer/ → pipeline (engineer+chat jobs), cache, serializers
 - backend/tests/ → Tests pytest para todos los módulos del backend
@@ -18,7 +20,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
   - components/ui/ → 10 design system components (Button, Card, Badge, Modal, etc.)
   - components/layout/ → AppShell, Sidebar, SplashScreen, ToastContainer
   - components/onboarding/ → OnboardingWizard, PathInput, Step* components
-  - hooks/ → 9 hooks (useTheme, useSessions, useLaps, useMessages, useRecommendations, etc.)
+  - hooks/ → 10 hooks (useTheme, useSessions, useLaps, useMessages, useRecommendations, useCars, etc.)
   - store/ → 5 Zustand stores (ui, session, theme, notification, job)
   - lib/ → api.ts, types.ts, constants.ts, validation.ts, wsManager.ts
   - views/ → 5 vistas: sessions, analysis, compare, engineer, settings
@@ -27,7 +29,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - data/sessions/ → Archivos de telemetría (.csv) y metadata (.meta.json) por sesión
 - data/setups/ → Archivos de setup .ini
 - data/config.json → Configuración de usuario (ac_install_path, llm_provider, llm_model, api_key)
-- data/ac_engineer.db → Base de datos SQLite (4 tablas: sessions, recommendations, setup_changes, messages)
+- data/ac_engineer.db → Base de datos SQLite (5 tablas: sessions, recommendations, setup_changes, messages, parameter_cache)
 
 ## Stack
 - Python 3.11+ (backend, conda env `ac-race-engineer`)
@@ -45,6 +47,8 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - `from ac_engineer.config import read_config, write_config, update_config, ACConfig`
 - `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages`
 - `from ac_engineer.engineer import summarize_session, read_parameter_ranges, validate_changes, apply_changes, analyze_with_engineer, apply_recommendation, build_model`
+- `from ac_engineer.acd_reader import read_acd, AcdResult`
+- `from ac_engineer.resolver import resolve_parameters, list_cars, get_cached_parameters, invalidate_cache, invalidate_all_caches, ResolvedParameters, ResolutionTier, CarStatus`
 
 ## Fases del proyecto
 - Fase 1 ✅ Captura de telemetría (app in-game AC)
@@ -57,6 +61,8 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 5.3 ✅ Engineer Agents (Pydantic AI specialists, tools, conflict resolution) — 81 tests
 - Fase 6 ✅ Backend API (FastAPI: 26 endpoints + 1 WebSocket, job system, file watcher) — 201 tests
 - Fase 7 ✅ Desktop App (Tauri + React: sessions, analysis, compare, engineer chat, settings) — 329 tests
+- Fase 8.1 ✅ ACD File Reader (descifrado de archivos data.acd propietarios de AC) — 20 tests
+- Fase 8.2 ✅ Setup Resolver (resolución de parámetros en 3 tiers, caché, API, UI) — 93 tests
 
 ## Reglas de desarrollo
 - Todo tipo de coche debe funcionar (vanilla y mods), no hardcodear por coche
@@ -75,4 +81,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 7 completadas (1128 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 81, API 201, frontend 329). El proyecto tiene funcionalidad end-to-end completa.
+Fases 1 a 8 completadas (1241 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 81, API 209, acd_reader 20, resolver 81, frontend 341, watcher+jobs 47). El proyecto tiene funcionalidad end-to-end completa con resolución de parámetros para el 100% de los coches.

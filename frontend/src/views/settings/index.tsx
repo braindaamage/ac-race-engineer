@@ -8,6 +8,7 @@ import { useNotificationStore } from "../../store/notificationStore";
 import { useUIStore } from "../../store/uiStore";
 import { apiPost } from "../../lib/api";
 import type { ConnectionTestResult } from "../../lib/validation";
+import { CarDataSection } from "./CarDataSection";
 import "./Settings.css";
 
 export function SettingsView() {
@@ -233,6 +234,9 @@ export function SettingsView() {
           </div>
         </div>
       </Card>
+
+      {/* Section: Car Data */}
+      <CarDataSection />
 
       {/* Section 4: Advanced */}
       <Card title="Advanced">

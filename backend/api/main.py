@@ -59,6 +59,7 @@ def create_app() -> FastAPI:
     from fastapi.middleware.cors import CORSMiddleware
 
     from api.routes.analysis import router as analysis_router
+    from api.routes.cars import router as cars_router
     from api.routes.config import router as config_router
     from api.routes.engineer import router as engineer_router
     from api.routes.health import router as health_router
@@ -83,6 +84,7 @@ def create_app() -> FastAPI:
     app.include_router(analysis_router, prefix="/sessions")
     app.include_router(engineer_router, prefix="/sessions")
     app.include_router(config_router, prefix="/config")
+    app.include_router(cars_router, prefix="/cars")
     app.include_router(knowledge_router)
     app.include_router(ws_jobs_router)
     register_error_handlers(app)

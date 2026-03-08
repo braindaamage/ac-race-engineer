@@ -43,6 +43,21 @@ def validate_changes(
             continue
 
         value = change.value_after
+
+        # Single-point range (min == max) means no real range data is
+        # available (Tier 3 session fallback).  Pass the proposed value
+        # through without clamping so recommendations are not no-ops.
+        if pr.min_value == pr.max_value:
+            results.append(ValidationResult(
+                section=change.section,
+                parameter=change.parameter,
+                proposed_value=value,
+                clamped_value=None,
+                is_valid=True,
+                warning="No range data; applied without bounds checking",
+            ))
+            continue
+
         if value < pr.min_value:
             results.append(ValidationResult(
                 section=change.section,

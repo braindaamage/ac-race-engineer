@@ -402,6 +402,8 @@ async def analyze_with_engineer(
     config: ACConfig,
     db_path: Path,
     ac_install_path: Path | None = None,
+    parameter_ranges: dict[str, ParameterRange] | None = None,
+    resolution_tier: int | None = None,
 ) -> EngineerResponse:
     """Primary entry point for AI-powered session analysis.
 
@@ -419,8 +421,11 @@ async def analyze_with_engineer(
             confidence="low",
         )
 
-    # Read parameter ranges
-    ranges = read_parameter_ranges(install_path, summary.car_name)
+    # Read parameter ranges (use pre-resolved if provided)
+    if parameter_ranges is not None:
+        ranges = parameter_ranges
+    else:
+        ranges = read_parameter_ranges(install_path, summary.car_name)
 
     # Route signals to domains
     domains = route_signals(summary.signals, summary.active_setup_parameters)
@@ -469,6 +474,7 @@ async def analyze_with_engineer(
             parameter_ranges=ranges,
             domain_signals=domain_signals,
             knowledge_fragments=all_knowledge,
+            resolution_tier=resolution_tier,
         )
 
         try:
@@ -525,6 +531,22 @@ async def analyze_with_engineer(
         )
     except Exception:
         logger.warning("Failed to persist recommendation", exc_info=True)
+
+    # Attach resolution tier metadata
+    if resolution_tier is not None:
+        tier_notice = ""
+        if resolution_tier == 3:
+            tier_notice = (
+                "Parameter data was inferred from the session's active setup file. "
+                "Exact adjustment ranges and factory defaults are not available for this car. "
+                "Recommendations may be less precise."
+            )
+        response = response.model_copy(
+            update={
+                "resolution_tier": resolution_tier,
+                "tier_notice": tier_notice,
+            }
+        )
 
     return response
 

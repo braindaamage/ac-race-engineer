@@ -19,6 +19,7 @@ from ac_engineer.engineer.agents import analyze_with_engineer
 from ac_engineer.engineer.agents import build_model
 from ac_engineer.engineer.models import SessionSummary
 from ac_engineer.engineer.summarizer import summarize_session
+from ac_engineer.resolver import resolve_parameters
 from ac_engineer.storage.messages import get_messages, save_message
 from ac_engineer.storage.recommendations import get_recommendations
 from ac_engineer.storage.sessions import update_session_state
@@ -50,12 +51,22 @@ def make_engineer_job(
             await update(20, "Summarizing session for AI engineer...")
             summary = summarize_session(analyzed, config, setup_ini_contents=setup_ini_contents)
 
+            await update(25, "Resolving parameter ranges...")
+            resolved = resolve_parameters(
+                config.ac_install_path,
+                summary.car_name,
+                Path(db_path),
+                session_setup=summary.active_setup_parameters,
+            )
+
             await update(30, "Running AI engineer analysis...")
             response = await analyze_with_engineer(
                 summary,
                 config,
                 Path(db_path),
                 ac_install_path=config.ac_install_path,
+                parameter_ranges=resolved.parameters,
+                resolution_tier=resolved.tier,
             )
 
             # Detect total failure: no changes, no feedback, low confidence

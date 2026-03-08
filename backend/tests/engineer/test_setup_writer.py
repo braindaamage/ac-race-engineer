@@ -97,6 +97,33 @@ class TestValidateChanges:
         r_max = validate_changes(ranges, [_make_change("CAMBER_LF", 0.0)])
         assert r_max[0].is_valid is True
 
+    def test_single_point_range_passes_higher_value(self):
+        """min == max (Tier 3): proposed value above current passes through unclamped."""
+        ranges = {
+            "TOE_OUT_LF": ParameterRange(
+                section="TOE_OUT_LF", parameter="VALUE",
+                min_value=6.0, max_value=6.0, step=1,
+            ),
+        }
+        results = validate_changes(ranges, [_make_change("TOE_OUT_LF", 7.0)])
+        assert results[0].is_valid is True
+        assert results[0].clamped_value is None
+        assert results[0].proposed_value == 7.0
+        assert "no range data" in results[0].warning.lower()
+
+    def test_single_point_range_passes_lower_value(self):
+        """min == max (Tier 3): proposed value below current passes through unclamped."""
+        ranges = {
+            "TOE_OUT_LF": ParameterRange(
+                section="TOE_OUT_LF", parameter="VALUE",
+                min_value=6.0, max_value=6.0, step=1,
+            ),
+        }
+        results = validate_changes(ranges, [_make_change("TOE_OUT_LF", 5.0)])
+        assert results[0].is_valid is True
+        assert results[0].clamped_value is None
+        assert results[0].proposed_value == 5.0
+
 
 # ---------------------------------------------------------------------------
 # T026: Backup tests

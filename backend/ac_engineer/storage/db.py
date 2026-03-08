@@ -58,6 +58,15 @@ _MIGRATIONS = [
     "ALTER TABLE sessions ADD COLUMN session_type TEXT",
     "ALTER TABLE sessions ADD COLUMN csv_path TEXT",
     "ALTER TABLE sessions ADD COLUMN meta_path TEXT",
+    (
+        "CREATE TABLE IF NOT EXISTS parameter_cache ("
+        "car_name TEXT PRIMARY KEY, "
+        "tier INTEGER NOT NULL CHECK(tier IN (1, 2)), "
+        "has_defaults INTEGER NOT NULL DEFAULT 0, "
+        "parameters_json TEXT NOT NULL, "
+        "resolved_at TEXT NOT NULL"
+        ")"
+    ),
 ]
 
 

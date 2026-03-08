@@ -323,3 +323,44 @@ export interface ApplyResponse {
 export type FeedItem =
   | { type: "message"; data: MessageResponse }
   | { type: "recommendation"; data: RecommendationDetailResponse };
+
+// ---------------------------------------------------------------------------
+// Car data types
+// ---------------------------------------------------------------------------
+
+export interface CarStatusRecord {
+  car_name: string;
+  status: "resolved" | "unresolved";
+  tier: number | null;
+  has_defaults: boolean | null;
+  resolved_at: string | null;
+}
+
+export interface CarListResponse {
+  cars: CarStatusRecord[];
+  total: number;
+}
+
+export interface CarParametersResponse {
+  car_name: string;
+  tier: number;
+  has_defaults: boolean;
+  resolved_at: string;
+  parameters: Record<string, {
+    section: string;
+    parameter: string;
+    min_value: number;
+    max_value: number;
+    step: number;
+    default_value: number | null;
+  }>;
+}
+
+export interface CacheInvalidateResponse {
+  car_name: string;
+  invalidated: boolean;
+}
+
+export interface CacheInvalidateAllResponse {
+  invalidated_count: number;
+}
