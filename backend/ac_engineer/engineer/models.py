@@ -184,6 +184,8 @@ class EngineerResponse(BaseModel):
     summary: str
     explanation: str
     confidence: Literal["high", "medium", "low"]
+    resolution_tier: int | None = None
+    tier_notice: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -214,3 +216,4 @@ class AgentDeps(BaseModel):
     parameter_ranges: dict[str, ParameterRange] = {}
     domain_signals: list[str] = []
     knowledge_fragments: list[Any] = []
+    resolution_tier: int | None = None
