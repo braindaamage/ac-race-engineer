@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 VALID_SESSION_STATES = ("discovered", "parsed", "analyzed", "engineered")
@@ -61,3 +63,32 @@ class Message(BaseModel):
     role: str = ""
     content: str = ""
     created_at: str = ""
+
+
+VALID_DOMAINS = ("balance", "tyre", "aero", "technique")
+
+
+class ToolCallDetail(BaseModel):
+    """A single tool invocation within an agent execution."""
+
+    detail_id: str = ""
+    usage_id: str = ""
+    tool_name: str = Field(..., min_length=1)
+    token_count: int = Field(..., ge=0)
+    called_at: str = ""
+
+
+class AgentUsage(BaseModel):
+    """A specialist agent execution within an engineer recommendation."""
+
+    usage_id: str = ""
+    recommendation_id: str = ""
+    domain: Literal["balance", "tyre", "aero", "technique"]
+    model: str = Field(..., min_length=1)
+    input_tokens: int = Field(..., ge=0)
+    output_tokens: int = Field(..., ge=0)
+    tool_call_count: int = Field(..., ge=0)
+    turn_count: int = Field(..., ge=0)
+    duration_ms: int = Field(..., ge=0)
+    created_at: str = ""
+    tool_calls: list[ToolCallDetail] = Field(default_factory=list)
