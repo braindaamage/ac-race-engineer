@@ -19,8 +19,8 @@
 
 **Purpose**: Pydantic models and database migration — shared by all user stories
 
-- [ ] T001 [P] Add `VALID_DOMAINS` tuple, `ToolCallDetail` model, and `AgentUsage` model (with `Literal` domain type) to `backend/ac_engineer/storage/models.py`, following existing model conventions per data-model.md
-- [ ] T002 [P] Append two `CREATE TABLE IF NOT EXISTS` statements (agent_usage, tool_call_details) to `_MIGRATIONS` list in `backend/ac_engineer/storage/db.py`, using the DDL from data-model.md
+- [x] T001 [P] Add `VALID_DOMAINS` tuple, `ToolCallDetail` model, and `AgentUsage` model (with `Literal` domain type) to `backend/ac_engineer/storage/models.py`, following existing model conventions per data-model.md
+- [x] T002 [P] Append two `CREATE TABLE IF NOT EXISTS` statements (agent_usage, tool_call_details) to `_MIGRATIONS` list in `backend/ac_engineer/storage/db.py`, using the DDL from data-model.md
 
 **Checkpoint**: Models defined and tables created on `init_db()`. Verify by running `init_db` on a fresh temp database and confirming 7 tables exist.
 
@@ -36,16 +36,16 @@
 
 ### Tests for US1+US2
 
-- [ ] T003 [P] [US1] Write test `TestSaveAgentUsage::test_creates_record_with_all_fields` — save a usage record with tool calls, verify all fields populated and UUIDs generated (32-char hex), in `backend/tests/storage/test_usage.py`. Include `_setup_session` and `_setup_recommendation` helpers plus a `_sample_tool_calls` factory.
-- [ ] T004 [P] [US1] Write test `TestSaveAgentUsage::test_auto_generates_ids` — verify usage_id and all detail_ids are unique 32-char hex strings, in `backend/tests/storage/test_usage.py`
-- [ ] T005 [P] [US1] Write test `TestSaveAgentUsage::test_invalid_recommendation_raises` — save with nonexistent recommendation_id, expect `sqlite3.IntegrityError`, in `backend/tests/storage/test_usage.py`
-- [ ] T006 [P] [US1] Write test `TestSaveAgentUsage::test_invalid_domain_raises` — attempt to save with domain `'invalid'`, expect Pydantic `ValidationError`, in `backend/tests/storage/test_usage.py`
-- [ ] T007 [P] [US2] Write test `TestSaveAgentUsage::test_tool_calls_persisted_atomically` — save with multiple tool calls, verify all rows exist in tool_call_details table with correct usage_id FK, in `backend/tests/storage/test_usage.py`
-- [ ] T008 [P] [US2] Write test `TestSaveAgentUsage::test_saves_without_tool_calls` — save a usage record with empty tool_calls list, verify agent_usage row exists and tool_call_details table is empty, in `backend/tests/storage/test_usage.py`
+- [x] T003 [P] [US1] Write test `TestSaveAgentUsage::test_creates_record_with_all_fields` — save a usage record with tool calls, verify all fields populated and UUIDs generated (32-char hex), in `backend/tests/storage/test_usage.py`. Include `_setup_session` and `_setup_recommendation` helpers plus a `_sample_tool_calls` factory.
+- [x] T004 [P] [US1] Write test `TestSaveAgentUsage::test_auto_generates_ids` — verify usage_id and all detail_ids are unique 32-char hex strings, in `backend/tests/storage/test_usage.py`
+- [x] T005 [P] [US1] Write test `TestSaveAgentUsage::test_invalid_recommendation_raises` — save with nonexistent recommendation_id, expect `sqlite3.IntegrityError`, in `backend/tests/storage/test_usage.py`
+- [x] T006 [P] [US1] Write test `TestSaveAgentUsage::test_invalid_domain_raises` — attempt to save with domain `'invalid'`, expect Pydantic `ValidationError`, in `backend/tests/storage/test_usage.py`
+- [x] T007 [P] [US2] Write test `TestSaveAgentUsage::test_tool_calls_persisted_atomically` — save with multiple tool calls, verify all rows exist in tool_call_details table with correct usage_id FK, in `backend/tests/storage/test_usage.py`
+- [x] T008 [P] [US2] Write test `TestSaveAgentUsage::test_saves_without_tool_calls` — save a usage record with empty tool_calls list, verify agent_usage row exists and tool_call_details table is empty, in `backend/tests/storage/test_usage.py`
 
 ### Implementation for US1+US2
 
-- [ ] T009 [US1] Create `backend/ac_engineer/storage/usage.py` with `save_agent_usage(db_path, usage: AgentUsage) -> AgentUsage` function. Follow `save_recommendation` pattern: open `_connect`, insert agent_usage row with `uuid4().hex` ID and `datetime.now(UTC).isoformat()` timestamp, loop to insert each tool_call_detail with generated IDs, `conn.commit()`, return populated model. Single transaction per R2.
+- [x] T009 [US1] Create `backend/ac_engineer/storage/usage.py` with `save_agent_usage(db_path, usage: AgentUsage) -> AgentUsage` function. Follow `save_recommendation` pattern: open `_connect`, insert agent_usage row with `uuid4().hex` ID and `datetime.now(UTC).isoformat()` timestamp, loop to insert each tool_call_detail with generated IDs, `conn.commit()`, return populated model. Single transaction per R2.
 
 **Checkpoint**: All T003–T008 tests pass. `save_agent_usage` persists parent and child rows atomically.
 
@@ -59,13 +59,13 @@
 
 ### Tests for US3
 
-- [ ] T010 [P] [US3] Write test `TestGetAgentUsage::test_returns_with_tool_calls` — save 2 usage records (each with tool calls) for same recommendation, verify retrieval returns both ordered by created_at with tool calls populated, in `backend/tests/storage/test_usage.py`
-- [ ] T011 [P] [US3] Write test `TestGetAgentUsage::test_empty_returns_empty` — call get_agent_usage for recommendation with no usage records, verify empty list returned, in `backend/tests/storage/test_usage.py`
-- [ ] T012 [P] [US3] Write test `TestGetAgentUsage::test_does_not_return_other_recommendations` — save usage for rec A and rec B, verify get_agent_usage(rec_A) only returns rec A's records, in `backend/tests/storage/test_usage.py`
+- [x] T010 [P] [US3] Write test `TestGetAgentUsage::test_returns_with_tool_calls` — save 2 usage records (each with tool calls) for same recommendation, verify retrieval returns both ordered by created_at with tool calls populated, in `backend/tests/storage/test_usage.py`
+- [x] T011 [P] [US3] Write test `TestGetAgentUsage::test_empty_returns_empty` — call get_agent_usage for recommendation with no usage records, verify empty list returned, in `backend/tests/storage/test_usage.py`
+- [x] T012 [P] [US3] Write test `TestGetAgentUsage::test_does_not_return_other_recommendations` — save usage for rec A and rec B, verify get_agent_usage(rec_A) only returns rec A's records, in `backend/tests/storage/test_usage.py`
 
 ### Implementation for US3
 
-- [ ] T013 [US3] Add `get_agent_usage(db_path, recommendation_id: str) -> list[AgentUsage]` to `backend/ac_engineer/storage/usage.py`. Follow `get_recommendations` pattern: query agent_usage rows ordered by created_at ASC, for each row query tool_call_details, return nested `AgentUsage` models with `tool_calls` populated.
+- [x] T013 [US3] Add `get_agent_usage(db_path, recommendation_id: str) -> list[AgentUsage]` to `backend/ac_engineer/storage/usage.py`. Follow `get_recommendations` pattern: query agent_usage rows ordered by created_at ASC, for each row query tool_call_details, return nested `AgentUsage` models with `tool_calls` populated.
 
 **Checkpoint**: All T010–T012 tests pass. Full read path works with nested results.
 
@@ -75,12 +75,12 @@
 
 **Purpose**: Exports, migration idempotency, cascade behavior
 
-- [ ] T014 Update `backend/ac_engineer/storage/__init__.py` to import and export `AgentUsage`, `ToolCallDetail`, `VALID_DOMAINS`, `save_agent_usage`, `get_agent_usage` in both the import block and `__all__` list
-- [ ] T015 [P] Write test `TestMigration::test_fresh_db_creates_all_tables` — call `init_db` on fresh temp path, query `sqlite_master` for all 7 table names (sessions, recommendations, setup_changes, messages, parameter_cache, agent_usage, tool_call_details), in `backend/tests/storage/test_usage.py`
-- [ ] T016 [P] Write test `TestMigration::test_idempotent_on_existing_db` — call `init_db` twice on same path, verify no errors and tables intact, in `backend/tests/storage/test_usage.py`
-- [ ] T017 [P] Write test `TestCascade::test_delete_recommendation_cascades_to_usage_and_details` — create session → recommendation → usage → tool_calls, delete recommendation, verify agent_usage and tool_call_details rows are gone, in `backend/tests/storage/test_usage.py`
-- [ ] T018 Run full storage test suite (`conda run -n ac-race-engineer pytest backend/tests/storage/ -v`) to verify no regressions in existing tests
-- [ ] T019 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) to verify no regressions across the project
+- [x] T014 Update `backend/ac_engineer/storage/__init__.py` to import and export `AgentUsage`, `ToolCallDetail`, `VALID_DOMAINS`, `save_agent_usage`, `get_agent_usage` in both the import block and `__all__` list
+- [x] T015 [P] Write test `TestMigration::test_fresh_db_creates_all_tables` — call `init_db` on fresh temp path, query `sqlite_master` for all 7 table names (sessions, recommendations, setup_changes, messages, parameter_cache, agent_usage, tool_call_details), in `backend/tests/storage/test_usage.py`
+- [x] T016 [P] Write test `TestMigration::test_idempotent_on_existing_db` — call `init_db` twice on same path, verify no errors and tables intact, in `backend/tests/storage/test_usage.py`
+- [x] T017 [P] Write test `TestCascade::test_delete_recommendation_cascades_to_usage_and_details` — create session → recommendation → usage → tool_calls, delete recommendation, verify agent_usage and tool_call_details rows are gone, in `backend/tests/storage/test_usage.py`
+- [x] T018 Run full storage test suite (`conda run -n ac-race-engineer pytest backend/tests/storage/ -v`) to verify no regressions in existing tests
+- [x] T019 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) to verify no regressions across the project
 
 **Checkpoint**: All exports wired, all edge cases covered, full suite green.
 

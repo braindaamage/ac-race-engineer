@@ -67,6 +67,29 @@ _MIGRATIONS = [
         "resolved_at TEXT NOT NULL"
         ")"
     ),
+    (
+        "CREATE TABLE IF NOT EXISTS agent_usage ("
+        "usage_id TEXT PRIMARY KEY, "
+        "recommendation_id TEXT NOT NULL REFERENCES recommendations(recommendation_id) ON DELETE CASCADE, "
+        "domain TEXT NOT NULL CHECK(domain IN ('balance', 'tyre', 'aero', 'technique')), "
+        "model TEXT NOT NULL, "
+        "input_tokens INTEGER NOT NULL CHECK(input_tokens >= 0), "
+        "output_tokens INTEGER NOT NULL CHECK(output_tokens >= 0), "
+        "tool_call_count INTEGER NOT NULL CHECK(tool_call_count >= 0), "
+        "turn_count INTEGER NOT NULL CHECK(turn_count >= 0), "
+        "duration_ms INTEGER NOT NULL CHECK(duration_ms >= 0), "
+        "created_at TEXT NOT NULL"
+        ")"
+    ),
+    (
+        "CREATE TABLE IF NOT EXISTS tool_call_details ("
+        "detail_id TEXT PRIMARY KEY, "
+        "usage_id TEXT NOT NULL REFERENCES agent_usage(usage_id) ON DELETE CASCADE, "
+        "tool_name TEXT NOT NULL, "
+        "token_count INTEGER NOT NULL CHECK(token_count >= 0), "
+        "called_at TEXT NOT NULL"
+        ")"
+    ),
 ]
 
 
