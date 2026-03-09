@@ -116,3 +116,46 @@ class ClearMessagesResponse(BaseModel):
 
     session_id: str
     deleted_count: int
+
+
+# ---------------------------------------------------------------------------
+# Usage response models (Phase 9.2)
+# ---------------------------------------------------------------------------
+
+
+class ToolCallInfo(BaseModel):
+    """Individual tool call in usage response."""
+
+    tool_name: str
+    token_count: int
+
+
+class AgentUsageDetail(BaseModel):
+    """Per-agent breakdown in usage response."""
+
+    domain: str
+    model: str
+    input_tokens: int
+    output_tokens: int
+    tool_call_count: int
+    turn_count: int
+    duration_ms: int
+    tool_calls: list[ToolCallInfo] = []
+
+
+class UsageTotals(BaseModel):
+    """Aggregated totals across all agents."""
+
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
+    tool_call_count: int
+    agent_count: int
+
+
+class RecommendationUsageResponse(BaseModel):
+    """Response for GET /sessions/{sid}/recommendations/{rid}/usage."""
+
+    recommendation_id: str
+    totals: UsageTotals
+    agents: list[AgentUsageDetail] = []
