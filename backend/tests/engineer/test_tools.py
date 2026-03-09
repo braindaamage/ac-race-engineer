@@ -15,7 +15,6 @@ from ac_engineer.engineer.models import (
 )
 from ac_engineer.engineer.tools import (
     get_corner_metrics,
-    get_current_value,
     get_lap_detail,
     get_setup_range,
     search_kb,
@@ -30,7 +29,7 @@ def _make_ctx(deps: AgentDeps) -> MagicMock:
 
 
 # ===================================================================
-# T010: Tool function tests (~8 tests)
+# T010: Tool function tests
 # ===================================================================
 
 
@@ -53,81 +52,109 @@ class TestSearchKb:
 
 
 class TestGetSetupRange:
-    """Tests for get_setup_range tool."""
+    """Tests for batch get_setup_range tool."""
 
     @pytest.mark.asyncio
-    async def test_returns_range_info(self, sample_agent_deps):
+    async def test_single_item_returns_range_info(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_setup_range(ctx, "PRESSURE_LF")
+        result = await get_setup_range(ctx, ["PRESSURE_LF"])
         assert "Min: 20.0" in result
         assert "Max: 35.0" in result
         assert "Step: 0.5" in result
 
     @pytest.mark.asyncio
-    async def test_returns_not_found_for_unknown(self, sample_agent_deps):
+    async def test_multi_item_returns_all_blocks(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_setup_range(ctx, "NONEXISTENT")
+        result = await get_setup_range(ctx, ["PRESSURE_LF", "WING_1"])
+        assert "PRESSURE_LF" in result
+        assert "WING_1" in result
+        assert "Min: 20.0" in result
+        assert "Min: 0" in result
+
+    @pytest.mark.asyncio
+    async def test_unknown_section_in_batch(self, sample_agent_deps):
+        ctx = _make_ctx(sample_agent_deps)
+        result = await get_setup_range(ctx, ["PRESSURE_LF", "NONEXISTENT"])
+        assert "Min: 20.0" in result
         assert "no range data" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_empty_list_returns_empty(self, sample_agent_deps):
+        ctx = _make_ctx(sample_agent_deps)
+        result = await get_setup_range(ctx, [])
+        assert result == ""
 
     @pytest.mark.asyncio
     async def test_includes_default_when_present(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_setup_range(ctx, "SPRING_RATE_LF")
+        result = await get_setup_range(ctx, ["SPRING_RATE_LF"])
         assert "Default: 80000" in result
 
 
-class TestGetCurrentValue:
-    """Tests for get_current_value tool."""
-
-    @pytest.mark.asyncio
-    async def test_returns_current_value(self, sample_agent_deps):
-        ctx = _make_ctx(sample_agent_deps)
-        result = await get_current_value(ctx, "WING_1")
-        assert "5.0" in result
-
-    @pytest.mark.asyncio
-    async def test_returns_not_found_for_unknown(self, sample_agent_deps):
-        ctx = _make_ctx(sample_agent_deps)
-        result = await get_current_value(ctx, "NONEXISTENT")
-        assert "not found" in result.lower()
-
-
 class TestGetLapDetail:
-    """Tests for get_lap_detail tool."""
+    """Tests for batch get_lap_detail tool."""
 
     @pytest.mark.asyncio
-    async def test_returns_correct_lap(self, sample_agent_deps):
+    async def test_single_item_returns_correct_lap(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_lap_detail(ctx, 2)
+        result = await get_lap_detail(ctx, [2])
         assert "89.5" in result
         assert "BEST" in result
 
     @pytest.mark.asyncio
-    async def test_returns_empty_for_unknown_lap(self, sample_agent_deps):
+    async def test_multi_item_returns_all_laps(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_lap_detail(ctx, 999)
+        result = await get_lap_detail(ctx, [2, 3])
+        assert "89.5" in result
+        assert "90.2" in result
+
+    @pytest.mark.asyncio
+    async def test_unknown_lap_in_batch(self, sample_agent_deps):
+        ctx = _make_ctx(sample_agent_deps)
+        result = await get_lap_detail(ctx, [2, 999])
+        assert "89.5" in result
         assert "not found" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_empty_list_returns_empty(self, sample_agent_deps):
+        ctx = _make_ctx(sample_agent_deps)
+        result = await get_lap_detail(ctx, [])
+        assert result == ""
 
 
 class TestGetCornerMetrics:
-    """Tests for get_corner_metrics tool."""
+    """Tests for batch get_corner_metrics tool."""
 
     @pytest.mark.asyncio
-    async def test_returns_corner_data(self, sample_agent_deps):
+    async def test_single_item_returns_corner_data(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_corner_metrics(ctx, 3)
+        result = await get_corner_metrics(ctx, [3])
         assert "understeer" in result.lower()
         assert "1.35" in result
 
     @pytest.mark.asyncio
-    async def test_returns_not_found_for_unknown_corner(self, sample_agent_deps):
+    async def test_multi_item_returns_all_corners(self, sample_agent_deps):
         ctx = _make_ctx(sample_agent_deps)
-        result = await get_corner_metrics(ctx, 999)
+        result = await get_corner_metrics(ctx, [3, 7])
+        assert "Corner 3" in result
+        assert "Corner 7" in result
+
+    @pytest.mark.asyncio
+    async def test_unknown_corner_in_batch(self, sample_agent_deps):
+        ctx = _make_ctx(sample_agent_deps)
+        result = await get_corner_metrics(ctx, [3, 999])
+        assert "Corner 3" in result
         assert "no issue data" in result.lower()
+
+    @pytest.mark.asyncio
+    async def test_empty_list_returns_empty(self, sample_agent_deps):
+        ctx = _make_ctx(sample_agent_deps)
+        result = await get_corner_metrics(ctx, [])
+        assert result == ""
 
 
 # ===================================================================
-# T029: US4 — Knowledge grounding tests (~3 tests)
+# T029: US4 — Knowledge grounding tests
 # ===================================================================
 
 
@@ -154,3 +181,13 @@ class TestSearchKbFormatting:
         """Verify knowledge_fragments field is accessible on deps."""
         assert hasattr(sample_agent_deps, "knowledge_fragments")
         assert isinstance(sample_agent_deps.knowledge_fragments, list)
+
+    @pytest.mark.asyncio
+    async def test_max_two_fragments_returned(self, sample_agent_deps):
+        """search_kb returns at most 2 fragments."""
+        ctx = _make_ctx(sample_agent_deps)
+        result = await search_kb(ctx, "understeer oversteer balance springs suspension")
+        if "No relevant knowledge" not in result:
+            # Count separator occurrences — N fragments produce N-1 separators
+            separator_count = result.count("\n\n---\n\n")
+            assert separator_count <= 1  # At most 2 fragments → at most 1 separator
