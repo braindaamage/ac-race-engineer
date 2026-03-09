@@ -15,11 +15,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic_ai import Agent
+from pydantic_ai.exceptions import UsageLimitExceeded
 from pydantic_ai.messages import ModelRequest, ToolReturnPart
 from pydantic_ai.models import Model
 
 from ac_engineer.config.io import get_effective_model
-from ac_engineer.knowledge import search_knowledge as kb_search
+from ac_engineer.knowledge.index import SIGNAL_MAP
+from ac_engineer.knowledge.loader import get_docs_cache
 from ac_engineer.knowledge.models import KnowledgeFragment
 from ac_engineer.storage.models import AgentUsage, ToolCallDetail
 
@@ -34,7 +36,6 @@ from .setup_reader import read_parameter_ranges
 from .setup_writer import validate_changes
 from .tools import (
     get_corner_metrics,
-    get_current_value,
     get_lap_detail,
     get_setup_range,
     search_kb,
@@ -43,7 +44,6 @@ from .tools import (
 if TYPE_CHECKING:
     from ac_engineer.config import ACConfig
     from ac_engineer.engineer.models import ParameterRange, SessionSummary, ValidationResult
-    from ac_engineer.knowledge.models import KnowledgeFragment
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +214,6 @@ def _build_specialist_agent(domain: str, model: str | Model) -> Agent[AgentDeps,
     # Register tools
     agent.tool(search_kb)
     agent.tool(get_setup_range)
-    agent.tool(get_current_value)
     agent.tool(get_lap_detail)
     agent.tool(get_corner_metrics)
 
@@ -222,11 +221,57 @@ def _build_specialist_agent(domain: str, model: str | Model) -> Agent[AgentDeps,
 
 
 # ---------------------------------------------------------------------------
+# Knowledge pre-loading
+# ---------------------------------------------------------------------------
+
+
+def _select_knowledge_fragments(signals: list[str]) -> list[KnowledgeFragment]:
+    """Select knowledge fragments for a set of signals using SIGNAL_MAP.
+
+    Deterministic: same signals always produce same fragments in same order.
+    Capped at 8 fragments.
+    """
+    seen: set[tuple[str, str]] = set()
+    fragments: list[KnowledgeFragment] = []
+    docs_cache = get_docs_cache()
+
+    for signal in signals:
+        for doc, section in SIGNAL_MAP.get(signal, []):
+            key = (doc, section)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            doc_sections = docs_cache.get(doc)
+            if doc_sections is None:
+                continue
+            content = doc_sections.get(section, "")
+            if not content:
+                continue
+
+            fragments.append(
+                KnowledgeFragment(
+                    source_file=doc,
+                    section_title=section,
+                    content=content,
+                )
+            )
+            if len(fragments) >= 8:
+                return fragments
+
+    return fragments
+
+
+# ---------------------------------------------------------------------------
 # User prompt builder
 # ---------------------------------------------------------------------------
 
 
-def _build_user_prompt(summary: SessionSummary, domain_signals: list[str]) -> str:
+def _build_user_prompt(
+    summary: SessionSummary,
+    domain_signals: list[str],
+    knowledge_fragments: list[KnowledgeFragment] | None = None,
+) -> str:
     """Format SessionSummary data into a natural language prompt for specialists."""
     lines = [
         f"## Session Analysis Request",
@@ -243,6 +288,20 @@ def _build_user_prompt(summary: SessionSummary, domain_signals: list[str]) -> st
     lines.append(f"### Detected Signals (your domain)")
     for sig in domain_signals:
         lines.append(f"- {sig}")
+
+    # Vehicle dynamics knowledge
+    lines.append(f"")
+    lines.append(f"### Vehicle Dynamics Knowledge")
+    if knowledge_fragments:
+        for frag in knowledge_fragments:
+            lines.append(f"**[{frag.source_file} > {frag.section_title}]**")
+            lines.append(frag.content)
+            lines.append(f"")
+    else:
+        lines.append(
+            "No pre-loaded knowledge for these signals. "
+            "Use the search_kb tool if you need vehicle dynamics information."
+        )
 
     # Corner issues
     if summary.corner_issues:
@@ -469,16 +528,6 @@ async def analyze_with_engineer(
             confidence="high",
         )
 
-    # Pre-load knowledge for domain signals
-    from ac_engineer.knowledge import get_knowledge_for_signals, search_knowledge
-
-    all_knowledge: list[KnowledgeFragment] = []
-    for signal in summary.signals:
-        frags = search_knowledge(signal)
-        for frag in frags[:3]:  # Top 3 per signal
-            if frag not in all_knowledge:
-                all_knowledge.append(frag)
-
     # Build model with API key
     model = build_model(config)
 
@@ -500,20 +549,27 @@ async def analyze_with_engineer(
                 if any(d in _SETUP_DOMAINS for d in SIGNAL_DOMAINS.get(s, []))
             ]
 
+        # Select domain-specific knowledge fragments
+        domain_fragments = _select_knowledge_fragments(domain_signals)
+
         deps = AgentDeps(
             session_summary=summary,
             parameter_ranges=ranges,
             domain_signals=domain_signals,
-            knowledge_fragments=all_knowledge,
+            knowledge_fragments=domain_fragments,
             resolution_tier=resolution_tier,
         )
 
         try:
             agent = _build_specialist_agent(domain, model)
-            user_prompt = _build_user_prompt(summary, domain_signals)
+            user_prompt = _build_user_prompt(summary, domain_signals, domain_fragments)
 
             start_time = time.perf_counter()
-            result = await agent.run(user_prompt, deps=deps)
+            from pydantic_ai.usage import UsageLimits
+            result = await agent.run(
+                user_prompt, deps=deps,
+                usage_limits=UsageLimits(request_limit=5),
+            )
             duration_ms = int((time.perf_counter() - start_time) * 1000)
 
             specialist_results[domain] = result.output
@@ -547,6 +603,9 @@ async def analyze_with_engineer(
             except Exception:
                 logger.warning("Failed to extract usage for '%s'", domain, exc_info=True)
 
+        except UsageLimitExceeded:
+            logger.warning("Agent '%s' exceeded usage limit (request_limit=5)", domain)
+            continue
         except Exception:
             logger.exception("Specialist '%s' failed", domain)
 

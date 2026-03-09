@@ -19,10 +19,10 @@
 
 **Independent Test**: Confirm no agent has access to `get_current_value`, user prompt still contains all setup parameter values, all remaining tests pass.
 
-- [ ] T001 [US4] Delete `get_current_value` function (lines 47-64) from `backend/ac_engineer/engineer/tools.py`
-- [ ] T002 [US4] Remove `get_current_value` from imports and tool registration in `backend/ac_engineer/engineer/agents.py` — delete from `from .tools import (...)` block (line 37) and remove `agent.tool(get_current_value)` (line 217) in `_build_specialist_agent`
-- [ ] T003 [US4] Update `backend/tests/engineer/test_tools.py` — delete `TestGetCurrentValue` class (2 tests: `test_returns_current_value`, `test_returns_not_found_for_unknown`)
-- [ ] T004 [US4] Update `backend/tests/engineer/test_agents.py` — remove any assertions that reference `get_current_value` in tool registration tests; verify `_build_specialist_agent` registers exactly 4 tools instead of 5
+- [x] T001 [US4] Delete `get_current_value` function (lines 47-64) from `backend/ac_engineer/engineer/tools.py`
+- [x] T002 [US4] Remove `get_current_value` from imports and tool registration in `backend/ac_engineer/engineer/agents.py` — delete from `from .tools import (...)` block (line 37) and remove `agent.tool(get_current_value)` (line 217) in `_build_specialist_agent`
+- [x] T003 [US4] Update `backend/tests/engineer/test_tools.py` — delete `TestGetCurrentValue` class (2 tests: `test_returns_current_value`, `test_returns_not_found_for_unknown`)
+- [x] T004 [US4] Update `backend/tests/engineer/test_agents.py` — remove any assertions that reference `get_current_value` in tool registration tests; verify `_build_specialist_agent` registers exactly 4 tools instead of 5
 
 **Checkpoint**: `get_current_value` fully removed. Run `pytest backend/tests/engineer/ -v` — all tests pass with updated expectations.
 
@@ -34,12 +34,12 @@
 
 **Independent Test**: Call each batch tool with multiple items and verify the response contains all items' data with identical formatting to the old single-item output.
 
-- [ ] T005 [P] [US2] Rewrite `get_setup_range` in `backend/ac_engineer/engineer/tools.py` — change parameter from `section: str` to `sections: list[str]`, iterate sections, build one formatted block per section (same fields: Section/Min/Max/Step/Default), join with `\n\n`, return empty string for empty list, include "not found" line for missing sections (per D2)
-- [ ] T006 [P] [US2] Rewrite `get_lap_detail` in `backend/ac_engineer/engineer/tools.py` — change parameter from `lap_number: int` to `lap_numbers: list[int]`, iterate lap numbers, build one formatted block per lap (same fields: time, best marker, gap, temps, understeer ratio, lat G, speed), join with `\n\n`, return empty string for empty list (per D3)
-- [ ] T007 [P] [US2] Rewrite `get_corner_metrics` in `backend/ac_engineer/engineer/tools.py` — change parameter from `corner_number: int` to `corner_numbers: list[int]`, keep `lap_number: int | None = None` as shared filter, iterate corner numbers, build one formatted block per corner (same fields: issue type, severity, understeer ratio, apex speed loss, lat G), join with `\n\n`, return empty string for empty list (per D4)
-- [ ] T008 [US2] Update `backend/tests/engineer/test_tools.py` — rewrite `TestGetSetupRange` tests to pass `sections=[...]` lists: single-item list returns same data, multi-item list returns all blocks, unknown section in batch returns "not found" without failing valid items, empty list returns empty string
-- [ ] T009 [US2] Update `backend/tests/engineer/test_tools.py` — rewrite `TestGetLapDetail` tests to pass `lap_numbers=[...]` lists: single-item returns same data, multi-item returns all laps, unknown lap in batch returns "not found", empty list returns empty string
-- [ ] T010 [US2] Update `backend/tests/engineer/test_tools.py` — rewrite `TestGetCornerMetrics` tests to pass `corner_numbers=[...]` lists: single-item returns same data, multi-item returns all corners, unknown corner in batch returns "not found", empty list returns empty string
+- [x] T005 [P] [US2] Rewrite `get_setup_range` in `backend/ac_engineer/engineer/tools.py` — change parameter from `section: str` to `sections: list[str]`, iterate sections, build one formatted block per section (same fields: Section/Min/Max/Step/Default), join with `\n\n`, return empty string for empty list, include "not found" line for missing sections (per D2)
+- [x] T006 [P] [US2] Rewrite `get_lap_detail` in `backend/ac_engineer/engineer/tools.py` — change parameter from `lap_number: int` to `lap_numbers: list[int]`, iterate lap numbers, build one formatted block per lap (same fields: time, best marker, gap, temps, understeer ratio, lat G, speed), join with `\n\n`, return empty string for empty list (per D3)
+- [x] T007 [P] [US2] Rewrite `get_corner_metrics` in `backend/ac_engineer/engineer/tools.py` — change parameter from `corner_number: int` to `corner_numbers: list[int]`, keep `lap_number: int | None = None` as shared filter, iterate corner numbers, build one formatted block per corner (same fields: issue type, severity, understeer ratio, apex speed loss, lat G), join with `\n\n`, return empty string for empty list (per D4)
+- [x] T008 [US2] Update `backend/tests/engineer/test_tools.py` — rewrite `TestGetSetupRange` tests to pass `sections=[...]` lists: single-item list returns same data, multi-item list returns all blocks, unknown section in batch returns "not found" without failing valid items, empty list returns empty string
+- [x] T009 [US2] Update `backend/tests/engineer/test_tools.py` — rewrite `TestGetLapDetail` tests to pass `lap_numbers=[...]` lists: single-item returns same data, multi-item returns all laps, unknown lap in batch returns "not found", empty list returns empty string
+- [x] T010 [US2] Update `backend/tests/engineer/test_tools.py` — rewrite `TestGetCornerMetrics` tests to pass `corner_numbers=[...]` lists: single-item returns same data, multi-item returns all corners, unknown corner in batch returns "not found", empty list returns empty string
 
 **Checkpoint**: All three batch tools work with list parameters. Run `pytest backend/tests/engineer/test_tools.py -v` — all tests pass.
 
@@ -51,8 +51,8 @@
 
 **Independent Test**: Call `search_kb` and confirm it returns at most 2 fragments with updated description.
 
-- [ ] T011 [US6] Update `search_kb` in `backend/ac_engineer/engineer/tools.py` — change `fragments[:5]` to `fragments[:2]`, update docstring to: "Search the vehicle dynamics knowledge base for supplementary information. Primary knowledge is already pre-loaded in your context. Use this only if you need additional details not covered above. Returns up to 2 fragments with source attribution."
-- [ ] T012 [US6] Update `backend/tests/engineer/test_tools.py` — in `TestSearchKbFormatting`, update any assertions that depend on the result count limit (verify max 2 fragments returned, not 5)
+- [x] T011 [US6] Update `search_kb` in `backend/ac_engineer/engineer/tools.py` — change `fragments[:5]` to `fragments[:2]`, update docstring to: "Search the vehicle dynamics knowledge base for supplementary information. Primary knowledge is already pre-loaded in your context. Use this only if you need additional details not covered above. Returns up to 2 fragments with source attribution."
+- [x] T012 [US6] Update `backend/tests/engineer/test_tools.py` — in `TestSearchKbFormatting`, update any assertions that depend on the result count limit (verify max 2 fragments returned, not 5)
 
 **Checkpoint**: `search_kb` returns max 2 results with updated docstring. Run `pytest backend/tests/engineer/test_tools.py -v` — all tests pass.
 
@@ -64,10 +64,10 @@
 
 **Independent Test**: Build a user prompt for a domain with known signals and verify the prompt contains the expected knowledge fragments in deterministic order.
 
-- [ ] T013 [US3] Add `_select_knowledge_fragments` private helper function in `backend/ac_engineer/engineer/agents.py` — accepts `signals: list[str]`, uses `SIGNAL_MAP` from `ac_engineer.knowledge.index` and `get_docs_cache()` from `ac_engineer.knowledge.loader` to look up (doc, section) pairs for each signal, deduplicate by (doc, section) in insertion order, build `KnowledgeFragment` objects, return first 8. Add required imports: `from ac_engineer.knowledge.index import SIGNAL_MAP` and `from ac_engineer.knowledge.loader import get_docs_cache`
-- [ ] T014 [US3] Modify `_build_user_prompt` in `backend/ac_engineer/engineer/agents.py` — add `knowledge_fragments: list` parameter (default `[]`), insert a "### Vehicle Dynamics Knowledge" section after "### Detected Signals" and before "### Corner Issues". Format each fragment as `**[source_file > section_title]**\ncontent`. If list is empty, include note: "No pre-loaded knowledge for these signals. Use the search_kb tool if you need vehicle dynamics information." (per D6)
-- [ ] T015 [US3] Update `analyze_with_engineer` in `backend/ac_engineer/engineer/agents.py` — replace the `search_knowledge(signal)` loop (lines 473-480) with per-domain fragment selection: inside the domain loop, call `domain_fragments = _select_knowledge_fragments(domain_signals)` and pass `domain_fragments` to `_build_user_prompt`. Remove the now-unused `all_knowledge` list and `search_knowledge` import (`from ac_engineer.knowledge import ... search_knowledge`). Remove unused `from ac_engineer.knowledge.models import KnowledgeFragment` from the TYPE_CHECKING block if it's also imported at runtime now. Clean up the `from ac_engineer.knowledge import get_knowledge_for_signals, search_knowledge` import at line 473 (move deterministic imports to top-level per D9)
-- [ ] T016 [US3] Update `backend/tests/engineer/test_agents.py` — add tests for `_select_knowledge_fragments`: returns empty list for unknown signals, returns deterministic fragments for known signals (same input → same output), caps at 8 fragments, handles empty signal list. Add test that `_build_user_prompt` includes "### Vehicle Dynamics Knowledge" section when fragments are provided, and includes fallback note when fragments list is empty
+- [x] T013 [US3] Add `_select_knowledge_fragments` private helper function in `backend/ac_engineer/engineer/agents.py` — accepts `signals: list[str]`, uses `SIGNAL_MAP` from `ac_engineer.knowledge.index` and `get_docs_cache()` from `ac_engineer.knowledge.loader` to look up (doc, section) pairs for each signal, deduplicate by (doc, section) in insertion order, build `KnowledgeFragment` objects, return first 8. Add required imports: `from ac_engineer.knowledge.index import SIGNAL_MAP` and `from ac_engineer.knowledge.loader import get_docs_cache`
+- [x] T014 [US3] Modify `_build_user_prompt` in `backend/ac_engineer/engineer/agents.py` — add `knowledge_fragments: list` parameter (default `[]`), insert a "### Vehicle Dynamics Knowledge" section after "### Detected Signals" and before "### Corner Issues". Format each fragment as `**[source_file > section_title]**\ncontent`. If list is empty, include note: "No pre-loaded knowledge for these signals. Use the search_kb tool if you need vehicle dynamics information." (per D6)
+- [x] T015 [US3] Update `analyze_with_engineer` in `backend/ac_engineer/engineer/agents.py` — replace the `search_knowledge(signal)` loop (lines 473-480) with per-domain fragment selection: inside the domain loop, call `domain_fragments = _select_knowledge_fragments(domain_signals)` and pass `domain_fragments` to `_build_user_prompt`. Remove the now-unused `all_knowledge` list and `search_knowledge` import (`from ac_engineer.knowledge import ... search_knowledge`). Remove unused `from ac_engineer.knowledge.models import KnowledgeFragment` from the TYPE_CHECKING block if it's also imported at runtime now. Clean up the `from ac_engineer.knowledge import get_knowledge_for_signals, search_knowledge` import at line 473 (move deterministic imports to top-level per D9)
+- [x] T016 [US3] Update `backend/tests/engineer/test_agents.py` — add tests for `_select_knowledge_fragments`: returns empty list for unknown signals, returns deterministic fragments for known signals (same input → same output), caps at 8 fragments, handles empty signal list. Add test that `_build_user_prompt` includes "### Vehicle Dynamics Knowledge" section when fragments are provided, and includes fallback note when fragments list is empty
 
 **Checkpoint**: Knowledge fragments injected into user prompt deterministically. Run `pytest backend/tests/engineer/ -v` — all tests pass.
 
@@ -79,8 +79,8 @@
 
 **Independent Test**: Simulate an agent exceeding the turn limit and verify it is caught gracefully, logged as a warning, and other agents continue.
 
-- [ ] T017 [US5] Update `agent.run()` call in `analyze_with_engineer` in `backend/ac_engineer/engineer/agents.py` — add `max_turns=5` parameter, add `from pydantic_ai.exceptions import UnexpectedModelBehavior` import at top of file, restructure the existing try/except to catch `UnexpectedModelBehavior` first with `logger.warning("Agent '%s' exceeded turn limit (max_turns=5)", domain)` then `continue`, followed by existing generic `Exception` catch with `logger.exception` then `continue` (per D8)
-- [ ] T018 [US5] Update `backend/tests/engineer/test_agents.py` — add test that `analyze_with_engineer` passes `max_turns=5` to `agent.run()` (verify via FunctionModel or mock). Add test that when one agent raises `UnexpectedModelBehavior`, the remaining agents still execute and their results are included in the final response. Add test that when all agents hit the turn limit, the "all specialists failed" fallback response is returned
+- [x] T017 [US5] Update `agent.run()` call in `analyze_with_engineer` in `backend/ac_engineer/engineer/agents.py` — add `max_turns=5` parameter, add `from pydantic_ai.exceptions import UnexpectedModelBehavior` import at top of file, restructure the existing try/except to catch `UnexpectedModelBehavior` first with `logger.warning("Agent '%s' exceeded turn limit (max_turns=5)", domain)` then `continue`, followed by existing generic `Exception` catch with `logger.exception` then `continue` (per D8)
+- [x] T018 [US5] Update `backend/tests/engineer/test_agents.py` — add test that `analyze_with_engineer` passes `max_turns=5` to `agent.run()` (verify via FunctionModel or mock). Add test that when one agent raises `UnexpectedModelBehavior`, the remaining agents still execute and their results are included in the final response. Add test that when all agents hit the turn limit, the "all specialists failed" fallback response is returned
 
 **Checkpoint**: Turn limit enforced with per-agent isolation. Run `pytest backend/tests/engineer/ -v` — all tests pass.
 
@@ -90,8 +90,8 @@
 
 **Goal**: Verify all optimizations work together, all tests pass across the full backend suite, and no regressions exist.
 
-- [ ] T019 Run full backend test suite `pytest backend/tests/ -v` and verify all tests pass (parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents updated, API 209, acd_reader 20, resolver 81, watcher+jobs 47)
-- [ ] T020 Verify import cleanliness in `backend/ac_engineer/engineer/agents.py` — confirm: no `get_current_value` import, no `search_knowledge as kb_search` import, `UnexpectedModelBehavior` imported, `SIGNAL_MAP` and `get_docs_cache` imported, no unused imports remain
+- [x] T019 Run full backend test suite `pytest backend/tests/ -v` and verify all tests pass (parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents updated, API 209, acd_reader 20, resolver 81, watcher+jobs 47)
+- [x] T020 Verify import cleanliness in `backend/ac_engineer/engineer/agents.py` — confirm: no `get_current_value` import, no `search_knowledge as kb_search` import, `UnexpectedModelBehavior` imported, `SIGNAL_MAP` and `get_docs_cache` imported, no unused imports remain
 
 **Checkpoint**: All backend tests pass. Token optimization complete and invisible to users.
 

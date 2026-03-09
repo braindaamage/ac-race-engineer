@@ -12,6 +12,7 @@ from ac_engineer.engineer.agents import (
     _build_specialist_agent,
     _build_user_prompt,
     _combine_results,
+    _select_knowledge_fragments,
     get_model_string,
     route_signals,
 )
@@ -331,3 +332,180 @@ class TestExplanationQuality:
         assert fb.observation
         assert fb.suggestion
         assert len(fb.corners_affected) > 0
+
+
+# ===================================================================
+# T016: Knowledge pre-loading tests
+# ===================================================================
+
+
+class TestSelectKnowledgeFragments:
+    """Tests for _select_knowledge_fragments deterministic selection."""
+
+    def test_returns_empty_for_unknown_signals(self):
+        result = _select_knowledge_fragments(["unknown_xyz_signal"])
+        assert result == []
+
+    def test_returns_fragments_for_known_signals(self):
+        result = _select_knowledge_fragments(["high_understeer"])
+        assert len(result) > 0
+        assert all(hasattr(f, "source_file") for f in result)
+
+    def test_deterministic_output(self):
+        """Same input always produces same output."""
+        result1 = _select_knowledge_fragments(["high_understeer", "tyre_temp_spread_high"])
+        result2 = _select_knowledge_fragments(["high_understeer", "tyre_temp_spread_high"])
+        assert len(result1) == len(result2)
+        for f1, f2 in zip(result1, result2):
+            assert f1.source_file == f2.source_file
+            assert f1.section_title == f2.section_title
+
+    def test_caps_at_8_fragments(self):
+        """Never returns more than 8 fragments."""
+        all_signals = list(SIGNAL_DOMAINS.keys())
+        result = _select_knowledge_fragments(all_signals)
+        assert len(result) <= 8
+
+    def test_empty_signal_list(self):
+        result = _select_knowledge_fragments([])
+        assert result == []
+
+
+class TestBuildUserPromptKnowledge:
+    """Tests for knowledge section in user prompt."""
+
+    def test_includes_knowledge_section_with_fragments(self, sample_session_summary):
+        fragments = _select_knowledge_fragments(["high_understeer"])
+        prompt = _build_user_prompt(sample_session_summary, ["high_understeer"], fragments)
+        assert "### Vehicle Dynamics Knowledge" in prompt
+        assert "vehicle_balance_fundamentals.md" in prompt
+
+    def test_includes_fallback_note_when_empty(self, sample_session_summary):
+        prompt = _build_user_prompt(sample_session_summary, ["high_understeer"], [])
+        assert "### Vehicle Dynamics Knowledge" in prompt
+        assert "No pre-loaded knowledge" in prompt
+        assert "search_kb" in prompt
+
+    def test_no_fragments_param_shows_fallback(self, sample_session_summary):
+        """Default (no fragments param) shows fallback note."""
+        prompt = _build_user_prompt(sample_session_summary, ["high_understeer"])
+        assert "No pre-loaded knowledge" in prompt
+
+
+# ===================================================================
+# T018: Agent turn limit tests
+# ===================================================================
+
+
+class TestAgentTurnLimit:
+    """Tests for max_turns enforcement and error isolation."""
+
+    @pytest.mark.asyncio
+    async def test_agent_registers_4_tools(self, sample_agent_deps):
+        """Specialist agent registers exactly 4 tools (no get_current_value)."""
+        agent = _build_specialist_agent("balance", "test")
+        tool_names = set(agent._function_toolset.tools.keys())
+        assert "get_current_value" not in tool_names
+        assert len(tool_names) == 4
+        assert tool_names == {"search_kb", "get_setup_range", "get_lap_detail", "get_corner_metrics"}
+
+    @pytest.mark.asyncio
+    async def test_analyze_handles_unexpected_model_behavior(self, sample_session_summary, tmp_path):
+        """When an agent raises UnexpectedModelBehavior, others still run."""
+        from unittest.mock import AsyncMock, patch
+
+        from pydantic_ai.exceptions import UsageLimitExceeded
+
+        from ac_engineer.config import ACConfig
+        from ac_engineer.engineer.agents import analyze_with_engineer
+        from ac_engineer.engineer.models import ParameterRange
+        from ac_engineer.storage import init_db
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        ranges = {
+            "PRESSURE_LF": ParameterRange(section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5),
+        }
+
+        call_count = 0
+
+        async def mock_agent_run(prompt, *, deps, usage_limits=None, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            # First agent exceeds turn limit, second succeeds
+            if call_count == 1:
+                raise UsageLimitExceeded("Exceeded request_limit")
+            # Return a mock result
+            mock_result = AsyncMock()
+            mock_result.output = SpecialistResult(
+                setup_changes=[
+                    SetupChange(
+                        section="ARB_FRONT", parameter="VALUE",
+                        value_after=2.0, reasoning="test",
+                        expected_effect="test", confidence="high",
+                    ),
+                ],
+                driver_feedback=[],
+                domain_summary="OK",
+            )
+            mock_result.usage.return_value = AsyncMock(
+                input_tokens=100, output_tokens=50, tool_calls=1, requests=1,
+            )
+            mock_result.all_messages.return_value = []
+            return mock_result
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent") as mock_build, \
+             patch("ac_engineer.engineer.agents.build_model"):
+            mock_agent = AsyncMock()
+            mock_agent.run = mock_agent_run
+            mock_build.return_value = mock_agent
+
+            # Use signals that route to 2 domains
+            summary = sample_session_summary.model_copy(
+                update={"signals": ["high_understeer", "tyre_temp_spread_high"]}
+            )
+
+            response = await analyze_with_engineer(
+                summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        # One agent failed but we still got a response from the other
+        assert response.summary != "Analysis could not be completed due to an error."
+
+    @pytest.mark.asyncio
+    async def test_all_agents_fail_returns_fallback(self, sample_session_summary, tmp_path):
+        """When all agents hit turn limit, fallback response is returned."""
+        from unittest.mock import AsyncMock, patch
+
+        from pydantic_ai.exceptions import UsageLimitExceeded
+
+        from ac_engineer.config import ACConfig
+        from ac_engineer.engineer.agents import analyze_with_engineer
+        from ac_engineer.engineer.models import ParameterRange
+        from ac_engineer.storage import init_db
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        ranges = {
+            "PRESSURE_LF": ParameterRange(section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5),
+        }
+
+        async def always_fail(prompt, *, deps, usage_limits=None, **kwargs):
+            raise UsageLimitExceeded("Exceeded request_limit")
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent") as mock_build, \
+             patch("ac_engineer.engineer.agents.build_model"):
+            mock_agent = AsyncMock()
+            mock_agent.run = always_fail
+            mock_build.return_value = mock_agent
+
+            response = await analyze_with_engineer(
+                sample_session_summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        assert "error" in response.summary.lower() or "could not" in response.summary.lower()
+        assert response.confidence == "low"
