@@ -25,9 +25,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T001 [P] [US1] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/balance.md`: max 3 SetupChanges; reasoning is 1-2 sentences with mandatory data citation (corner number + metric name + value); expected_effect is 1 sentence describing driver-felt outcome; domain_summary is 1-2 sentences. Add Priority Tiers section: Propose (signal in majority of flying laps, or both if 2-3 laps), Mention with low confidence (signal in 1 lap or partial data), Omit (marginal, absent, or out-of-domain). Rewrite Tool Usage: remove `get_current_value` (current values are in prompt under `### Current Setup Parameters`), move `search_kb` to end with note that knowledge is pre-loaded in context. Add explicit domain boundary: omit findings outside balance domain.
-- [ ] T002 [P] [US1] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/tyre.md`: same structure as T001 — max 3 SetupChanges, 1-2 sentence reasoning with data citation, 1 sentence expected_effect, 1-2 sentence domain_summary, Priority Tiers section, corrected Tool Usage (remove `get_current_value`, move `search_kb` to end), domain boundary enforcement (tyre domain only).
-- [ ] T003 [P] [US1] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/aero.md`: same structure as T001 — max 3 SetupChanges, 1-2 sentence reasoning with data citation, 1 sentence expected_effect, 1-2 sentence domain_summary, Priority Tiers section, corrected Tool Usage (remove `get_current_value`, move `search_kb` to end), domain boundary enforcement (aero domain only). Preserve existing "small changes only — 1-2 clicks at a time" constraint.
+- [x] T001 [P] [US1] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/balance.md`: max 3 SetupChanges; reasoning is 1-2 sentences with mandatory data citation (corner number + metric name + value); expected_effect is 1 sentence describing driver-felt outcome; domain_summary is 1-2 sentences. Add Priority Tiers section: Propose (signal in majority of flying laps, or both if 2-3 laps), Mention with low confidence (signal in 1 lap or partial data), Omit (marginal, absent, or out-of-domain). Rewrite Tool Usage: remove `get_current_value` (current values are in prompt under `### Current Setup Parameters`), move `search_kb` to end with note that knowledge is pre-loaded in context. Add explicit domain boundary: omit findings outside balance domain.
+- [x] T002 [P] [US1] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/tyre.md`: same structure as T001 — max 3 SetupChanges, 1-2 sentence reasoning with data citation, 1 sentence expected_effect, 1-2 sentence domain_summary, Priority Tiers section, corrected Tool Usage (remove `get_current_value`, move `search_kb` to end), domain boundary enforcement (tyre domain only).
+- [x] T003 [P] [US1] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/aero.md`: same structure as T001 — max 3 SetupChanges, 1-2 sentence reasoning with data citation, 1 sentence expected_effect, 1-2 sentence domain_summary, Priority Tiers section, corrected Tool Usage (remove `get_current_value`, move `search_kb` to end), domain boundary enforcement (aero domain only). Preserve existing "small changes only — 1-2 clicks at a time" constraint.
 
 **Checkpoint**: Balance, tyre, and aero specialists produce concise, data-cited output. All three files can be edited in parallel since they are independent.
 
@@ -43,7 +43,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T004 [P] [US2] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/technique.md`: max 3 DriverFeedback entries; observation is 1 sentence citing specific data (metric + value + corners); suggestion is 1-2 sentences of actionable advice; corners_affected is a list of corner numbers; severity is high/medium/low; domain_summary is 1-2 sentences. Add Priority Tiers section (same three tiers as specialists). Reinforce: NO SetupChanges, only DriverFeedback. Omit marginal observations — if no significant technique issue, produce no feedback.
+- [x] T004 [P] [US2] Rewrite Output Requirements section in `backend/ac_engineer/engineer/skills/technique.md`: max 3 DriverFeedback entries; observation is 1 sentence citing specific data (metric + value + corners); suggestion is 1-2 sentences of actionable advice; corners_affected is a list of corner numbers; severity is high/medium/low; domain_summary is 1-2 sentences. Add Priority Tiers section (same three tiers as specialists). Reinforce: NO SetupChanges, only DriverFeedback. Omit marginal observations — if no significant technique issue, produce no feedback.
 
 **Checkpoint**: Technique specialist produces concise, structured feedback. Can be done in parallel with Phase 1 tasks.
 
@@ -59,7 +59,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T005 [P] [US3] Rewrite `backend/ac_engineer/engineer/skills/principal.md`: Add Output Requirements section — overall summary is 2-3 sentences max describing the car's current state; list changes by impact order without re-explaining the physics behind them (that reasoning is already in each change's reasoning field); confidence justification is 1 sentence. Add Tool Usage section listing `get_lap_detail` and `get_corner_metrics` as available tools for contextual verification only. Make explicit: the orchestrator does NOT propose setup changes, does NOT repeat reasoning from specialist outputs, and does NOT re-explain vehicle dynamics theory.
+- [x] T005 [P] [US3] Rewrite `backend/ac_engineer/engineer/skills/principal.md`: Add Output Requirements section — overall summary is 2-3 sentences max describing the car's current state; list changes by impact order without re-explaining the physics behind them (that reasoning is already in each change's reasoning field); confidence justification is 1 sentence. Add Tool Usage section listing `get_lap_detail` and `get_corner_metrics` as available tools for contextual verification only. Make explicit: the orchestrator does NOT propose setup changes, does NOT repeat reasoning from specialist outputs, and does NOT re-explain vehicle dynamics theory.
 
 **Checkpoint**: Orchestrator produces a lean synthesis. Can be done in parallel with Phases 1 and 2.
 
@@ -69,8 +69,8 @@
 
 **Purpose**: Validate all changes against spec requirements and success criteria
 
-- [ ] T006 Run existing engineer tests: `conda run -n ac-race-engineer pytest backend/tests/engineer/ -v` — all 167 tests must pass unchanged
-- [ ] T007 Review all 5 modified skill files for consistency: verify all share the same Priority Tiers wording, all specialist files have matching Output Requirements structure, all tool usage sections are corrected
+- [x] T006 Run existing engineer tests: `conda run -n ac-race-engineer pytest backend/tests/engineer/ -v` — all 167 tests must pass unchanged
+- [x] T007 Review all 5 modified skill files for consistency: verify all share the same Priority Tiers wording, all specialist files have matching Output Requirements structure, all tool usage sections are corrected
 
 **Checkpoint**: All tests pass, all files are consistent, ready for real-session validation.
 
