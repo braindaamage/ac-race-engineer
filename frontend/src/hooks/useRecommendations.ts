@@ -3,6 +3,7 @@ import { apiGet } from "../lib/api";
 import type {
   RecommendationListResponse,
   RecommendationDetailResponse,
+  RecommendationUsageResponse,
 } from "../lib/types";
 
 export function useRecommendations(sessionId: string | null) {
@@ -27,6 +28,21 @@ export function useRecommendationDetail(
     queryFn: () =>
       apiGet<RecommendationDetailResponse>(
         `/sessions/${sessionId}/recommendations/${recommendationId}`,
+      ),
+    enabled: !!sessionId && !!recommendationId,
+    staleTime: Infinity,
+  });
+}
+
+export function useRecommendationUsage(
+  sessionId: string | null,
+  recommendationId: string | null,
+) {
+  return useQuery<RecommendationUsageResponse>({
+    queryKey: ["recommendation-usage", sessionId, recommendationId],
+    queryFn: () =>
+      apiGet<RecommendationUsageResponse>(
+        `/sessions/${sessionId}/recommendations/${recommendationId}/usage`,
       ),
     enabled: !!sessionId && !!recommendationId,
     staleTime: Infinity,

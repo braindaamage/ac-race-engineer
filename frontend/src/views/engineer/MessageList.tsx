@@ -8,6 +8,7 @@ import { AnalysisProgress } from "./AnalysisProgress";
 import type {
   MessageResponse,
   RecommendationDetailResponse,
+  RecommendationUsageResponse,
   FeedItem,
 } from "../../lib/types";
 import type { JobProgress } from "../../store/jobStore";
@@ -18,6 +19,7 @@ interface MessageListProps {
   activeJobType: "engineer" | "chat" | null;
   jobProgress: JobProgress | undefined;
   onApply: (recommendationId: string) => void;
+  usageMap?: Map<string, RecommendationUsageResponse>;
 }
 
 function buildFeed(
@@ -46,6 +48,7 @@ export function MessageList({
   activeJobType,
   jobProgress,
   onApply,
+  usageMap,
 }: MessageListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
@@ -105,7 +108,11 @@ export function MessageList({
         const rec = item.data;
         return (
           <div key={rec.recommendation_id}>
-            <RecommendationCard recommendation={rec} onApply={onApply} />
+            <RecommendationCard
+              recommendation={rec}
+              onApply={onApply}
+              usage={usageMap?.get(rec.recommendation_id)}
+            />
             {rec.driver_feedback.map((fb, j) => (
               <DriverFeedbackCard key={j} feedback={fb} />
             ))}

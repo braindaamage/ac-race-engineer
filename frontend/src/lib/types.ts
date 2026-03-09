@@ -364,3 +364,37 @@ export interface CacheInvalidateResponse {
 export interface CacheInvalidateAllResponse {
   invalidated_count: number;
 }
+
+// ---------------------------------------------------------------------------
+// Usage types
+// ---------------------------------------------------------------------------
+
+export interface ToolCallInfo {
+  tool_name: string;
+  token_count: number;
+}
+
+export interface AgentUsageDetail {
+  domain: string;
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  tool_call_count: number;
+  turn_count: number;
+  duration_ms: number;
+  tool_calls: ToolCallInfo[];
+}
+
+export interface UsageTotals {
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  tool_call_count: number;
+  agent_count: number;
+}
+
+export interface RecommendationUsageResponse {
+  recommendation_id: string;
+  totals: UsageTotals;
+  agents: AgentUsageDetail[];
+}

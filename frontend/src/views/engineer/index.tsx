@@ -17,6 +17,7 @@ import type {
   ChatJobResponse,
   ApplyResponse,
   RecommendationDetailResponse,
+  RecommendationUsageResponse,
 } from "../../lib/types";
 import { Modal } from "../../components/ui";
 import "./EngineerView.css";
@@ -55,6 +56,28 @@ export function EngineerView() {
   const recDetails: RecommendationDetailResponse[] = recDetailResults
     .map((q) => q.data)
     .filter((d): d is RecommendationDetailResponse => d != null);
+
+  // Fetch usage data for each recommendation
+  const recUsageResults = useQueries({
+    queries: recSummaries.map((r) => ({
+      queryKey: ["recommendation-usage", selectedSessionId, r.recommendation_id],
+      queryFn: () =>
+        apiGet<RecommendationUsageResponse>(
+          `/sessions/${selectedSessionId}/recommendations/${r.recommendation_id}/usage`,
+        ),
+      staleTime: Infinity,
+      enabled: !!selectedSessionId && !!r.recommendation_id,
+    })),
+  });
+  const recUsageMap = useMemo(() => {
+    const map = new Map<string, RecommendationUsageResponse>();
+    for (const q of recUsageResults) {
+      if (q.data) {
+        map.set(q.data.recommendation_id, q.data);
+      }
+    }
+    return map;
+  }, [recUsageResults]);
 
   const messages = messagesQuery.data?.messages ?? [];
 
@@ -250,6 +273,7 @@ export function EngineerView() {
         activeJobType={activeJobType}
         jobProgress={jobProgress ?? undefined}
         onApply={handleApply}
+        usageMap={recUsageMap}
       />
 
       <ChatInput onSend={handleSendMessage} disabled={isJobRunning} />

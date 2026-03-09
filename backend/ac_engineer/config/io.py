@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 LLM_MODEL_DEFAULTS: dict[str, str] = {
     "anthropic": "claude-sonnet-4-5",
     "openai": "gpt-4o",
-    "gemini": "gemini-3.1-flash-lite-preview",
+    "gemini": "gemini-2.5-flash",
 }
 
 

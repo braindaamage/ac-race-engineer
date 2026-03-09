@@ -266,7 +266,22 @@ describe("EngineerView", () => {
           },
         ],
       });
-      mockedApiGet.mockResolvedValue(recDetail);
+      mockedApiGet.mockImplementation((url: string) => {
+        if (url.endsWith("/usage")) {
+          return Promise.resolve({
+            recommendation_id: "rec-1",
+            totals: {
+              input_tokens: 1000,
+              output_tokens: 500,
+              total_tokens: 1500,
+              tool_call_count: 3,
+              agent_count: 1,
+            },
+            agents: [],
+          });
+        }
+        return Promise.resolve(recDetail);
+      });
     }
 
     it("renders recommendation cards in the feed", async () => {
@@ -356,27 +371,42 @@ describe("EngineerView", () => {
         ],
       });
 
-      mockedApiGet.mockResolvedValue({
-        recommendation_id: "rec-1",
-        session_id: "sess-1",
-        status: "applied",
-        summary: "Already applied rec",
-        explanation: "Done",
-        confidence: "high",
-        signals_addressed: [],
-        setup_changes: [
-          {
-            section: "ARB",
-            parameter: "FRONT",
-            old_value: "3",
-            new_value: "5",
-            reasoning: "Reason",
-            expected_effect: "Effect",
-            confidence: "high",
-          },
-        ],
-        driver_feedback: [],
-        created_at: "2026-03-01T12:00:00Z",
+      mockedApiGet.mockImplementation((url: string) => {
+        if (url.endsWith("/usage")) {
+          return Promise.resolve({
+            recommendation_id: "rec-1",
+            totals: {
+              input_tokens: 1000,
+              output_tokens: 500,
+              total_tokens: 1500,
+              tool_call_count: 3,
+              agent_count: 1,
+            },
+            agents: [],
+          });
+        }
+        return Promise.resolve({
+          recommendation_id: "rec-1",
+          session_id: "sess-1",
+          status: "applied",
+          summary: "Already applied rec",
+          explanation: "Done",
+          confidence: "high",
+          signals_addressed: [],
+          setup_changes: [
+            {
+              section: "ARB",
+              parameter: "FRONT",
+              old_value: "3",
+              new_value: "5",
+              reasoning: "Reason",
+              expected_effect: "Effect",
+              confidence: "high",
+            },
+          ],
+          driver_feedback: [],
+          created_at: "2026-03-01T12:00:00Z",
+        });
       });
 
       render(<EngineerView />, { wrapper: createWrapper() });
