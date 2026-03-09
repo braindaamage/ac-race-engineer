@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { Card, Badge, Button } from "../../components/ui";
 import { DriverFeedbackCard } from "./DriverFeedbackCard";
-import type { RecommendationDetailResponse } from "../../lib/types";
+import { UsageSummaryBar } from "./UsageSummaryBar";
+import { UsageDetailModal } from "./UsageDetailModal";
+import type {
+  RecommendationDetailResponse,
+  RecommendationUsageResponse,
+} from "../../lib/types";
 
 interface RecommendationCardProps {
   recommendation: RecommendationDetailResponse;
   onApply: (recommendationId: string) => void;
+  usage?: RecommendationUsageResponse;
 }
 
 const CONFIDENCE_VARIANT: Record<string, "success" | "warning" | "info"> = {
@@ -22,8 +29,10 @@ const STATUS_VARIANT: Record<string, "info" | "success" | "neutral"> = {
 export function RecommendationCard({
   recommendation,
   onApply,
+  usage,
 }: RecommendationCardProps) {
   const isApplied = recommendation.status === "applied";
+  const [showUsageModal, setShowUsageModal] = useState(false);
 
   return (
     <div
@@ -92,6 +101,13 @@ export function RecommendationCard({
           </div>
         )}
 
+        {usage && (
+          <UsageSummaryBar
+            totals={usage.totals}
+            onViewDetails={() => setShowUsageModal(true)}
+          />
+        )}
+
         <div className="ace-recommendation-card__actions">
           <Button
             variant="primary"
@@ -103,6 +119,14 @@ export function RecommendationCard({
           </Button>
         </div>
       </Card>
+
+      {usage && (
+        <UsageDetailModal
+          open={showUsageModal}
+          onClose={() => setShowUsageModal(false)}
+          usage={usage}
+        />
+      )}
     </div>
   );
 }
