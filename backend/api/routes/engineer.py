@@ -19,7 +19,10 @@ from ac_engineer.storage.sessions import get_session
 from api.analysis.cache import get_cache_dir
 from api.engineer.cache import load_engineer_response
 from api.engineer.pipeline import make_chat_job, make_engineer_job
+from ac_engineer.storage.usage import get_agent_usage
+
 from api.engineer.serializers import (
+    AgentUsageDetail,
     ApplyRequest,
     ApplyResponse,
     ChatJobResponse,
@@ -32,7 +35,10 @@ from api.engineer.serializers import (
     RecommendationDetailResponse,
     RecommendationListResponse,
     RecommendationSummary,
+    RecommendationUsageResponse,
     SetupChangeDetail,
+    ToolCallInfo,
+    UsageTotals,
 )
 from api.jobs.worker import run_job
 
@@ -260,6 +266,72 @@ async def get_recommendation_detail(
         summary=rec.summary,
         setup_changes=setup_changes,
         created_at=rec.created_at,
+    )
+
+
+# ---------------------------------------------------------------------------
+# GET /sessions/{session_id}/recommendations/{recommendation_id}/usage
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/{session_id}/recommendations/{recommendation_id}/usage",
+    response_model=RecommendationUsageResponse,
+)
+async def get_recommendation_usage(
+    request: Request, session_id: str, recommendation_id: str
+) -> RecommendationUsageResponse:
+    db_path = request.app.state.db_path
+
+    session = get_session(db_path, session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
+
+    recs = get_recommendations(db_path, session_id)
+    rec = next((r for r in recs if r.recommendation_id == recommendation_id), None)
+    if rec is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recommendation not found: {recommendation_id}",
+        )
+
+    usage_records = get_agent_usage(db_path, recommendation_id)
+
+    # Compute totals
+    total_input = sum(u.input_tokens for u in usage_records)
+    total_output = sum(u.output_tokens for u in usage_records)
+    total_tool_calls = sum(u.tool_call_count for u in usage_records)
+
+    totals = UsageTotals(
+        input_tokens=total_input,
+        output_tokens=total_output,
+        total_tokens=total_input + total_output,
+        tool_call_count=total_tool_calls,
+        agent_count=len(usage_records),
+    )
+
+    # Map per-agent details
+    agents = [
+        AgentUsageDetail(
+            domain=u.domain,
+            model=u.model,
+            input_tokens=u.input_tokens,
+            output_tokens=u.output_tokens,
+            tool_call_count=u.tool_call_count,
+            turn_count=u.turn_count,
+            duration_ms=u.duration_ms,
+            tool_calls=[
+                ToolCallInfo(tool_name=tc.tool_name, token_count=tc.token_count)
+                for tc in u.tool_calls
+            ],
+        )
+        for u in usage_records
+    ]
+
+    return RecommendationUsageResponse(
+        recommendation_id=recommendation_id,
+        totals=totals,
+        agents=agents,
     )
 
 

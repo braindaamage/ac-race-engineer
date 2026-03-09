@@ -10,15 +10,18 @@ Uses Pydantic AI agents with programmatic orchestration:
 from __future__ import annotations
 
 import logging
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic_ai import Agent
+from pydantic_ai.messages import ModelRequest, ToolReturnPart
 from pydantic_ai.models import Model
 
 from ac_engineer.config.io import get_effective_model
 from ac_engineer.knowledge import search_knowledge as kb_search
 from ac_engineer.knowledge.models import KnowledgeFragment
+from ac_engineer.storage.models import AgentUsage, ToolCallDetail
 
 from .models import (
     AgentDeps,
@@ -164,6 +167,32 @@ def build_model(config: ACConfig) -> Model:
     else:
         # Fallback: let Pydantic AI infer the provider (may use env vars)
         return infer_model(get_model_string(config))
+
+
+# ---------------------------------------------------------------------------
+# Usage extraction helper (T001)
+# ---------------------------------------------------------------------------
+
+
+def _extract_tool_calls(result) -> list[ToolCallDetail]:
+    """Extract tool call details from a Pydantic AI agent result.
+
+    Iterates all_messages(), finds ToolReturnPart instances in ModelRequest
+    messages, and estimates token count as len(str(content)) // 4.
+    """
+    tool_calls: list[ToolCallDetail] = []
+    for message in result.all_messages():
+        if isinstance(message, ModelRequest):
+            for part in message.parts:
+                if isinstance(part, ToolReturnPart):
+                    token_count = len(str(part.content)) // 4
+                    tool_calls.append(
+                        ToolCallDetail(
+                            tool_name=part.tool_name,
+                            token_count=token_count,
+                        )
+                    )
+    return tool_calls
 
 
 # ---------------------------------------------------------------------------
@@ -455,6 +484,8 @@ async def analyze_with_engineer(
 
     # Run specialist agents
     specialist_results: dict[str, SpecialistResult] = {}
+    collected_usage: list[AgentUsage] = []
+    effective_model = get_effective_model(config)
 
     for domain in domains:
         # Determine domain-specific signals
@@ -480,8 +511,42 @@ async def analyze_with_engineer(
         try:
             agent = _build_specialist_agent(domain, model)
             user_prompt = _build_user_prompt(summary, domain_signals)
+
+            start_time = time.perf_counter()
             result = await agent.run(user_prompt, deps=deps)
+            duration_ms = int((time.perf_counter() - start_time) * 1000)
+
             specialist_results[domain] = result.output
+
+            # Extract usage data (T002)
+            try:
+                usage = result.usage()
+                tool_calls = _extract_tool_calls(result)
+                agent_usage = AgentUsage(
+                    domain=domain,
+                    model=effective_model,
+                    input_tokens=usage.input_tokens or 0,
+                    output_tokens=usage.output_tokens or 0,
+                    tool_call_count=usage.tool_calls or 0,
+                    turn_count=usage.requests or 0,
+                    duration_ms=duration_ms,
+                    tool_calls=tool_calls,
+                )
+                collected_usage.append(agent_usage)
+
+                # Log usage summary (T004)
+                logger.info(
+                    "Agent usage: domain=%s input_tokens=%d output_tokens=%d "
+                    "tool_call_count=%d duration_ms=%d",
+                    domain,
+                    agent_usage.input_tokens,
+                    agent_usage.output_tokens,
+                    agent_usage.tool_call_count,
+                    duration_ms,
+                )
+            except Exception:
+                logger.warning("Failed to extract usage for '%s'", domain, exc_info=True)
+
         except Exception:
             logger.exception("Specialist '%s' failed", domain)
 
@@ -509,6 +574,7 @@ async def analyze_with_engineer(
     })
 
     # Persist recommendation
+    recommendation_id: str | None = None
     try:
         from ac_engineer.storage import save_recommendation
         from ac_engineer.storage.models import SetupChange as StorageSetupChange
@@ -523,14 +589,28 @@ async def analyze_with_engineer(
             )
             for c in response.setup_changes
         ]
-        save_recommendation(
+        rec = save_recommendation(
             db_path,
             summary.session_id,
             response.summary,
             storage_changes,
         )
+        recommendation_id = rec.recommendation_id
     except Exception:
         logger.warning("Failed to persist recommendation", exc_info=True)
+
+    # Persist usage data (T003)
+    if recommendation_id and collected_usage:
+        try:
+            from ac_engineer.storage.usage import save_agent_usage
+
+            for usage_record in collected_usage:
+                usage_record = usage_record.model_copy(
+                    update={"recommendation_id": recommendation_id}
+                )
+                save_agent_usage(db_path, usage_record)
+        except Exception:
+            logger.warning("Failed to persist usage data", exc_info=True)
 
     # Attach resolution tier metadata
     if resolution_tier is not None:
