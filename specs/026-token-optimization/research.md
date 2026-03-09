@@ -15,9 +15,9 @@
 
 ## R2: Pydantic AI max_turns and UnexpectedModelBehavior
 
-**Decision**: Pass `max_turns=5` to `agent.run()`. Catch `pydantic_ai.exceptions.UnexpectedModelBehavior` which is raised when the turn limit is exceeded.
+**Decision**: Pass `usage_limits=UsageLimits(request_limit=5)` to `agent.run()`. Catch `pydantic_ai.exceptions.UsageLimitExceeded` which is raised when the request limit is exceeded.
 
-**Rationale**: Pydantic AI's `Agent.run()` accepts `max_turns: int | None` parameter. When the agent exceeds this limit, it raises `UnexpectedModelBehavior` with a message indicating the model exceeded the turn limit. This is the documented behavior in Pydantic AI.
+**Rationale**: Pydantic AI 1.65.0 uses `UsageLimits`/`UsageLimitExceeded` instead of `max_turns`/`UnexpectedModelBehavior`. `Agent.run()` accepts a `usage_limits: UsageLimits | None` parameter. When the agent exceeds the `request_limit`, it raises `UsageLimitExceeded`. This is the built-in usage control mechanism in Pydantic AI.
 
 **Alternatives considered**:
 - Custom middleware/callback to count turns: rejected — Pydantic AI has built-in support.

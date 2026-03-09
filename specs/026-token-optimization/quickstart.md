@@ -40,7 +40,8 @@ from ac_engineer.knowledge.models import KnowledgeFragment
 
 # Pydantic AI (existing)
 from pydantic_ai import Agent, RunContext
-from pydantic_ai.exceptions import UnexpectedModelBehavior
+from pydantic_ai.usage import UsageLimits
+from pydantic_ai.exceptions import UsageLimitExceeded
 
 # Engineer models (existing)
 from ac_engineer.engineer.models import AgentDeps, SpecialistResult

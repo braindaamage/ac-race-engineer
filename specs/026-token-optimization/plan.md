@@ -166,9 +166,9 @@ def _select_knowledge_fragments(signals: list[str]) -> list[KnowledgeFragment]:
     """
 ```
 
-### D8: agents.py — max_turns and Error Isolation
+### D8: agents.py — Usage Limits and Error Isolation
 
-Add `max_turns=5` to the `agent.run()` call. Wrap the call in `try/except` that catches `UnexpectedModelBehavior` (from `pydantic_ai.exceptions`) in addition to the existing generic `Exception`. Log a warning when the turn limit is hit. The agent's results are excluded (same as current behavior for any exception), and remaining agents continue.
+Add `usage_limits=UsageLimits(request_limit=5)` to the `agent.run()` call. Wrap the call in `try/except` that catches `UsageLimitExceeded` (from `pydantic_ai.exceptions`) in addition to the existing generic `Exception`. Log a warning when the request limit is hit. The agent's results are excluded (same as current behavior for any exception), and remaining agents continue.
 
 **Current** (line 516):
 ```python
@@ -177,12 +177,13 @@ result = await agent.run(user_prompt, deps=deps)
 
 **After**:
 ```python
-from pydantic_ai.exceptions import UnexpectedModelBehavior
+from pydantic_ai.usage import UsageLimits
+from pydantic_ai.exceptions import UsageLimitExceeded
 
 try:
-    result = await agent.run(user_prompt, deps=deps, max_turns=5)
-except UnexpectedModelBehavior:
-    logger.warning("Agent '%s' exceeded turn limit (max_turns=5)", domain)
+    result = await agent.run(user_prompt, deps=deps, usage_limits=UsageLimits(request_limit=5))
+except UsageLimitExceeded:
+    logger.warning("Agent '%s' exceeded usage limit (request_limit=5)", domain)
     continue
 except Exception:
     logger.exception("Specialist '%s' failed", domain)
@@ -193,7 +194,7 @@ except Exception:
 
 - Remove `get_current_value` from the tools import
 - Remove `search_knowledge as kb_search` import (replaced by SIGNAL_MAP-based lookup)
-- Add `from pydantic_ai.exceptions import UnexpectedModelBehavior`
+- Add `from pydantic_ai.exceptions import UsageLimitExceeded`
 - Add `from ac_engineer.knowledge.index import SIGNAL_MAP`
 - Add `from ac_engineer.knowledge.loader import get_docs_cache`
 
