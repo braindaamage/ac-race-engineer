@@ -77,6 +77,14 @@ AERO_SECTIONS: set[str] = {
     "RIDE_HEIGHT_LF", "RIDE_HEIGHT_RF", "RIDE_HEIGHT_LR", "RIDE_HEIGHT_RR",
 }
 
+DOMAIN_TOOLS: dict[str, list] = {
+    "balance": [get_setup_range, get_corner_metrics, search_kb],
+    "tyre": [get_setup_range, get_lap_detail, search_kb],
+    "aero": [get_setup_range, get_corner_metrics, search_kb],
+    "technique": [get_lap_detail, get_corner_metrics, search_kb],
+    "principal": [get_lap_detail, get_corner_metrics],
+}
+
 # Domains that produce setup changes (used for aero trigger)
 _SETUP_DOMAINS = {"balance", "tyre"}
 
@@ -211,11 +219,9 @@ def _build_specialist_agent(domain: str, model: str | Model) -> Agent[AgentDeps,
         system_prompt=system_prompt,
     )
 
-    # Register tools
-    agent.tool(search_kb)
-    agent.tool(get_setup_range)
-    agent.tool(get_lap_detail)
-    agent.tool(get_corner_metrics)
+    # Register domain-scoped tools
+    for tool_fn in DOMAIN_TOOLS[domain]:
+        agent.tool(tool_fn)
 
     return agent
 

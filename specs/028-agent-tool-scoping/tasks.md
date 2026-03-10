@@ -27,9 +27,9 @@
 
 ### Implementation for User Story 1
 
-- [ ] T001 [US1] Add `DOMAIN_TOOLS` constant mapping each domain to its tool functions in `backend/ac_engineer/engineer/agents.py` — place after `AERO_SECTIONS`, mapping: balance→[get_setup_range, get_corner_metrics, search_kb], tyre→[get_setup_range, get_lap_detail, search_kb], aero→[get_setup_range, get_corner_metrics, search_kb], technique→[get_lap_detail, get_corner_metrics, search_kb], principal→[get_lap_detail, get_corner_metrics]
-- [ ] T002 [US1] Update `_build_specialist_agent()` in `backend/ac_engineer/engineer/agents.py` to register tools from `DOMAIN_TOOLS[domain]` instead of hardcoding all 4 tools
-- [ ] T003 [US1] Update `test_agent_registers_4_tools` in `backend/tests/engineer/test_agents.py` — replace the single all-4-tools assertion with per-domain assertions: build each domain's agent and verify its tool set matches `DOMAIN_TOOLS`
+- [x] T001 [US1] Add `DOMAIN_TOOLS` constant mapping each domain to its tool functions in `backend/ac_engineer/engineer/agents.py` — place after `AERO_SECTIONS`, mapping: balance→[get_setup_range, get_corner_metrics, search_kb], tyre→[get_setup_range, get_lap_detail, search_kb], aero→[get_setup_range, get_corner_metrics, search_kb], technique→[get_lap_detail, get_corner_metrics, search_kb], principal→[get_lap_detail, get_corner_metrics]
+- [x] T002 [US1] Update `_build_specialist_agent()` in `backend/ac_engineer/engineer/agents.py` to register tools from `DOMAIN_TOOLS[domain]` instead of hardcoding all 4 tools
+- [x] T003 [US1] Update `test_agent_registers_4_tools` in `backend/tests/engineer/test_agents.py` — replace the single all-4-tools assertion with per-domain assertions: build each domain's agent and verify its tool set matches `DOMAIN_TOOLS`
 
 **Checkpoint**: All 4 specialist agents have domain-scoped tools. Run `conda run -n ac-race-engineer pytest backend/tests/engineer/ -v` — all tests pass.
 
@@ -43,7 +43,7 @@
 
 ### Implementation for User Story 2
 
-- [ ] T004 [US2] Export `DOMAIN_TOOLS` in `backend/ac_engineer/engineer/__init__.py` — add to imports from `.agents` and to `__all__` list under the Constants section
+- [x] T004 [US2] Export `DOMAIN_TOOLS` in `backend/ac_engineer/engineer/__init__.py` — add to imports from `.agents` and to `__all__` list under the Constants section
 
 **Checkpoint**: `DOMAIN_TOOLS` is importable. Run `conda run -n ac-race-engineer pytest backend/tests/engineer/ -v` — all tests still pass.
 
@@ -65,8 +65,8 @@
 
 **Purpose**: Final validation across all user stories
 
-- [ ] T005 Run full backend test suite: `conda run -n ac-race-engineer pytest backend/tests/ -v` — all 900+ tests pass with no regressions
-- [ ] T006 Run quickstart.md validation steps to confirm verification instructions are accurate
+- [x] T005 Run full backend test suite: `conda run -n ac-race-engineer pytest backend/tests/ -v` — all 900+ tests pass with no regressions
+- [x] T006 Run quickstart.md validation steps to confirm verification instructions are accurate
 
 ---
 
