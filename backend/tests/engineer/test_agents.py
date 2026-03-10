@@ -8,6 +8,7 @@ from ac_engineer.config import ACConfig
 from ac_engineer.engineer.agents import (
     AERO_SECTIONS,
     DOMAIN_PRIORITY,
+    DOMAIN_TOOLS,
     SIGNAL_DOMAINS,
     _build_specialist_agent,
     _build_user_prompt,
@@ -401,13 +402,20 @@ class TestAgentTurnLimit:
     """Tests for max_turns enforcement and error isolation."""
 
     @pytest.mark.asyncio
-    async def test_agent_registers_4_tools(self, sample_agent_deps):
-        """Specialist agent registers exactly 4 tools (no get_current_value)."""
-        agent = _build_specialist_agent("balance", "test")
+    @pytest.mark.parametrize("domain", ["balance", "tyre", "aero", "technique"])
+    async def test_agent_registers_domain_scoped_tools(self, domain, sample_agent_deps):
+        """Each specialist agent registers only the tools from DOMAIN_TOOLS."""
+        agent = _build_specialist_agent(domain, "test")
         tool_names = set(agent._function_toolset.tools.keys())
-        assert "get_current_value" not in tool_names
-        assert len(tool_names) == 4
-        assert tool_names == {"search_kb", "get_setup_range", "get_lap_detail", "get_corner_metrics"}
+        expected = {fn.__name__ for fn in DOMAIN_TOOLS[domain]}
+        assert tool_names == expected, f"{domain}: expected {expected}, got {tool_names}"
+
+    @pytest.mark.asyncio
+    async def test_principal_domain_tools_defined(self):
+        """DOMAIN_TOOLS['principal'] contains exactly get_lap_detail and get_corner_metrics."""
+        expected = {"get_lap_detail", "get_corner_metrics"}
+        actual = {fn.__name__ for fn in DOMAIN_TOOLS["principal"]}
+        assert actual == expected
 
     @pytest.mark.asyncio
     async def test_analyze_handles_unexpected_model_behavior(self, sample_session_summary, tmp_path):

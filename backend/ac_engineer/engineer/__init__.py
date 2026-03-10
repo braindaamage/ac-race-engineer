@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .agents import (
     DOMAIN_PRIORITY,
+    DOMAIN_TOOLS,
     SIGNAL_DOMAINS,
     AgentDeps,
     SpecialistResult,
@@ -60,4 +61,6 @@ __all__ = [
     # Constants — Phase 5.3
     "SIGNAL_DOMAINS",
     "DOMAIN_PRIORITY",
+    # Constants — Phase 9.6
+    "DOMAIN_TOOLS",
 ]
