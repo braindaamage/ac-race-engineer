@@ -18,7 +18,7 @@
 
 **Purpose**: Add the DOMAIN_PARAMS constant and export it. This blocks all user story work.
 
-- [ ] T001 Add `DOMAIN_PARAMS` constant after `DOMAIN_TOOLS` in `backend/ac_engineer/engineer/agents.py` — map each domain to a tuple of section name prefixes per data-model.md: balance → `("SPRING_RATE", "DAMP_BUMP", "DAMP_FAST_BUMP", "DAMP_REBOUND", "DAMP_FAST_REBOUND", "ARB_", "RIDE_HEIGHT", "BRAKE_POWER", "BRAKE_BIAS")`, tyre → `("PRESSURE_", "CAMBER_", "TOE_OUT_", "TOE_IN_")`, aero → `("WING_", "SPLITTER_")`, technique → `()`, principal → `()`
+- [x] T001 Add `DOMAIN_PARAMS` constant after `DOMAIN_TOOLS` in `backend/ac_engineer/engineer/agents.py` — map each domain to a tuple of section name prefixes per data-model.md: balance → `("SPRING_RATE", "DAMP_BUMP", "DAMP_FAST_BUMP", "DAMP_REBOUND", "DAMP_FAST_REBOUND", "ARB_", "RIDE_HEIGHT", "BRAKE_POWER", "BRAKE_BIAS")`, tyre → `("PRESSURE_", "CAMBER_", "TOE_OUT_", "TOE_IN_")`, aero → `("WING_", "SPLITTER_")`, technique → `()`, principal → `()`
 
 **Checkpoint**: `DOMAIN_PARAMS` importable from `agents.py`. No behavior change yet.
 
@@ -32,13 +32,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T002 [US1] Add `domain: str | None = None` parameter to `_build_user_prompt()` in `backend/ac_engineer/engineer/agents.py` — when `domain` is `None`, include all parameters (backward compatible); when `domain` has empty prefixes in `DOMAIN_PARAMS`, skip the "Current Setup Parameters" block entirely and emit the existing "WARNING: No setup parameters available" message; when `domain` has prefixes, filter `summary.active_setup_parameters` to include only sections where the section name starts with one of the domain's prefixes (use `str.startswith()`), plus for `"balance"` domain include any section not matching ANY domain's prefixes (FR-009 fallback). Never mutate `summary.active_setup_parameters` — build a local filtered dict.
+- [x] T002 [US1] Add `domain: str | None = None` parameter to `_build_user_prompt()` in `backend/ac_engineer/engineer/agents.py` — when `domain` is `None`, include all parameters (backward compatible); when `domain` has empty prefixes in `DOMAIN_PARAMS`, skip the "Current Setup Parameters" block entirely and emit the existing "WARNING: No setup parameters available" message; when `domain` has prefixes, filter `summary.active_setup_parameters` to include only sections where the section name starts with one of the domain's prefixes (use `str.startswith()`), plus for `"balance"` domain include any section not matching ANY domain's prefixes (FR-009 fallback). Never mutate `summary.active_setup_parameters` — build a local filtered dict.
 
-- [ ] T003 [US1] Pass `domain=domain` from `analyze_with_engineer()` to `_build_user_prompt()` in `backend/ac_engineer/engineer/agents.py` — in the specialist loop (line ~574), change `_build_user_prompt(summary, domain_signals, domain_fragments)` to `_build_user_prompt(summary, domain_signals, domain_fragments, domain=domain)`
+- [x] T003 [US1] Pass `domain=domain` from `analyze_with_engineer()` to `_build_user_prompt()` in `backend/ac_engineer/engineer/agents.py` — in the specialist loop (line ~574), change `_build_user_prompt(summary, domain_signals, domain_fragments)` to `_build_user_prompt(summary, domain_signals, domain_fragments, domain=domain)`
 
 ### Tests for User Story 1
 
-- [ ] T004 [US1] Add `TestDomainScopedParams` class to `backend/tests/engineer/test_agents.py` with the following tests. Import `DOMAIN_PARAMS` from `agents.py`. Use a `SessionSummary` fixture with sections spanning all domains (e.g., `SPRING_RATE_LF`, `DAMP_BUMP_LF`, `ARB_FRONT`, `PRESSURE_LF`, `CAMBER_LF`, `TOE_OUT_LF`, `WING_1`, `WING_2`, `RIDE_HEIGHT_0`, `BRAKE_BIAS`). Tests:
+- [x] T004 [US1] Add `TestDomainScopedParams` class to `backend/tests/engineer/test_agents.py` with the following tests. Import `DOMAIN_PARAMS` from `agents.py`. Use a `SessionSummary` fixture with sections spanning all domains (e.g., `SPRING_RATE_LF`, `DAMP_BUMP_LF`, `ARB_FRONT`, `PRESSURE_LF`, `CAMBER_LF`, `TOE_OUT_LF`, `WING_1`, `WING_2`, `RIDE_HEIGHT_0`, `BRAKE_BIAS`). Tests:
   - `test_balance_domain_gets_only_balance_sections`: call `_build_user_prompt(summary, signals, domain="balance")`, assert prompt contains `SPRING_RATE_LF`, `DAMP_BUMP_LF`, `ARB_FRONT`, `RIDE_HEIGHT_0`, `BRAKE_BIAS` and does NOT contain `PRESSURE_LF`, `CAMBER_LF`, `TOE_OUT_LF`, `WING_1`, `WING_2`
   - `test_tyre_domain_gets_only_tyre_sections`: call with `domain="tyre"`, assert prompt contains `PRESSURE_LF`, `CAMBER_LF`, `TOE_OUT_LF` and does NOT contain `SPRING_RATE_LF`, `ARB_FRONT`, `WING_1`
   - `test_aero_domain_gets_only_aero_sections`: call with `domain="aero"`, assert prompt contains `WING_1`, `WING_2` and does NOT contain `SPRING_RATE_LF`, `PRESSURE_LF`, `ARB_FRONT`
@@ -58,7 +58,7 @@
 
 ### Tests for User Story 2
 
-- [ ] T005 [US2] Add test `test_tool_fallback_access_unaffected` to `TestDomainScopedParams` in `backend/tests/engineer/test_agents.py` — create an `AgentDeps` with parameter_ranges containing both balance and tyre sections, build a prompt with `domain="tyre"` (so prompt excludes balance sections), then verify that `AgentDeps.parameter_ranges` still contains the balance section keys. This confirms the tool can still access any parameter via `get_setup_range` since it reads from `deps.parameter_ranges`, not from the prompt text.
+- [x] T005 [US2] Add test `test_tool_fallback_access_unaffected` to `TestDomainScopedParams` in `backend/tests/engineer/test_agents.py` — create an `AgentDeps` with parameter_ranges containing both balance and tyre sections, build a prompt with `domain="tyre"` (so prompt excludes balance sections), then verify that `AgentDeps.parameter_ranges` still contains the balance section keys. This confirms the tool can still access any parameter via `get_setup_range` since it reads from `deps.parameter_ranges`, not from the prompt text.
 
 **Checkpoint**: Tool fallback verified — `parameter_ranges` in deps is never filtered.
 
@@ -72,7 +72,7 @@
 
 ### Tests for User Story 3
 
-- [ ] T006 [US3] Add tests to `TestDomainScopedParams` in `backend/tests/engineer/test_agents.py`:
+- [x] T006 [US3] Add tests to `TestDomainScopedParams` in `backend/tests/engineer/test_agents.py`:
   - `test_unrecognized_section_falls_back_to_balance`: create a `SessionSummary` with an unknown section (e.g., `CUSTOM_MOD_PARAM`) alongside standard sections, call `_build_user_prompt(summary, signals, domain="balance")`, assert `CUSTOM_MOD_PARAM` appears in the prompt
   - `test_unrecognized_section_excluded_from_other_domains`: same summary, call with `domain="tyre"`, assert `CUSTOM_MOD_PARAM` does NOT appear in the prompt
   - `test_empty_setup_params_preserves_existing_behavior`: create a `SessionSummary` with `active_setup_parameters={}`, call with `domain="balance"`, assert prompt contains `No setup parameters available`
@@ -86,9 +86,9 @@
 
 **Purpose**: Verify zero regressions across the full engineer test suite.
 
-- [ ] T007 Run full engineer test suite: `conda run -n ac-race-engineer pytest backend/tests/engineer/ -v` — all existing tests must pass without modification (SC-003). Verify the 3 existing `TestBuildUserPromptKnowledge` tests still pass (they call `_build_user_prompt` without `domain`, so backward compat).
+- [x] T007 Run full engineer test suite: `conda run -n ac-race-engineer pytest backend/tests/engineer/ -v` — all existing tests must pass without modification (SC-003). Verify the 3 existing `TestBuildUserPromptKnowledge` tests still pass (they call `_build_user_prompt` without `domain`, so backward compat).
 
-- [ ] T008 Run full backend test suite: `conda run -n ac-race-engineer pytest backend/tests/ -v` — verify zero regressions across all 962 backend tests.
+- [x] T008 Run full backend test suite: `conda run -n ac-race-engineer pytest backend/tests/ -v` — verify zero regressions across all 962 backend tests.
 
 ---
 

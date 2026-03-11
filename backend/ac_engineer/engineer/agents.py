@@ -85,6 +85,17 @@ DOMAIN_TOOLS: dict[str, list] = {
     "principal": [get_lap_detail, get_corner_metrics],
 }
 
+DOMAIN_PARAMS: dict[str, tuple[str, ...]] = {
+    "balance": (
+        "SPRING_RATE", "DAMP_BUMP", "DAMP_FAST_BUMP", "DAMP_REBOUND",
+        "DAMP_FAST_REBOUND", "ARB_", "RIDE_HEIGHT", "BRAKE_POWER", "BRAKE_BIAS",
+    ),
+    "tyre": ("PRESSURE_", "CAMBER_", "TOE_OUT_", "TOE_IN_"),
+    "aero": ("WING_", "SPLITTER_"),
+    "technique": (),
+    "principal": (),
+}
+
 # Domains that produce setup changes (used for aero trigger)
 _SETUP_DOMAINS = {"balance", "tyre"}
 
@@ -280,6 +291,7 @@ def _build_user_prompt(
     summary: SessionSummary,
     domain_signals: list[str],
     knowledge_fragments: list[KnowledgeFragment] | None = None,
+    domain: str | None = None,
 ) -> str:
     """Format SessionSummary data into a natural language prompt for specialists."""
     lines = [
@@ -350,11 +362,31 @@ def _build_user_prompt(
             best_marker = " (BEST)" if lap.is_best else ""
             lines.append(f"- Lap {lap.lap_number}: {lap.lap_time_s}s (+{lap.gap_to_best_s}s){best_marker}")
 
-    # Current setup
-    if summary.active_setup_parameters:
+    # Current setup — filter by domain if specified
+    setup_params = summary.active_setup_parameters or {}
+    if domain is not None:
+        prefixes = DOMAIN_PARAMS.get(domain, ())
+        if not prefixes:
+            # Domains with empty prefixes (technique, principal) get no setup params
+            setup_params = {}
+        else:
+            # Collect all prefixes from all domains for fallback detection
+            all_prefixes = tuple(
+                p for ps in DOMAIN_PARAMS.values() for p in ps
+            )
+            filtered: dict[str, dict[str, float | str]] = {}
+            for section, params in setup_params.items():
+                if section.startswith(prefixes):
+                    filtered[section] = params
+                elif domain == "balance" and not section.startswith(all_prefixes):
+                    # Unrecognized sections fall back to balance
+                    filtered[section] = params
+            setup_params = filtered
+
+    if setup_params:
         lines.append(f"")
         lines.append(f"### Current Setup Parameters")
-        for section, params in summary.active_setup_parameters.items():
+        for section, params in setup_params.items():
             for param, value in params.items():
                 lines.append(f"- {section}.{param} = {value}")
         lines.append(f"")
@@ -571,7 +603,7 @@ async def analyze_with_engineer(
 
         try:
             agent = _build_specialist_agent(domain, model)
-            user_prompt = _build_user_prompt(summary, domain_signals, domain_fragments)
+            user_prompt = _build_user_prompt(summary, domain_signals, domain_fragments, domain=domain)
 
             start_time = time.perf_counter()
             from pydantic_ai.usage import UsageLimits
