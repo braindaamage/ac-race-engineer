@@ -123,6 +123,8 @@ def _seed_usage(db_path, recommendation_id, session_id="test_session"):
         model="claude-sonnet-4-5",
         input_tokens=5400,
         output_tokens=1200,
+        cache_read_tokens=800,
+        cache_write_tokens=300,
         request_count=2,
         tool_call_count=3,
         duration_ms=4500,
@@ -141,6 +143,8 @@ def _seed_usage(db_path, recommendation_id, session_id="test_session"):
         model="claude-sonnet-4-5",
         input_tokens=5100,
         output_tokens=1400,
+        cache_read_tokens=600,
+        cache_write_tokens=150,
         request_count=2,
         tool_call_count=3,
         duration_ms=5200,
@@ -178,6 +182,8 @@ async def test_usage_with_data(client, db_path):
     assert totals["input_tokens"] == 5400 + 5100
     assert totals["output_tokens"] == 1200 + 1400
     assert totals["total_tokens"] == (5400 + 5100) + (1200 + 1400)
+    assert totals["cache_read_tokens"] == 800 + 600
+    assert totals["cache_write_tokens"] == 300 + 150
     assert totals["tool_call_count"] == 3 + 3
     assert totals["agent_count"] == 2
 
@@ -192,6 +198,8 @@ async def test_usage_with_data(client, db_path):
     balance = next(a for a in agents if a["domain"] == "balance")
     assert balance["input_tokens"] == 5400
     assert balance["output_tokens"] == 1200
+    assert balance["cache_read_tokens"] == 800
+    assert balance["cache_write_tokens"] == 300
     assert balance["tool_call_count"] == 3
     assert balance["turn_count"] == 2
     assert balance["duration_ms"] == 4500
@@ -214,6 +222,8 @@ async def test_usage_empty(client, db_path):
     assert data["totals"]["input_tokens"] == 0
     assert data["totals"]["output_tokens"] == 0
     assert data["totals"]["total_tokens"] == 0
+    assert data["totals"]["cache_read_tokens"] == 0
+    assert data["totals"]["cache_write_tokens"] == 0
     assert data["totals"]["tool_call_count"] == 0
     assert data["totals"]["agent_count"] == 0
     assert data["agents"] == []
@@ -291,6 +301,8 @@ async def test_message_usage_with_data(client, db_path):
         model="claude-sonnet-4-5",
         input_tokens=1520,
         output_tokens=340,
+        cache_read_tokens=420,
+        cache_write_tokens=0,
         request_count=3,
         tool_call_count=2,
         duration_ms=4200,
@@ -313,10 +325,14 @@ async def test_message_usage_with_data(client, db_path):
     assert data["totals"]["input_tokens"] == 1520
     assert data["totals"]["output_tokens"] == 340
     assert data["totals"]["total_tokens"] == 1860
+    assert data["totals"]["cache_read_tokens"] == 420
+    assert data["totals"]["cache_write_tokens"] == 0
     assert data["totals"]["tool_call_count"] == 2
     assert data["totals"]["agent_count"] == 1
     assert len(data["agents"]) == 1
     assert data["agents"][0]["domain"] == "principal"
+    assert data["agents"][0]["cache_read_tokens"] == 420
+    assert data["agents"][0]["cache_write_tokens"] == 0
 
 
 @pytest.mark.asyncio

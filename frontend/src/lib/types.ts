@@ -379,6 +379,8 @@ export interface AgentUsageDetail {
   model: string;
   input_tokens: number;
   output_tokens: number;
+  cache_read_tokens: number;
+  cache_write_tokens: number;
   tool_call_count: number;
   turn_count: number;
   duration_ms: number;
@@ -389,6 +391,8 @@ export interface UsageTotals {
   input_tokens: number;
   output_tokens: number;
   total_tokens: number;
+  cache_read_tokens: number;
+  cache_write_tokens: number;
   tool_call_count: number;
   agent_count: number;
 }

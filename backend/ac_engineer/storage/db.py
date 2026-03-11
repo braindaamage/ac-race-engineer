@@ -93,6 +93,8 @@ _MIGRATIONS = [
         "call_index INTEGER NOT NULL CHECK(call_index >= 0)"
         ")"
     ),
+    "ALTER TABLE llm_events ADD COLUMN cache_read_tokens INTEGER NOT NULL DEFAULT 0 CHECK(cache_read_tokens >= 0)",
+    "ALTER TABLE llm_events ADD COLUMN cache_write_tokens INTEGER NOT NULL DEFAULT 0 CHECK(cache_write_tokens >= 0)",
 ]
 
 

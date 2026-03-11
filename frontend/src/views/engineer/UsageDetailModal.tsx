@@ -63,6 +63,20 @@ export function UsageDetailModal({ open, onClose, usage }: UsageDetailModalProps
                 Tools <span className="ace-mono">{agent.tool_call_count}</span>
               </span>
             </div>
+            {(agent.cache_read_tokens > 0 || agent.cache_write_tokens > 0) && (
+              <div className="ace-usage-modal__agent-cache">
+                {agent.cache_read_tokens > 0 && (
+                  <span className="ace-usage-modal__agent-metric">
+                    Cache Read <span className="ace-mono">{formatTokenCount(agent.cache_read_tokens)}</span>
+                  </span>
+                )}
+                {agent.cache_write_tokens > 0 && (
+                  <span className="ace-usage-modal__agent-metric">
+                    Cache Write <span className="ace-mono">{formatTokenCount(agent.cache_write_tokens)}</span>
+                  </span>
+                )}
+              </div>
+            )}
             {agent.tool_calls.length > 0 && (
               <div className="ace-usage-modal__tools">
                 {agent.tool_calls.map((tc, i) => (

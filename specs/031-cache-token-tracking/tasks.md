@@ -19,17 +19,17 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T001 [P] Add `cache_read_tokens` and `cache_write_tokens` fields to `LlmEvent` model with `Field(default=0, ge=0)` in `backend/ac_engineer/storage/models.py`
-- [ ] T002 [P] Add migration 7 to `_MIGRATIONS` list with two `ALTER TABLE llm_events ADD COLUMN` statements (`cache_read_tokens` and `cache_write_tokens`, both `INTEGER NOT NULL DEFAULT 0 CHECK(col >= 0)`) in `backend/ac_engineer/storage/db.py`
-- [ ] T003 Include `cache_read_tokens` and `cache_write_tokens` in the INSERT statement of `save_llm_event()` and in the row-to-model reconstruction of `get_llm_events()` in `backend/ac_engineer/storage/usage.py`
-- [ ] T004 Add storage tests: save/get round-trip with non-zero cache fields, and verify pre-existing records (inserted without cache columns) default to 0 on read, in `backend/tests/storage/test_usage.py`
-- [ ] T005 [P] Read `usage.cache_read_tokens` and `usage.cache_write_tokens` from `result.usage()` into the `LlmEvent` constructor in the specialist agent usage capture block (~line 625) of `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`
-- [ ] T006 [P] Read `usage.cache_read_tokens` and `usage.cache_write_tokens` from `result.usage()` into the `LlmEvent` constructor in the chat usage capture block (~line 218) of `make_chat_job()` in `backend/api/engineer/pipeline.py`
-- [ ] T007 Add capture tests: verify `LlmEvent` construction reads `cache_read_tokens` and `cache_write_tokens` from a mock `RunUsage` object (non-zero values pass through, missing/zero values default to 0), in `backend/tests/engineer/test_usage_capture.py`
-- [ ] T008 [P] Add `cache_read_tokens: int = 0` and `cache_write_tokens: int = 0` to both `AgentUsageDetail` and `UsageTotals` Pydantic models in `backend/api/engineer/serializers.py`
-- [ ] T009 Sum `cache_read_tokens` and `cache_write_tokens` in the totals computation and pass them through in the per-agent detail construction within `_compute_usage_response()` in `backend/api/routes/engineer.py`
-- [ ] T010 Add API tests: verify both usage endpoints (`/recommendations/{rid}/usage` and `/messages/{mid}/usage`) return `cache_read_tokens` and `cache_write_tokens` in both `totals` and per-agent `agents[]` objects, in `backend/tests/api/test_usage_routes.py`
-- [ ] T011 [P] Add `cache_read_tokens: number` and `cache_write_tokens: number` to `UsageTotals` and `AgentUsageDetail` TypeScript interfaces in `frontend/src/lib/types.ts`
+- [x] T001 [P] Add `cache_read_tokens` and `cache_write_tokens` fields to `LlmEvent` model with `Field(default=0, ge=0)` in `backend/ac_engineer/storage/models.py`
+- [x] T002 [P] Add migration 7 to `_MIGRATIONS` list with two `ALTER TABLE llm_events ADD COLUMN` statements (`cache_read_tokens` and `cache_write_tokens`, both `INTEGER NOT NULL DEFAULT 0 CHECK(col >= 0)`) in `backend/ac_engineer/storage/db.py`
+- [x] T003 Include `cache_read_tokens` and `cache_write_tokens` in the INSERT statement of `save_llm_event()` and in the row-to-model reconstruction of `get_llm_events()` in `backend/ac_engineer/storage/usage.py`
+- [x] T004 Add storage tests: save/get round-trip with non-zero cache fields, and verify pre-existing records (inserted without cache columns) default to 0 on read, in `backend/tests/storage/test_usage.py`
+- [x] T005 [P] Read `usage.cache_read_tokens` and `usage.cache_write_tokens` from `result.usage()` into the `LlmEvent` constructor in the specialist agent usage capture block (~line 625) of `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`
+- [x] T006 [P] Read `usage.cache_read_tokens` and `usage.cache_write_tokens` from `result.usage()` into the `LlmEvent` constructor in the chat usage capture block (~line 218) of `make_chat_job()` in `backend/api/engineer/pipeline.py`
+- [x] T007 Add capture tests: verify `LlmEvent` construction reads `cache_read_tokens` and `cache_write_tokens` from a mock `RunUsage` object (non-zero values pass through, missing/zero values default to 0), in `backend/tests/engineer/test_usage_capture.py`
+- [x] T008 [P] Add `cache_read_tokens: int = 0` and `cache_write_tokens: int = 0` to both `AgentUsageDetail` and `UsageTotals` Pydantic models in `backend/api/engineer/serializers.py`
+- [x] T009 Sum `cache_read_tokens` and `cache_write_tokens` in the totals computation and pass them through in the per-agent detail construction within `_compute_usage_response()` in `backend/api/routes/engineer.py`
+- [x] T010 Add API tests: verify both usage endpoints (`/recommendations/{rid}/usage` and `/messages/{mid}/usage`) return `cache_read_tokens` and `cache_write_tokens` in both `totals` and per-agent `agents[]` objects, in `backend/tests/api/test_usage_routes.py`
+- [x] T011 [P] Add `cache_read_tokens: number` and `cache_write_tokens: number` to `UsageTotals` and `AgentUsageDetail` TypeScript interfaces in `frontend/src/lib/types.ts`
 
 **Checkpoint**: Backend pipeline complete with tests. Both usage endpoints now return cache token fields (defaulting to 0 for older records). Frontend types updated. Run `conda run -n ac-race-engineer pytest backend/tests/ -v` to verify all tests pass.
 
@@ -43,8 +43,8 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Add conditional cache read and cache write display per agent row (shown only when `cache_read_tokens > 0 || cache_write_tokens > 0` for that agent) using `formatTokenCount()` in `frontend/src/views/engineer/UsageDetailModal.tsx`
-- [ ] T013 [US1] Add frontend tests: verify cache read/write renders per agent when non-zero, verify cache info hidden when both are zero, verify modal works with legacy data (no cache fields), in `frontend/tests/views/engineer/UsageDetailModal.test.tsx`
+- [x] T012 [US1] Add conditional cache read and cache write display per agent row (shown only when `cache_read_tokens > 0 || cache_write_tokens > 0` for that agent) using `formatTokenCount()` in `frontend/src/views/engineer/UsageDetailModal.tsx`
+- [x] T013 [US1] Add frontend tests: verify cache read/write renders per agent when non-zero, verify cache info hidden when both are zero, verify modal works with legacy data (no cache fields), in `frontend/tests/views/engineer/UsageDetailModal.test.tsx`
 
 **Checkpoint**: User Story 1 complete. The detail modal shows cache breakdown per agent when data exists, and hides it otherwise.
 
@@ -58,8 +58,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Add conditional cache read total display (shown only when `totals.cache_read_tokens > 0`) using `formatTokenCount()` in `frontend/src/views/engineer/UsageSummaryBar.tsx`
-- [ ] T015 [US2] Add frontend tests: verify cache read total renders when non-zero, verify cache info hidden when zero, in `frontend/tests/views/engineer/UsageSummaryBar.test.tsx`
+- [x] T014 [US2] Add conditional cache read total display (shown only when `totals.cache_read_tokens > 0`) using `formatTokenCount()` in `frontend/src/views/engineer/UsageSummaryBar.tsx`
+- [x] T015 [US2] Add frontend tests: verify cache read total renders when non-zero, verify cache info hidden when zero, in `frontend/tests/views/engineer/UsageSummaryBar.test.tsx`
 
 **Checkpoint**: User Story 2 complete. Summary bar shows cache totals when present.
 
@@ -69,8 +69,8 @@
 
 **Purpose**: Verify backward compatibility, run full test suites, confirm no regressions.
 
-- [ ] T016 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and verify all tests pass including new cache token tests
-- [ ] T017 Run frontend type check and test suite (`cd frontend && npx tsc --noEmit && npm run test`) and verify all tests pass with zero type errors including new cache token tests
+- [x] T016 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and verify all tests pass including new cache token tests
+- [x] T017 Run frontend type check and test suite (`cd frontend && npx tsc --noEmit && npm run test`) and verify all tests pass with zero type errors including new cache token tests
 
 ---
 

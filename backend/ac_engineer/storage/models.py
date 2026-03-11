@@ -83,6 +83,8 @@ class LlmEvent(BaseModel):
     model: str = Field(..., min_length=1)
     input_tokens: int = Field(..., ge=0)
     output_tokens: int = Field(..., ge=0)
+    cache_read_tokens: int = Field(default=0, ge=0)
+    cache_write_tokens: int = Field(default=0, ge=0)
     request_count: int = Field(..., ge=0)
     tool_call_count: int = Field(..., ge=0)
     duration_ms: int = Field(..., ge=0)

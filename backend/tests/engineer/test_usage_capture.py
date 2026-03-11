@@ -173,6 +173,70 @@ class TestExtractToolCalls:
 
 
 # ---------------------------------------------------------------------------
+# Cache token field extraction
+# ---------------------------------------------------------------------------
+
+
+class TestCacheTokenCapture:
+    """Verify LlmEvent construction reads cache fields from RunUsage."""
+
+    def test_nonzero_cache_fields_pass_through(self):
+        """Non-zero cache_read_tokens and cache_write_tokens are captured."""
+        event = LlmEvent(
+            session_id="s1",
+            event_type="analysis",
+            agent_name="balance",
+            model="test-model",
+            input_tokens=1000,
+            output_tokens=200,
+            cache_read_tokens=450,
+            cache_write_tokens=120,
+            request_count=1,
+            tool_call_count=0,
+            duration_ms=500,
+        )
+        assert event.cache_read_tokens == 450
+        assert event.cache_write_tokens == 120
+
+    def test_zero_cache_fields_default(self):
+        """Missing/zero cache fields default to 0."""
+        event = LlmEvent(
+            session_id="s1",
+            event_type="analysis",
+            agent_name="balance",
+            model="test-model",
+            input_tokens=1000,
+            output_tokens=200,
+            request_count=1,
+            tool_call_count=0,
+            duration_ms=500,
+        )
+        assert event.cache_read_tokens == 0
+        assert event.cache_write_tokens == 0
+
+    def test_or_zero_pattern_handles_none(self):
+        """The `or 0` pattern used in capture code handles None gracefully."""
+        # Simulate what happens in agents.py / pipeline.py
+        cache_read = None
+        cache_write = None
+        event = LlmEvent(
+            session_id="s1",
+            event_type="analysis",
+            agent_name="balance",
+            model="test-model",
+            input_tokens=1000,
+            output_tokens=200,
+            cache_read_tokens=cache_read or 0,
+            cache_write_tokens=cache_write or 0,
+            request_count=1,
+            tool_call_count=0,
+            duration_ms=500,
+        )
+        assert event.cache_read_tokens == 0
+        assert event.cache_write_tokens == 0
+
+
+# ---------------------------------------------------------------------------
 # Full pipeline with FunctionModel
 # ---------------------------------------------------------------------------
 

@@ -279,12 +279,16 @@ def _compute_usage_response(usage_records):
     """Compute UsageTotals and AgentUsageDetail list from LlmEvent records."""
     total_input = sum(u.input_tokens for u in usage_records)
     total_output = sum(u.output_tokens for u in usage_records)
+    total_cache_read = sum(u.cache_read_tokens for u in usage_records)
+    total_cache_write = sum(u.cache_write_tokens for u in usage_records)
     total_tool_calls = sum(u.tool_call_count for u in usage_records)
 
     totals = UsageTotals(
         input_tokens=total_input,
         output_tokens=total_output,
         total_tokens=total_input + total_output,
+        cache_read_tokens=total_cache_read,
+        cache_write_tokens=total_cache_write,
         tool_call_count=total_tool_calls,
         agent_count=len(usage_records),
     )
@@ -295,6 +299,8 @@ def _compute_usage_response(usage_records):
             model=u.model,
             input_tokens=u.input_tokens,
             output_tokens=u.output_tokens,
+            cache_read_tokens=u.cache_read_tokens,
+            cache_write_tokens=u.cache_write_tokens,
             tool_call_count=u.tool_call_count,
             turn_count=u.request_count,
             duration_ms=u.duration_ms,

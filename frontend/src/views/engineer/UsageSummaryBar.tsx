@@ -26,6 +26,12 @@ export function UsageSummaryBar({ totals, onViewDetails }: UsageSummaryBarProps)
         <span className="ace-usage-summary__label">Tools</span>
         <span className="ace-mono">{totals.tool_call_count}</span>
       </span>
+      {totals.cache_read_tokens > 0 && (
+        <span className="ace-usage-summary__item">
+          <span className="ace-usage-summary__label">Cached</span>
+          <span className="ace-mono">{formatTokenCount(totals.cache_read_tokens)}</span>
+        </span>
+      )}
       <Button variant="ghost" size="sm" onClick={onViewDetails}>
         Details
       </Button>
