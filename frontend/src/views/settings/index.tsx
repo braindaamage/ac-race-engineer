@@ -23,6 +23,7 @@ export function SettingsView() {
   const [llmProvider, setLlmProvider] = useState("anthropic");
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [diagnosticMode, setDiagnosticMode] = useState(false);
 
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -39,6 +40,7 @@ export function SettingsView() {
       setSetupsPath(config.setups_path);
       setLlmProvider(config.llm_provider);
       setApiKey("");
+      setDiagnosticMode(config.diagnostic_mode ?? false);
     }
   }, [config]);
 
@@ -46,7 +48,8 @@ export function SettingsView() {
     ? acInstallPath !== config.ac_install_path ||
       setupsPath !== config.setups_path ||
       llmProvider !== config.llm_provider ||
-      apiKey !== ""
+      apiKey !== "" ||
+      diagnosticMode !== (config.diagnostic_mode ?? false)
     : false;
 
   // Intercept sidebar navigation when dirty
@@ -67,6 +70,7 @@ export function SettingsView() {
       setSetupsPath(config.setups_path);
       setLlmProvider(config.llm_provider);
       setApiKey("");
+      setDiagnosticMode(config.diagnostic_mode ?? false);
     }
     if (pendingSection.current) {
       setActiveSection(pendingSection.current);
@@ -81,6 +85,8 @@ export function SettingsView() {
       if (setupsPath !== config.setups_path) fields.setups_path = setupsPath;
       if (llmProvider !== config.llm_provider) fields.llm_provider = llmProvider;
       if (apiKey) fields.api_key = apiKey;
+      if (diagnosticMode !== (config.diagnostic_mode ?? false))
+        fields.diagnostic_mode = diagnosticMode;
     }
     try {
       await updateConfig(fields);
@@ -240,6 +246,28 @@ export function SettingsView() {
 
       {/* Section 4: Advanced */}
       <Card title="Advanced">
+        <div className="ace-settings__row">
+          <span>Diagnostic Mode</span>
+          <div className="ace-settings__theme-buttons">
+            <Button
+              variant={diagnosticMode ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => setDiagnosticMode(true)}
+            >
+              On
+            </Button>
+            <Button
+              variant={!diagnosticMode ? "primary" : "secondary"}
+              size="sm"
+              onClick={() => setDiagnosticMode(false)}
+            >
+              Off
+            </Button>
+          </div>
+        </div>
+        <p className="ace-settings__hint">
+          When enabled, captures full AI agent conversation traces for debugging.
+        </p>
         <button
           className="ace-settings__rerun-btn"
           type="button"

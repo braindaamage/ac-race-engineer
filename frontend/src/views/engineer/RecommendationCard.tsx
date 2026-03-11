@@ -3,6 +3,8 @@ import { Card, Badge, Button } from "../../components/ui";
 import { DriverFeedbackCard } from "./DriverFeedbackCard";
 import { UsageSummaryBar } from "./UsageSummaryBar";
 import { UsageDetailModal } from "./UsageDetailModal";
+import { TraceModal } from "./TraceModal";
+import { useTrace } from "../../hooks/useTrace";
 import type {
   RecommendationDetailResponse,
   RecommendationUsageResponse,
@@ -10,6 +12,7 @@ import type {
 
 interface RecommendationCardProps {
   recommendation: RecommendationDetailResponse;
+  sessionId: string | null;
   onApply: (recommendationId: string) => void;
   usage?: RecommendationUsageResponse;
 }
@@ -28,11 +31,14 @@ const STATUS_VARIANT: Record<string, "info" | "success" | "neutral"> = {
 
 export function RecommendationCard({
   recommendation,
+  sessionId,
   onApply,
   usage,
 }: RecommendationCardProps) {
   const isApplied = recommendation.status === "applied";
   const [showUsageModal, setShowUsageModal] = useState(false);
+  const [showTraceModal, setShowTraceModal] = useState(false);
+  const traceQuery = useTrace(sessionId, "recommendation", recommendation.recommendation_id);
 
   return (
     <div
@@ -109,6 +115,15 @@ export function RecommendationCard({
         )}
 
         <div className="ace-recommendation-card__actions">
+          {traceQuery.data?.available && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTraceModal(true)}
+            >
+              Trace
+            </Button>
+          )}
           <Button
             variant="primary"
             size="sm"
@@ -127,6 +142,12 @@ export function RecommendationCard({
           usage={usage}
         />
       )}
+
+      <TraceModal
+        open={showTraceModal}
+        onClose={() => setShowTraceModal(false)}
+        traceContent={traceQuery.data?.content ?? null}
+      />
     </div>
   );
 }

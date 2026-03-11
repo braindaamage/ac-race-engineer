@@ -21,6 +21,7 @@ class ACConfig(BaseModel):
     ui_theme: str = "dark"
     api_key: str | None = None
     onboarding_completed: bool = False
+    diagnostic_mode: bool = False
 
     @field_validator("ac_install_path", "setups_path", mode="before")
     @classmethod
@@ -84,4 +85,5 @@ class ACConfig(BaseModel):
             "ui_theme": self.ui_theme,
             "api_key": self.api_key,
             "onboarding_completed": self.onboarding_completed,
+            "diagnostic_mode": self.diagnostic_mode,
         }

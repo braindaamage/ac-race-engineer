@@ -408,3 +408,14 @@ export interface MessageUsageResponse {
   totals: UsageTotals;
   agents: AgentUsageDetail[];
 }
+
+// ---------------------------------------------------------------------------
+// Trace types
+// ---------------------------------------------------------------------------
+
+export interface TraceResponse {
+  available: boolean;
+  content: string | null;
+  trace_type: "recommendation" | "message";
+  id: string;
+}

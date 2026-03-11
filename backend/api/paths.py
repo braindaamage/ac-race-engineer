@@ -32,3 +32,8 @@ def get_config_path() -> Path:
 def get_sessions_dir() -> Path:
     """Return the sessions directory path."""
     return get_data_dir() / "sessions"
+
+
+def get_traces_dir() -> Path:
+    """Return the traces directory path."""
+    return get_data_dir() / "traces"

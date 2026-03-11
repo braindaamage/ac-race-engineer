@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SettingsView } from "../../../src/views/settings";
 
@@ -29,6 +29,7 @@ const defaultConfig = {
   ui_theme: "dark",
   api_key: "sk-a****7890",
   onboarding_completed: true,
+  diagnostic_mode: false,
 };
 
 function renderWithQuery(ui: React.ReactElement) {
@@ -155,6 +156,73 @@ describe("SettingsView", () => {
     await waitFor(() => {
       const testBtn = screen.getByText("Test Connection");
       expect(testBtn).toBeDisabled();
+    });
+  });
+
+  it("diagnostic mode toggle renders in Advanced section", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Diagnostic Mode")).toBeDefined();
+      expect(screen.getByText("On")).toBeDefined();
+      expect(screen.getByText("Off")).toBeDefined();
+    });
+  });
+
+  it("diagnostic mode toggle makes form dirty", async () => {
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Diagnostic Mode")).toBeDefined();
+      expect(screen.getByText("Save")).toBeDisabled();
+    });
+
+    // Wait for all pending async effects to settle
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("On"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Save")).not.toBeDisabled();
+    });
+  });
+
+  it("handleSave includes diagnostic_mode when toggled", async () => {
+    mockedApiPatch.mockResolvedValue({
+      ...defaultConfig,
+      diagnostic_mode: true,
+    });
+
+    renderWithQuery(<SettingsView />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Diagnostic Mode")).toBeDefined();
+      expect(screen.getByText("Save")).toBeDisabled();
+    });
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText("On"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Save")).not.toBeDisabled();
+    });
+
+    fireEvent.click(screen.getByText("Save"));
+
+    await waitFor(() => {
+      expect(mockedApiPatch).toHaveBeenCalledWith(
+        "/config",
+        expect.objectContaining({ diagnostic_mode: true }),
+      );
     });
   });
 });

@@ -24,9 +24,9 @@
 
 **Purpose**: Add the config field and path helper that all subsequent work depends on
 
-- [ ] T001 Add `diagnostic_mode: bool = False` field to ACConfig and include it in `_serialize()` in backend/ac_engineer/config/models.py
-- [ ] T002 Add `get_traces_dir() -> Path` helper returning `get_data_dir() / "traces"` in backend/api/paths.py
-- [ ] T003 [P] Add `TraceResponse` interface and `diagnostic_mode: boolean` to config type in frontend/src/lib/types.ts
+- [x] T001 Add `diagnostic_mode: bool = False` field to ACConfig and include it in `_serialize()` in backend/ac_engineer/config/models.py
+- [x] T002 Add `get_traces_dir() -> Path` helper returning `get_data_dir() / "traces"` in backend/api/paths.py
+- [x] T003 [P] Add `TraceResponse` interface and `diagnostic_mode: boolean` to config type in frontend/src/lib/types.ts
 
 ---
 
@@ -36,8 +36,8 @@
 
 **⚠️ CRITICAL**: All user story phases depend on this module
 
-- [ ] T004 Create backend/ac_engineer/engineer/trace.py with four functions: `serialize_agent_trace(domain, system_prompt, user_prompt, result) -> dict` that iterates `result.all_messages()` and handles SystemPromptPart, UserPromptPart, TextPart, ToolCallPart, ToolReturnPart; `format_trace_markdown(session_id, trace_type, context_id, agent_traces, timestamp) -> str` that formats agent trace dicts into Markdown per data-model.md structure; `write_trace(traces_dir, trace_type, context_id, content) -> Path` that writes to `{traces_dir}/{type}_{id}.md` creating directory if needed; `read_trace(traces_dir, trace_type, context_id) -> str | None` that reads trace file or returns None
-- [ ] T005 Create backend/tests/engineer/test_trace.py with tests for: serialize_agent_trace with mock Pydantic AI result (ModelRequest/ModelResponse with various part types), format_trace_markdown output contains expected headings and code blocks, write_trace/read_trace round-trip in tmp_path, read_trace returns None for missing file, write_trace creates directory if not exists
+- [x] T004 Create backend/ac_engineer/engineer/trace.py with four functions: `serialize_agent_trace(domain, system_prompt, user_prompt, result) -> dict` that iterates `result.all_messages()` and handles SystemPromptPart, UserPromptPart, TextPart, ToolCallPart, ToolReturnPart; `format_trace_markdown(session_id, trace_type, context_id, agent_traces, timestamp) -> str` that formats agent trace dicts into Markdown per data-model.md structure; `write_trace(traces_dir, trace_type, context_id, content) -> Path` that writes to `{traces_dir}/{type}_{id}.md` creating directory if needed; `read_trace(traces_dir, trace_type, context_id) -> str | None` that reads trace file or returns None
+- [x] T005 Create backend/tests/engineer/test_trace.py with tests for: serialize_agent_trace with mock Pydantic AI result (ModelRequest/ModelResponse with various part types), format_trace_markdown output contains expected headings and code blocks, write_trace/read_trace round-trip in tmp_path, read_trace returns None for missing file, write_trace creates directory if not exists
 
 **Checkpoint**: Core trace module ready — user story implementation can now begin
 
@@ -51,12 +51,12 @@
 
 ### Tests for User Story 1
 
-- [ ] T006 [P] [US1] Add test in backend/tests/config/test_config_models.py verifying ACConfig defaults diagnostic_mode to False, serializes it, and round-trips through read_config/write_config
-- [ ] T007 [P] [US1] Add test in frontend/tests/views/settings/SettingsView.test.tsx verifying diagnostic mode toggle renders in Advanced section, isDirty tracks changes, and handleSave includes diagnostic_mode
+- [x] T006 [P] [US1] Add test in backend/tests/config/test_config_models.py verifying ACConfig defaults diagnostic_mode to False, serializes it, and round-trips through read_config/write_config
+- [x] T007 [P] [US1] Add test in frontend/tests/views/settings/SettingsView.test.tsx verifying diagnostic mode toggle renders in Advanced section, isDirty tracks changes, and handleSave includes diagnostic_mode
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Add `diagnosticMode` local state to SettingsView initialized from `config.diagnostic_mode`, add toggle control in Advanced Card section, include in `isDirty` computation and `handleSave()` fields dict in frontend/src/views/settings/index.tsx
+- [x] T008 [US1] Add `diagnosticMode` local state to SettingsView initialized from `config.diagnostic_mode`, add toggle control in Advanced Card section, include in `isDirty` computation and `handleSave()` fields dict in frontend/src/views/settings/index.tsx
 
 **Checkpoint**: Diagnostic mode can be toggled on/off from Settings and persists via PATCH /config. All existing settings behavior unchanged.
 
@@ -70,21 +70,21 @@
 
 ### Tests for User Story 2
 
-- [ ] T009 [P] [US2] Create backend/tests/api/test_engineer_traces.py with tests for: GET recommendation trace returns `{available: true, content: "..."}` when trace file exists; returns `{available: false, content: null}` when no trace file; returns 404 when recommendation does not exist in DB
-- [ ] T010 [P] [US2] Create frontend/tests/hooks/useTrace.test.ts with tests for: useTrace fetches from correct endpoint path, returns available/unavailable state, does not fetch when id is null
-- [ ] T011 [P] [US2] Create frontend/tests/views/engineer/TraceModal.test.tsx with tests for: renders trace content as preformatted text, handles null content gracefully, close button triggers onClose callback
+- [x] T009 [P] [US2] Create backend/tests/api/test_engineer_traces.py with tests for: GET recommendation trace returns `{available: true, content: "..."}` when trace file exists; returns `{available: false, content: null}` when no trace file; returns 404 when recommendation does not exist in DB
+- [x] T010 [P] [US2] Create frontend/tests/hooks/useTrace.test.ts with tests for: useTrace fetches from correct endpoint path, returns available/unavailable state, does not fetch when id is null
+- [x] T011 [P] [US2] Create frontend/tests/views/engineer/TraceModal.test.tsx with tests for: renders trace content as preformatted text, handles null content gracefully, close button triggers onClose callback
 
 ### Implementation for User Story 2
 
-- [ ] T012 [US2] Add `diagnostic_mode: bool = False` parameter to `analyze_with_engineer()` signature in backend/ac_engineer/engineer/agents.py. After each `agent.run()` in the specialist loop (~line 610-616), if diagnostic_mode is true, call `serialize_agent_trace()` with domain, system_prompt (from `_load_skill_prompt(domain)`), user_prompt, and result; collect into a `collected_traces` list
-- [ ] T013 [US2] After recommendation persistence (~line 702) in `analyze_with_engineer()`, if diagnostic_mode is true and collected_traces is non-empty and recommendation_id is known, call `format_trace_markdown()` then `write_trace()` to `data/traces/rec_{recommendation_id}.md`. Wrap in try-except (non-critical). Import `get_traces_dir` from api.paths or accept traces_dir as parameter.
-- [ ] T014 [US2] In `make_engineer_job()` in backend/api/engineer/pipeline.py, pass `diagnostic_mode=config.diagnostic_mode` and `traces_dir=get_traces_dir()` to `analyze_with_engineer()`
-- [ ] T015 [US2] Add `TraceResponse` Pydantic model to backend/api/routes/engineer.py (or backend/api/engineer/serializers.py) with fields: `available: bool`, `content: str | None`, `trace_type: str`, `id: str`
-- [ ] T016 [US2] Add `GET /sessions/{session_id}/recommendations/{recommendation_id}/trace` endpoint in backend/api/routes/engineer.py that calls `read_trace(get_traces_dir(), "rec", recommendation_id)` and returns TraceResponse. Return 404 if recommendation does not exist in DB; return 200 with available=false if trace file not found
-- [ ] T017 [US2] Create frontend/src/hooks/useTrace.ts with `useTrace(sessionId, traceType, id)` hook using TanStack Query: queryKey `["trace", traceType, id]`, queryFn fetches `GET /sessions/{sessionId}/recommendations/{id}/trace` or `/messages/{id}/trace` based on traceType, enabled only when sessionId and id are truthy, staleTime Infinity
-- [ ] T018 [US2] Create frontend/src/views/engineer/TraceModal.tsx — Modal component that accepts `open`, `onClose`, `traceContent: string | null` props. Display trace content in a `<pre>` block with monospace font and horizontal scroll. Use existing Modal component from components/ui. Apply `ace-trace-modal` CSS class for styling (max-height with vertical scroll)
-- [ ] T019 [US2] Add trace indicator to RecommendationCard in frontend/src/views/engineer/RecommendationCard.tsx: use `useTrace(sessionId, "recommendation", recommendation.recommendation_id)` hook; when trace is available, show a small "Trace" button; on click, open TraceModal with trace content
-- [ ] T020 [US2] Add test in backend/tests/engineer/test_agents.py verifying that `analyze_with_engineer()` calls write_trace when diagnostic_mode=True and skips when False (mock trace functions)
+- [x] T012 [US2] Add `diagnostic_mode: bool = False` parameter to `analyze_with_engineer()` signature in backend/ac_engineer/engineer/agents.py. After each `agent.run()` in the specialist loop (~line 610-616), if diagnostic_mode is true, call `serialize_agent_trace()` with domain, system_prompt (from `_load_skill_prompt(domain)`), user_prompt, and result; collect into a `collected_traces` list
+- [x] T013 [US2] After recommendation persistence (~line 702) in `analyze_with_engineer()`, if diagnostic_mode is true and collected_traces is non-empty and recommendation_id is known, call `format_trace_markdown()` then `write_trace()` to `data/traces/rec_{recommendation_id}.md`. Wrap in try-except (non-critical). Import `get_traces_dir` from api.paths or accept traces_dir as parameter.
+- [x] T014 [US2] In `make_engineer_job()` in backend/api/engineer/pipeline.py, pass `diagnostic_mode=config.diagnostic_mode` and `traces_dir=get_traces_dir()` to `analyze_with_engineer()`
+- [x] T015 [US2] Add `TraceResponse` Pydantic model to backend/api/routes/engineer.py (or backend/api/engineer/serializers.py) with fields: `available: bool`, `content: str | None`, `trace_type: str`, `id: str`
+- [x] T016 [US2] Add `GET /sessions/{session_id}/recommendations/{recommendation_id}/trace` endpoint in backend/api/routes/engineer.py that calls `read_trace(get_traces_dir(), "rec", recommendation_id)` and returns TraceResponse. Return 404 if recommendation does not exist in DB; return 200 with available=false if trace file not found
+- [x] T017 [US2] Create frontend/src/hooks/useTrace.ts with `useTrace(sessionId, traceType, id)` hook using TanStack Query: queryKey `["trace", traceType, id]`, queryFn fetches `GET /sessions/{sessionId}/recommendations/{id}/trace` or `/messages/{id}/trace` based on traceType, enabled only when sessionId and id are truthy, staleTime Infinity
+- [x] T018 [US2] Create frontend/src/views/engineer/TraceModal.tsx — Modal component that accepts `open`, `onClose`, `traceContent: string | null` props. Display trace content in a `<pre>` block with monospace font and horizontal scroll. Use existing Modal component from components/ui. Apply `ace-trace-modal` CSS class for styling (max-height with vertical scroll)
+- [x] T019 [US2] Add trace indicator to RecommendationCard in frontend/src/views/engineer/RecommendationCard.tsx: use `useTrace(sessionId, "recommendation", recommendation.recommendation_id)` hook; when trace is available, show a small "Trace" button; on click, open TraceModal with trace content
+- [x] T020 [US2] Add test in backend/tests/engineer/test_agents.py verifying that `analyze_with_engineer()` calls write_trace when diagnostic_mode=True and skips when False (mock trace functions)
 
 **Checkpoint**: Engineer analysis traces are captured when diagnostic mode is on. Trace files are human-readable Markdown. API returns trace content. Frontend shows trace indicator and modal on RecommendationCard. No trace captured when diagnostic mode is off.
 
@@ -98,13 +98,13 @@
 
 ### Tests for User Story 3
 
-- [ ] T021 [P] [US3] Add test in backend/tests/api/test_engineer_traces.py for: GET message trace returns available/unavailable correctly, returns 404 when message does not exist
+- [x] T021 [P] [US3] Add test in backend/tests/api/test_engineer_traces.py for: GET message trace returns available/unavailable correctly, returns 404 when message does not exist
 
 ### Implementation for User Story 3
 
-- [ ] T022 [US3] In `make_chat_job()` in backend/api/engineer/pipeline.py, after `save_message()` (~line 208), if `config.diagnostic_mode` is true, call `serialize_agent_trace("principal", system_prompt, user_content, result)`, then `format_trace_markdown()` + `write_trace()` to `data/traces/msg_{assistant_msg.message_id}.md`. Wrap in try-except (non-critical, same pattern as usage capture)
-- [ ] T023 [US3] Add `GET /sessions/{session_id}/messages/{message_id}/trace` endpoint in backend/api/routes/engineer.py that calls `read_trace(get_traces_dir(), "msg", message_id)` and returns TraceResponse. Return 404 if message does not exist; 200 with available=false if trace file not found
-- [ ] T024 [US3] Add trace indicator to assistant messages in frontend/src/views/engineer/MessageList.tsx: for each assistant message, use `useTrace(sessionId, "message", msg.message_id)` hook; when trace is available, show a "Trace" button next to or below the message; on click, open TraceModal with trace content
+- [x] T022 [US3] In `make_chat_job()` in backend/api/engineer/pipeline.py, after `save_message()` (~line 208), if `config.diagnostic_mode` is true, call `serialize_agent_trace("principal", system_prompt, user_content, result)`, then `format_trace_markdown()` + `write_trace()` to `data/traces/msg_{assistant_msg.message_id}.md`. Wrap in try-except (non-critical, same pattern as usage capture)
+- [x] T023 [US3] Add `GET /sessions/{session_id}/messages/{message_id}/trace` endpoint in backend/api/routes/engineer.py that calls `read_trace(get_traces_dir(), "msg", message_id)` and returns TraceResponse. Return 404 if message does not exist; 200 with available=false if trace file not found
+- [x] T024 [US3] Add trace indicator to assistant messages in frontend/src/views/engineer/MessageList.tsx: for each assistant message, use `useTrace(sessionId, "message", msg.message_id)` hook; when trace is available, show a "Trace" button next to or below the message; on click, open TraceModal with trace content
 
 **Checkpoint**: Chat message traces are captured when diagnostic mode is on. Full engineer+chat trace coverage complete.
 
@@ -116,8 +116,8 @@
 
 **Independent Test**: Run full backend test suite and frontend test suite. Verify no regressions. Query trace endpoints for items without traces and confirm clean responses.
 
-- [ ] T025 [US4] Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and verify all existing tests pass with the new diagnostic_mode field defaulting to False
-- [ ] T026 [US4] Run full frontend test suite (`cd frontend && npx tsc --noEmit && npm run test`) and verify all existing tests pass with the new types and components
+- [x] T025 [US4] Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and verify all existing tests pass with the new diagnostic_mode field defaulting to False
+- [x] T026 [US4] Run full frontend test suite (`cd frontend && npx tsc --noEmit && npm run test`) and verify all existing tests pass with the new types and components
 
 **Checkpoint**: All existing tests pass. Trace feature has zero impact on existing functionality.
 
@@ -127,8 +127,8 @@
 
 **Purpose**: Final validation and cleanup
 
-- [ ] T027 Add CSS styles for trace modal and trace indicator button in frontend/src/views/engineer/Engineer.css (or appropriate CSS file): `ace-trace-modal` with max-height, overflow-y auto, monospace font for pre block; `ace-trace-btn` for the indicator button styling
-- [ ] T028 Run quickstart.md validation — execute all backend and frontend test commands listed in specs/032-agent-diagnostic-traces/quickstart.md
+- [x] T027 Add CSS styles for trace modal and trace indicator button in frontend/src/views/engineer/Engineer.css (or appropriate CSS file): `ace-trace-modal` with max-height, overflow-y auto, monospace font for pre block; `ace-trace-btn` for the indicator button styling
+- [x] T028 Run quickstart.md validation — execute all backend and frontend test commands listed in specs/032-agent-diagnostic-traces/quickstart.md
 
 ---
 

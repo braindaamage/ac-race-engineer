@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { RecommendationCard } from "../../../src/views/engineer/RecommendationCard";
 import type { RecommendationDetailResponse } from "../../../src/lib/types";
 
+vi.mock("../../../src/hooks/useTrace", () => ({
+  useTrace: () => ({ data: undefined, isLoading: false }),
+}));
+
 const baseRecommendation: RecommendationDetailResponse = {
   recommendation_id: "rec-1",
   session_id: "sess-1",
@@ -46,14 +50,14 @@ const baseRecommendation: RecommendationDetailResponse = {
 describe("RecommendationCard", () => {
   it("renders summary text", () => {
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     expect(screen.getByText("Stiffen front anti-roll bar")).toBeInTheDocument();
   });
 
   it("renders setup changes with all fields", () => {
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     expect(screen.getByText("[ARB] FRONT")).toBeInTheDocument();
     expect(screen.getByText("[SPRINGS] FRONT")).toBeInTheDocument();
@@ -65,7 +69,7 @@ describe("RecommendationCard", () => {
 
   it("renders old and new values", () => {
     const { container } = render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     const valuesCells = container.querySelectorAll(".ace-setup-change__values");
     expect(valuesCells).toHaveLength(2);
@@ -75,7 +79,7 @@ describe("RecommendationCard", () => {
 
   it("renders driver feedback items", () => {
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     expect(screen.getByText("braking")).toBeInTheDocument();
     expect(screen.getByText("Late braking into Turn 3")).toBeInTheDocument();
@@ -85,7 +89,7 @@ describe("RecommendationCard", () => {
 
   it("shows Apply button enabled for proposed status", () => {
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     const applyBtn = screen.getByRole("button", { name: "Apply" });
     expect(applyBtn).not.toBeDisabled();
@@ -94,7 +98,7 @@ describe("RecommendationCard", () => {
   it("shows Apply button disabled for applied status", () => {
     const applied = { ...baseRecommendation, status: "applied" as const };
     render(
-      <RecommendationCard recommendation={applied} onApply={() => {}} />,
+      <RecommendationCard recommendation={applied} sessionId="sess-1" onApply={() => {}} />,
     );
     const applyBtn = screen.getByRole("button", { name: "Applied" });
     expect(applyBtn).toBeDisabled();
@@ -103,7 +107,7 @@ describe("RecommendationCard", () => {
   it("calls onApply with recommendation_id when Apply clicked", () => {
     const onApply = vi.fn();
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={onApply} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={onApply} />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     expect(onApply).toHaveBeenCalledWith("rec-1");
@@ -111,7 +115,7 @@ describe("RecommendationCard", () => {
 
   it("shows correct status badge for proposed", () => {
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     expect(screen.getByText("Proposed")).toBeInTheDocument();
   });
@@ -119,7 +123,7 @@ describe("RecommendationCard", () => {
   it("shows correct status badge for applied", () => {
     const applied = { ...baseRecommendation, status: "applied" as const };
     render(
-      <RecommendationCard recommendation={applied} onApply={() => {}} />,
+      <RecommendationCard recommendation={applied} sessionId="sess-1" onApply={() => {}} />,
     );
     const appliedTexts = screen.getAllByText("Applied");
     // Badge + button text
@@ -128,7 +132,7 @@ describe("RecommendationCard", () => {
 
   it("renders confidence badges for each setup change", () => {
     render(
-      <RecommendationCard recommendation={baseRecommendation} onApply={() => {}} />,
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
     );
     // Overall confidence + 2 change confidences = at least 2 "high" badges
     const highBadges = screen.getAllByText("high");

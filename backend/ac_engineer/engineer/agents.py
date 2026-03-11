@@ -533,6 +533,8 @@ async def analyze_with_engineer(
     ac_install_path: Path | None = None,
     parameter_ranges: dict[str, ParameterRange] | None = None,
     resolution_tier: int | None = None,
+    diagnostic_mode: bool = False,
+    traces_dir: Path | None = None,
 ) -> EngineerResponse:
     """Primary entry point for AI-powered session analysis.
 
@@ -575,6 +577,7 @@ async def analyze_with_engineer(
     # Run specialist agents
     specialist_results: dict[str, SpecialistResult] = {}
     collected_usage: list[LlmEvent] = []
+    collected_traces: list[dict] = []
     effective_model = get_effective_model(config)
 
     for domain in domains:
@@ -614,6 +617,19 @@ async def analyze_with_engineer(
             duration_ms = int((time.perf_counter() - start_time) * 1000)
 
             specialist_results[domain] = result.output
+
+            # Capture diagnostic trace (non-critical)
+            if diagnostic_mode:
+                try:
+                    from .trace import serialize_agent_trace
+
+                    system_prompt = _load_skill_prompt(domain)
+                    trace_dict = serialize_agent_trace(
+                        domain, system_prompt, user_prompt, result,
+                    )
+                    collected_traces.append(trace_dict)
+                except Exception:
+                    logger.warning("Failed to serialize trace for '%s'", domain, exc_info=True)
 
             # Extract usage data
             try:
@@ -702,6 +718,20 @@ async def analyze_with_engineer(
         recommendation_id = rec.recommendation_id
     except Exception:
         logger.warning("Failed to persist recommendation", exc_info=True)
+
+    # Write diagnostic trace (non-critical)
+    if diagnostic_mode and recommendation_id and collected_traces and traces_dir:
+        try:
+            from .trace import format_trace_markdown, write_trace
+
+            trace_content = format_trace_markdown(
+                summary.session_id, "recommendation", recommendation_id,
+                collected_traces,
+            )
+            write_trace(traces_dir, "rec", recommendation_id, trace_content)
+            logger.info("Wrote diagnostic trace for recommendation %s", recommendation_id)
+        except Exception:
+            logger.warning("Failed to write diagnostic trace", exc_info=True)
 
     # Persist usage data
     if recommendation_id and collected_usage:
