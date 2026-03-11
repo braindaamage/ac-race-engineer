@@ -7,6 +7,8 @@ const baseTotals: UsageTotals = {
   input_tokens: 5200,
   output_tokens: 1800,
   total_tokens: 7000,
+  cache_read_tokens: 1500,
+  cache_write_tokens: 400,
   tool_call_count: 12,
   agent_count: 3,
 };
@@ -45,6 +47,8 @@ describe("UsageSummaryBar", () => {
       input_tokens: 0,
       output_tokens: 0,
       total_tokens: 0,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
       tool_call_count: 0,
       agent_count: 0,
     };
@@ -53,11 +57,33 @@ describe("UsageSummaryBar", () => {
     expect(zeros.length).toBeGreaterThanOrEqual(4);
   });
 
+  it("renders cache read total when non-zero", () => {
+    render(<UsageSummaryBar totals={baseTotals} onViewDetails={() => {}} />);
+    expect(screen.getByText("Cached")).toBeInTheDocument();
+    expect(screen.getByText("1.5K")).toBeInTheDocument(); // cache_read_tokens=1500
+  });
+
+  it("hides cache info when zero", () => {
+    const noCacheTotals: UsageTotals = {
+      input_tokens: 5200,
+      output_tokens: 1800,
+      total_tokens: 7000,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
+      tool_call_count: 12,
+      agent_count: 3,
+    };
+    render(<UsageSummaryBar totals={noCacheTotals} onViewDetails={() => {}} />);
+    expect(screen.queryByText("Cached")).not.toBeInTheDocument();
+  });
+
   it("renders compact formatting for large values", () => {
     const largeTotals: UsageTotals = {
       input_tokens: 1200000,
       output_tokens: 350000,
       total_tokens: 1550000,
+      cache_read_tokens: 500000,
+      cache_write_tokens: 100000,
       tool_call_count: 45,
       agent_count: 4,
     };

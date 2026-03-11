@@ -9,6 +9,8 @@ const baseUsage: RecommendationUsageResponse = {
     input_tokens: 8500,
     output_tokens: 3200,
     total_tokens: 11700,
+    cache_read_tokens: 1200,
+    cache_write_tokens: 400,
     tool_call_count: 15,
     agent_count: 3,
   },
@@ -18,6 +20,8 @@ const baseUsage: RecommendationUsageResponse = {
       model: "claude-sonnet-4-20250514",
       input_tokens: 3000,
       output_tokens: 1200,
+      cache_read_tokens: 800,
+      cache_write_tokens: 200,
       tool_call_count: 6,
       turn_count: 3,
       duration_ms: 2300,
@@ -31,6 +35,8 @@ const baseUsage: RecommendationUsageResponse = {
       model: "claude-sonnet-4-20250514",
       input_tokens: 3500,
       output_tokens: 1200,
+      cache_read_tokens: 400,
+      cache_write_tokens: 200,
       tool_call_count: 5,
       turn_count: 2,
       duration_ms: 1800,
@@ -43,6 +49,8 @@ const baseUsage: RecommendationUsageResponse = {
       model: "claude-sonnet-4-20250514",
       input_tokens: 2000,
       output_tokens: 800,
+      cache_read_tokens: 0,
+      cache_write_tokens: 0,
       tool_call_count: 4,
       turn_count: 2,
       duration_ms: 1500,
@@ -129,6 +137,84 @@ describe("UsageDetailModal", () => {
       <UsageDetailModal open={false} onClose={() => {}} usage={baseUsage} />,
     );
     expect(screen.queryByText("Usage Details")).not.toBeInTheDocument();
+  });
+
+  it("renders cache read and write per agent when non-zero", () => {
+    render(
+      <UsageDetailModal open={true} onClose={() => {}} usage={baseUsage} />,
+    );
+    // balance agent has cache_read_tokens=800 and cache_write_tokens=200
+    expect(screen.getAllByText(/Cache Read/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Cache Write/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("hides cache info when both are zero", () => {
+    const zeroCacheUsage: RecommendationUsageResponse = {
+      recommendation_id: "rec-2",
+      totals: {
+        input_tokens: 1000,
+        output_tokens: 500,
+        total_tokens: 1500,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
+        tool_call_count: 2,
+        agent_count: 1,
+      },
+      agents: [
+        {
+          domain: "balance",
+          model: "claude-sonnet-4-20250514",
+          input_tokens: 1000,
+          output_tokens: 500,
+          cache_read_tokens: 0,
+          cache_write_tokens: 0,
+          tool_call_count: 2,
+          turn_count: 1,
+          duration_ms: 1000,
+          tool_calls: [],
+        },
+      ],
+    };
+    render(
+      <UsageDetailModal open={true} onClose={() => {}} usage={zeroCacheUsage} />,
+    );
+    expect(screen.queryByText(/Cache Read/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cache Write/)).not.toBeInTheDocument();
+  });
+
+  it("works with legacy data missing cache fields", () => {
+    // Simulate legacy data where cache fields might be undefined
+    const legacyUsage = {
+      recommendation_id: "rec-legacy",
+      totals: {
+        input_tokens: 2000,
+        output_tokens: 800,
+        total_tokens: 2800,
+        cache_read_tokens: 0,
+        cache_write_tokens: 0,
+        tool_call_count: 3,
+        agent_count: 1,
+      },
+      agents: [
+        {
+          domain: "balance",
+          model: "claude-sonnet-4-20250514",
+          input_tokens: 2000,
+          output_tokens: 800,
+          cache_read_tokens: 0,
+          cache_write_tokens: 0,
+          tool_call_count: 3,
+          turn_count: 2,
+          duration_ms: 1500,
+          tool_calls: [],
+        },
+      ],
+    } as RecommendationUsageResponse;
+    render(
+      <UsageDetailModal open={true} onClose={() => {}} usage={legacyUsage} />,
+    );
+    expect(screen.getByText("balance")).toBeInTheDocument();
+    expect(screen.queryByText(/Cache Read/)).not.toBeInTheDocument();
   });
 
   it("uses monospace font on all numeric values", () => {

@@ -20,10 +20,10 @@ def save_llm_event(db_path: str | Path, event: LlmEvent) -> LlmEvent:
         conn.execute(
             """INSERT INTO llm_events
                (id, session_id, event_type, agent_name, model,
-                input_tokens, output_tokens, request_count,
-                tool_call_count, duration_ms, created_at,
+                input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
+                request_count, tool_call_count, duration_ms, created_at,
                 context_type, context_id)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 event_id,
                 event.session_id,
@@ -32,6 +32,8 @@ def save_llm_event(db_path: str | Path, event: LlmEvent) -> LlmEvent:
                 event.model,
                 event.input_tokens,
                 event.output_tokens,
+                event.cache_read_tokens,
+                event.cache_write_tokens,
                 event.request_count,
                 event.tool_call_count,
                 event.duration_ms,

@@ -626,6 +626,8 @@ async def analyze_with_engineer(
                     model=effective_model,
                     input_tokens=usage.input_tokens or 0,
                     output_tokens=usage.output_tokens or 0,
+                    cache_read_tokens=usage.cache_read_tokens or 0,
+                    cache_write_tokens=usage.cache_write_tokens or 0,
                     request_count=usage.requests or 0,
                     tool_call_count=usage.tool_calls or 0,
                     duration_ms=duration_ms,

@@ -137,6 +137,8 @@ class AgentUsageDetail(BaseModel):
     model: str
     input_tokens: int
     output_tokens: int
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
     tool_call_count: int
     turn_count: int
     duration_ms: int
@@ -149,6 +151,8 @@ class UsageTotals(BaseModel):
     input_tokens: int
     output_tokens: int
     total_tokens: int
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
     tool_call_count: int
     agent_count: int
 

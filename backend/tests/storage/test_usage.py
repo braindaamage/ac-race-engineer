@@ -259,6 +259,72 @@ class TestMigration:
             conn.close()
 
 
+class TestCacheTokenFields:
+    """Tests for cache_read_tokens and cache_write_tokens fields."""
+
+    def test_save_get_roundtrip_with_cache_fields(self, db_path):
+        """Save event with non-zero cache fields, verify round-trip."""
+        event = _sample_event(cache_read_tokens=500, cache_write_tokens=200)
+        result = save_llm_event(db_path, event)
+
+        assert result.cache_read_tokens == 500
+        assert result.cache_write_tokens == 200
+
+        events = get_llm_events(db_path, "recommendation", "rec_001")
+        assert len(events) == 1
+        assert events[0].cache_read_tokens == 500
+        assert events[0].cache_write_tokens == 200
+
+    def test_default_zero_cache_fields(self, db_path):
+        """Events without cache fields default to 0."""
+        event = _sample_event()
+        result = save_llm_event(db_path, event)
+
+        assert result.cache_read_tokens == 0
+        assert result.cache_write_tokens == 0
+
+        events = get_llm_events(db_path, "recommendation", "rec_001")
+        assert events[0].cache_read_tokens == 0
+        assert events[0].cache_write_tokens == 0
+
+    def test_pre_existing_records_default_to_zero(self, db_path):
+        """Records inserted without cache columns read back as 0."""
+        # Insert directly via SQL without cache columns (simulating old records)
+        conn = _connect(db_path)
+        try:
+            conn.execute(
+                """INSERT INTO llm_events
+                   (id, session_id, event_type, agent_name, model,
+                    input_tokens, output_tokens, request_count,
+                    tool_call_count, duration_ms, created_at,
+                    context_type, context_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    "old_event_id_1234567890123456",
+                    "test_session",
+                    "analysis",
+                    "balance",
+                    "claude-sonnet-4-20250514",
+                    1000,
+                    300,
+                    1,
+                    0,
+                    2000,
+                    "2026-01-01T00:00:00",
+                    "recommendation",
+                    "rec_old",
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        events = get_llm_events(db_path, "recommendation", "rec_old")
+        assert len(events) == 1
+        assert events[0].cache_read_tokens == 0
+        assert events[0].cache_write_tokens == 0
+
+
 class TestCascade:
     """Tests for cascade delete behavior."""
 
