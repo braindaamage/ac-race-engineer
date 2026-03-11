@@ -11,6 +11,7 @@ from .agents import (
     analyze_with_engineer,
     apply_recommendation,
     build_model,
+    extract_tool_calls,
     get_model_string,
     route_signals,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "route_signals",
     "get_model_string",
     "build_model",
+    "extract_tool_calls",
     # Models — Phase 5.2
     "SessionSummary",
     "LapSummary",

@@ -4,6 +4,7 @@ import { MessageList } from "../../../src/views/engineer/MessageList";
 import type {
   MessageResponse,
   RecommendationDetailResponse,
+  MessageUsageResponse,
 } from "../../../src/lib/types";
 import type { JobProgress } from "../../../src/store/jobStore";
 
@@ -187,5 +188,113 @@ describe("MessageList", () => {
       />,
     );
     expect(container.querySelector(".ace-typing-indicator")).toBeNull();
+  });
+
+  it("renders UsageSummaryBar below assistant messages with usage data", () => {
+    const msgs = [
+      makeMsg("m1", "assistant", "Here is your analysis", "2026-03-01T12:00:00Z"),
+    ];
+    const usageMap = new Map<string, MessageUsageResponse>();
+    usageMap.set("m1", {
+      message_id: "m1",
+      totals: {
+        input_tokens: 1520,
+        output_tokens: 340,
+        total_tokens: 1860,
+        tool_call_count: 2,
+        agent_count: 1,
+      },
+      agents: [],
+    });
+
+    const { container } = render(
+      <MessageList
+        messages={msgs}
+        recommendations={[]}
+        activeJobType={null}
+        jobProgress={undefined}
+        onApply={() => {}}
+        messageUsageMap={usageMap}
+      />,
+    );
+    expect(container.querySelector(".ace-usage-summary")).toBeInTheDocument();
+  });
+
+  it("does NOT render UsageSummaryBar for messages without usage data", () => {
+    const msgs = [
+      makeMsg("m1", "assistant", "Plain response", "2026-03-01T12:00:00Z"),
+    ];
+
+    const { container } = render(
+      <MessageList
+        messages={msgs}
+        recommendations={[]}
+        activeJobType={null}
+        jobProgress={undefined}
+        onApply={() => {}}
+        messageUsageMap={new Map()}
+      />,
+    );
+    expect(container.querySelector(".ace-usage-summary")).toBeNull();
+  });
+
+  it("does NOT render UsageSummaryBar for user messages", () => {
+    const msgs = [
+      makeMsg("m1", "user", "A question", "2026-03-01T12:00:00Z"),
+    ];
+    const usageMap = new Map<string, MessageUsageResponse>();
+    // Even if somehow there was usage data for a user msg, it shouldn't render
+    usageMap.set("m1", {
+      message_id: "m1",
+      totals: {
+        input_tokens: 100,
+        output_tokens: 50,
+        total_tokens: 150,
+        tool_call_count: 0,
+        agent_count: 1,
+      },
+      agents: [],
+    });
+
+    const { container } = render(
+      <MessageList
+        messages={msgs}
+        recommendations={[]}
+        activeJobType={null}
+        jobProgress={undefined}
+        onApply={() => {}}
+        messageUsageMap={usageMap}
+      />,
+    );
+    expect(container.querySelector(".ace-usage-summary")).toBeNull();
+  });
+
+  it("driver feedback renders only inside RecommendationCard, not duplicated", () => {
+    const recs = [
+      makeRec("r1", "2026-03-01T12:01:00Z", {
+        driver_feedback: [
+          {
+            area: "balance",
+            observation: "Understeer in T3",
+            suggestion: "Trail brake deeper",
+            corners_affected: [3],
+            severity: "medium" as const,
+          },
+        ],
+      }),
+    ];
+
+    render(
+      <MessageList
+        messages={[]}
+        recommendations={recs}
+        activeJobType={null}
+        jobProgress={undefined}
+        onApply={() => {}}
+      />,
+    );
+    // The feedback text should appear exactly once (inside RecommendationCard)
+    const feedbackElements = screen.getAllByText("Understeer in T3");
+    expect(feedbackElements).toHaveLength(1);
   });
 });

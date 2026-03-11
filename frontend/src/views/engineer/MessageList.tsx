@@ -1,14 +1,17 @@
 import { useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { UserMessage } from "./UserMessage";
 import { AssistantMessage } from "./AssistantMessage";
 import { RecommendationCard } from "./RecommendationCard";
-import { DriverFeedbackCard } from "./DriverFeedbackCard";
 import { TypingIndicator } from "./TypingIndicator";
 import { AnalysisProgress } from "./AnalysisProgress";
+import { UsageSummaryBar } from "./UsageSummaryBar";
+import { UsageDetailModal } from "./UsageDetailModal";
 import type {
   MessageResponse,
   RecommendationDetailResponse,
   RecommendationUsageResponse,
+  MessageUsageResponse,
   FeedItem,
 } from "../../lib/types";
 import type { JobProgress } from "../../store/jobStore";
@@ -20,6 +23,7 @@ interface MessageListProps {
   jobProgress: JobProgress | undefined;
   onApply: (recommendationId: string) => void;
   usageMap?: Map<string, RecommendationUsageResponse>;
+  messageUsageMap?: Map<string, MessageUsageResponse>;
 }
 
 function buildFeed(
@@ -49,7 +53,9 @@ export function MessageList({
   jobProgress,
   onApply,
   usageMap,
+  messageUsageMap,
 }: MessageListProps) {
+  const [usageDetailMsgId, setUsageDetailMsgId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const userScrolledUp = useRef(false);
 
@@ -91,18 +97,29 @@ export function MessageList({
       {feed.map((item) => {
         if (item.type === "message") {
           const msg = item.data;
-          return msg.role === "user" ? (
-            <UserMessage
-              key={msg.message_id}
-              content={msg.content}
-              timestamp={msg.created_at}
-            />
-          ) : (
-            <AssistantMessage
-              key={msg.message_id}
-              content={msg.content}
-              timestamp={msg.created_at}
-            />
+          if (msg.role === "user") {
+            return (
+              <UserMessage
+                key={msg.message_id}
+                content={msg.content}
+                timestamp={msg.created_at}
+              />
+            );
+          }
+          const msgUsage = messageUsageMap?.get(msg.message_id);
+          return (
+            <div key={msg.message_id}>
+              <AssistantMessage
+                content={msg.content}
+                timestamp={msg.created_at}
+              />
+              {msgUsage && (
+                <UsageSummaryBar
+                  totals={msgUsage.totals}
+                  onViewDetails={() => setUsageDetailMsgId(msg.message_id)}
+                />
+              )}
+            </div>
           );
         }
         const rec = item.data;
@@ -113,9 +130,6 @@ export function MessageList({
               onApply={onApply}
               usage={usageMap?.get(rec.recommendation_id)}
             />
-            {rec.driver_feedback.map((fb, j) => (
-              <DriverFeedbackCard key={j} feedback={fb} />
-            ))}
           </div>
         );
       })}
@@ -126,6 +140,17 @@ export function MessageList({
         />
       )}
       {activeJobType === "chat" && <TypingIndicator />}
+      {usageDetailMsgId && messageUsageMap?.get(usageDetailMsgId) && (
+        <UsageDetailModal
+          open={true}
+          onClose={() => setUsageDetailMsgId(null)}
+          usage={{
+            recommendation_id: usageDetailMsgId,
+            totals: messageUsageMap.get(usageDetailMsgId)!.totals,
+            agents: messageUsageMap.get(usageDetailMsgId)!.agents,
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import json
+import time
 from pathlib import Path
 from typing import Any, Awaitable, Callable
 
@@ -14,18 +16,27 @@ from pydantic_ai.messages import (
     UserPromptPart,
 )
 
+from ac_engineer.config.io import get_effective_model, read_config
 from ac_engineer.config.models import ACConfig
-from ac_engineer.engineer.agents import analyze_with_engineer
-from ac_engineer.engineer.agents import build_model
-from ac_engineer.engineer.models import SessionSummary
+from ac_engineer.engineer.agents import (
+    DOMAIN_TOOLS,
+    analyze_with_engineer,
+    build_model,
+    extract_tool_calls,
+)
+from ac_engineer.engineer.models import AgentDeps, SessionSummary
 from ac_engineer.engineer.summarizer import summarize_session
 from ac_engineer.resolver import resolve_parameters
 from ac_engineer.storage.messages import get_messages, save_message
+from ac_engineer.storage.models import LlmEvent
 from ac_engineer.storage.recommendations import get_recommendations
-from ac_engineer.storage.sessions import update_session_state
+from ac_engineer.storage.sessions import get_session, update_session_state
+from ac_engineer.storage.usage import save_llm_event
 
 from api.analysis.cache import get_cache_dir, load_analyzed_session
 from api.engineer.cache import save_engineer_response
+
+logger = logging.getLogger(__name__)
 
 
 def make_engineer_job(
@@ -142,19 +153,81 @@ def make_chat_job(
                 )
 
         model = build_model(config)
-        agent: Agent[None, str] = Agent(
-            model,
-            system_prompt=system_prompt,
-        )
+
+        # Try to build AgentDeps and register tools for richer responses
+        deps = None
+        tools = None
+        try:
+            session_rec = get_session(db_path, session_id)
+            car_name = session_rec.car if session_rec else summary.car_name
+            resolved = resolve_parameters(
+                config.ac_install_path,
+                car_name,
+                Path(db_path),
+                session_setup=summary.active_setup_parameters,
+            )
+            deps = AgentDeps(
+                session_summary=summary,
+                parameter_ranges=resolved.parameters,
+                knowledge_fragments=[],
+            )
+            tools = DOMAIN_TOOLS["principal"]
+        except Exception:
+            logger.warning(
+                "Failed to build AgentDeps for chat, proceeding without tools",
+                exc_info=True,
+            )
+
+        if deps is not None and tools is not None:
+            agent: Agent = Agent(
+                model,
+                deps_type=AgentDeps,
+                system_prompt=system_prompt,
+            )
+            for tool_fn in tools:
+                agent.tool(tool_fn)
+        else:
+            agent = Agent(
+                model,
+                system_prompt=system_prompt,
+            )
+            deps = None
+
+        effective_model = get_effective_model(config)
+        start_time = time.perf_counter()
 
         result = await agent.run(
             user_content,
             message_history=message_history,
+            deps=deps,
         )
+        duration_ms = int((time.perf_counter() - start_time) * 1000)
         assistant_content = result.output
 
         await update(90, "Saving assistant response...")
-        save_message(db_path, session_id, "assistant", assistant_content)
+        assistant_msg = save_message(db_path, session_id, "assistant", assistant_content)
+
+        # Capture usage (non-critical — never block message delivery)
+        try:
+            usage = result.usage()
+            tool_calls = extract_tool_calls(result)
+            llm_event = LlmEvent(
+                session_id=session_id,
+                event_type="chat",
+                agent_name="principal",
+                model=effective_model,
+                input_tokens=usage.input_tokens or 0,
+                output_tokens=usage.output_tokens or 0,
+                request_count=usage.requests or 0,
+                tool_call_count=usage.tool_calls or 0,
+                duration_ms=duration_ms,
+                context_type="message",
+                context_id=assistant_msg.message_id,
+                tool_calls=tool_calls,
+            )
+            save_llm_event(db_path, llm_event)
+        except Exception:
+            logger.warning("Failed to capture chat usage", exc_info=True)
 
         return {"session_id": session_id, "message_id": message_id}
 

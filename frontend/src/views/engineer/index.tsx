@@ -18,6 +18,7 @@ import type {
   ApplyResponse,
   RecommendationDetailResponse,
   RecommendationUsageResponse,
+  MessageUsageResponse,
 } from "../../lib/types";
 import { Modal } from "../../components/ui";
 import "./EngineerView.css";
@@ -80,6 +81,35 @@ export function EngineerView() {
   }, [recUsageResults]);
 
   const messages = messagesQuery.data?.messages ?? [];
+
+  // Fetch usage data for each assistant message
+  const assistantMessageIds = useMemo(
+    () =>
+      messages
+        .filter((m) => m.role === "assistant")
+        .map((m) => m.message_id),
+    [messages],
+  );
+  const msgUsageResults = useQueries({
+    queries: assistantMessageIds.map((mid) => ({
+      queryKey: ["message-usage", selectedSessionId, mid],
+      queryFn: () =>
+        apiGet<MessageUsageResponse>(
+          `/sessions/${selectedSessionId}/messages/${mid}/usage`,
+        ),
+      staleTime: Infinity,
+      enabled: !!selectedSessionId && !!mid,
+    })),
+  });
+  const messageUsageMap = useMemo(() => {
+    const map = new Map<string, MessageUsageResponse>();
+    for (const q of msgUsageResults) {
+      if (q.data && q.data.totals.total_tokens > 0) {
+        map.set(q.data.message_id, q.data);
+      }
+    }
+    return map;
+  }, [msgUsageResults]);
 
   // Job management
   const [engineerJobId, setEngineerJobId] = useState<string | null>(null);
@@ -274,6 +304,7 @@ export function EngineerView() {
         jobProgress={jobProgress ?? undefined}
         onApply={handleApply}
         usageMap={recUsageMap}
+        messageUsageMap={messageUsageMap}
       />
 
       <ChatInput onSend={handleSendMessage} disabled={isJobRunning} />
