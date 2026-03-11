@@ -16,6 +16,7 @@ class TestACConfigDefaults:
         assert config.setups_path is None
         assert config.llm_provider == "anthropic"
         assert config.llm_model is None
+        assert config.diagnostic_mode is False
 
     def test_with_explicit_values(self) -> None:
         config = ACConfig(
@@ -56,6 +57,23 @@ class TestEmptyStringCoercion:
     def test_whitespace_only_becomes_none(self) -> None:
         config = ACConfig(ac_install_path="   ")
         assert config.ac_install_path is None
+
+
+class TestDiagnosticMode:
+    def test_defaults_to_false(self) -> None:
+        config = ACConfig()
+        assert config.diagnostic_mode is False
+
+    def test_serializes_diagnostic_mode(self) -> None:
+        config = ACConfig(diagnostic_mode=True)
+        data = config.model_dump()
+        assert data["diagnostic_mode"] is True
+
+    def test_round_trip(self) -> None:
+        config = ACConfig(diagnostic_mode=True)
+        data = config.model_dump()
+        restored = ACConfig.model_validate(data)
+        assert restored.diagnostic_mode is True
 
 
 class TestPathSerialization:

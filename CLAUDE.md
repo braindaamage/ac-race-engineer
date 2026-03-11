@@ -8,7 +8,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/, config/, storage/, acd_reader/, resolver/
   - config/   → ACConfig model + read_config / write_config / update_config
   - storage/  → SQLite init + CRUD functions para sessions, recommendations, setup_changes, messages, llm_events
-  - engineer/ → summarizer, setup_reader/writer, agents (Pydantic AI specialists), tools, skills/ (markdown prompts)
+  - engineer/ → summarizer, setup_reader/writer, agents (Pydantic AI specialists), tools, skills/ (markdown prompts), trace (diagnostic traces)
   - acd_reader/ → Descifrado de archivos data.acd (propietario AC), zero-dependency
   - resolver/ → Resolución de parámetros en 3 tiers (open data → ACD → session fallback), caché SQLite
 - backend/api/ → Servidor FastAPI que expone los módulos de ac_engineer como endpoints HTTP
@@ -20,7 +20,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
   - components/ui/ → 10 design system components (Button, Card, Badge, Modal, etc.)
   - components/layout/ → AppShell, Sidebar, SplashScreen, ToastContainer
   - components/onboarding/ → OnboardingWizard, PathInput, Step* components
-  - hooks/ → 10 hooks (useTheme, useSessions, useLaps, useMessages, useRecommendations, useCars, etc.)
+  - hooks/ → 11 hooks (useTheme, useSessions, useLaps, useMessages, useRecommendations, useCars, useTrace, etc.)
   - store/ → 5 Zustand stores (ui, session, theme, notification, job)
   - lib/ → api.ts, types.ts, constants.ts, validation.ts, wsManager.ts
   - views/ → 5 vistas: sessions, analysis, compare, engineer, settings
@@ -28,8 +28,9 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - frontend/tests/ → Tests Vitest + Testing Library (mirror de src/)
 - data/sessions/ → Archivos de telemetría (.csv) y metadata (.meta.json) por sesión
 - data/setups/ → Archivos de setup .ini
-- data/config.json → Configuración de usuario (ac_install_path, llm_provider, llm_model, api_key)
+- data/config.json → Configuración de usuario (ac_install_path, llm_provider, llm_model, api_key, diagnostic_mode)
 - data/ac_engineer.db → Base de datos SQLite (7 tablas: sessions, recommendations, setup_changes, messages, parameter_cache, llm_events, llm_tool_calls)
+- data/traces/ → Archivos de traza diagnóstica (.md) generados cuando diagnostic_mode está activo
 
 ## Stack
 - Python 3.11+ (backend, conda env `ac-race-engineer`)
@@ -65,6 +66,8 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 8.2 ✅ Setup Resolver (resolución de parámetros en 3 tiers, caché, API, UI) — 93 tests
 - Fase 9 ✅ LLM Usage Tracking & Optimization (storage, capture, UI, token/prompt optimization, tool scoping, tracking redesign) — 104 tests
 - Fase 10 ✅ Domain-Scoped Setup Context (filtrado de parámetros de setup por dominio en prompts de agentes especialistas) — 11 tests
+- Fase 11.1 ✅ Cache Token Tracking (cache_read/write tokens en pipeline de uso LLM, UI condicional) — ~66 tests
+- Fase 11.2 ✅ Agent Diagnostic Traces (trazas Markdown de conversaciones multi-turn, toggle en Settings, API + modal) — ~60 tests
 
 ## Reglas de desarrollo
 - Todo tipo de coche debe funcionar (vanilla y mods), no hardcodear por coche
@@ -83,4 +86,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 10 completadas (1343 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 92, API 209, acd_reader 20, resolver 81, frontend 370, watcher+jobs 47, usage tracking ~62). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM y filtrado de contexto por dominio.
+Fases 1 a 11 completadas (1392 tests totales: backend 1006, frontend 386). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM, filtrado de contexto por dominio, cache token tracking y trazas diagnósticas de agentes.

@@ -668,3 +668,151 @@ class TestDomainScopedParams:
         original_params = dict(multi_domain_summary.active_setup_parameters)
         _build_user_prompt(multi_domain_summary, ["tyre_temp_spread_high"], domain="tyre")
         assert multi_domain_summary.active_setup_parameters == original_params
+
+
+# ===================================================================
+# Diagnostic trace capture tests
+# ===================================================================
+
+
+class TestAnalyzeWithEngineerTraceCapture:
+    """Tests that analyze_with_engineer captures traces when diagnostic_mode=True."""
+
+    @pytest.fixture()
+    def basic_summary(self):
+        from ac_engineer.engineer.models import SessionSummary
+
+        return SessionSummary(
+            session_id="trace_test_session",
+            car_name="test_car",
+            track_name="test_track",
+            total_lap_count=5,
+            flying_lap_count=3,
+            best_lap_time_s=90.0,
+            signals=["high_understeer"],
+        )
+
+    @pytest.fixture()
+    def basic_config(self):
+        return ACConfig(
+            llm_provider="anthropic",
+            llm_model="claude-sonnet-4-5",
+            api_key="test-key",
+            diagnostic_mode=True,
+        )
+
+    @pytest.mark.asyncio
+    async def test_writes_trace_when_diagnostic_mode_true(
+        self, basic_summary, basic_config, tmp_path,
+    ):
+        from pathlib import Path
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+        from ac_engineer.storage.models import SessionRecord
+        from ac_engineer.storage.sessions import save_session
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        save_session(db_path, SessionRecord(
+            session_id="trace_test_session", car="test_car", track="test_track",
+            session_date="2026-03-11T12:00:00", lap_count=5, best_lap_time=90.0,
+            state="analyzed",
+        ))
+        traces_dir = tmp_path / "traces"
+
+        # Mock the agent.run() to return a simple result
+        mock_result = MagicMock()
+        mock_result.output = SpecialistResult(
+            setup_changes=[],
+            driver_feedback=[
+                DriverFeedback(
+                    area="Testing", observation="Test obs",
+                    suggestion="Test sug", corners_affected=[1], severity="low",
+                ),
+            ],
+            domain_summary="Test result",
+        )
+        mock_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 100
+        mock_usage.output_tokens = 50
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_result)
+        mock_agent.tool = MagicMock()
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                basic_summary,
+                basic_config,
+                db_path,
+                diagnostic_mode=True,
+                traces_dir=traces_dir,
+            )
+
+        # The trace file should have been written
+        trace_files = list(traces_dir.glob("rec_*.md"))
+        assert len(trace_files) == 1
+        content = trace_files[0].read_text(encoding="utf-8")
+        assert "Diagnostic Trace" in content
+
+    @pytest.mark.asyncio
+    async def test_skips_trace_when_diagnostic_mode_false(
+        self, basic_summary, basic_config, tmp_path,
+    ):
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        traces_dir = tmp_path / "traces"
+
+        mock_result = MagicMock()
+        mock_result.output = SpecialistResult(
+            setup_changes=[],
+            driver_feedback=[
+                DriverFeedback(
+                    area="Testing", observation="Test obs",
+                    suggestion="Test sug", corners_affected=[1], severity="low",
+                ),
+            ],
+            domain_summary="Test result",
+        )
+        mock_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 100
+        mock_usage.output_tokens = 50
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_result)
+        mock_agent.tool = MagicMock()
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                basic_summary,
+                basic_config,
+                db_path,
+                diagnostic_mode=False,
+                traces_dir=traces_dir,
+            )
+
+        # No trace files should exist
+        assert not traces_dir.exists() or len(list(traces_dir.glob("rec_*.md"))) == 0

@@ -71,6 +71,8 @@ def make_engineer_job(
             )
 
             await update(30, "Running AI engineer analysis...")
+            from api.paths import get_traces_dir
+
             response = await analyze_with_engineer(
                 summary,
                 config,
@@ -78,6 +80,8 @@ def make_engineer_job(
                 ac_install_path=config.ac_install_path,
                 parameter_ranges=resolved.parameters,
                 resolution_tier=resolved.tier,
+                diagnostic_mode=config.diagnostic_mode,
+                traces_dir=get_traces_dir(),
             )
 
             # Detect total failure: no changes, no feedback, low confidence
@@ -206,6 +210,34 @@ def make_chat_job(
 
         await update(90, "Saving assistant response...")
         assistant_msg = save_message(db_path, session_id, "assistant", assistant_content)
+
+        # Capture diagnostic trace (non-critical — never block message delivery)
+        if config.diagnostic_mode:
+            try:
+                from ac_engineer.engineer.trace import (
+                    format_trace_markdown,
+                    serialize_agent_trace,
+                    write_trace,
+                )
+                from api.paths import get_traces_dir
+
+                trace_dict = serialize_agent_trace(
+                    "principal", system_prompt, user_content, result,
+                )
+                trace_content = format_trace_markdown(
+                    session_id, "message", assistant_msg.message_id,
+                    [trace_dict],
+                )
+                write_trace(
+                    get_traces_dir(), "msg", assistant_msg.message_id,
+                    trace_content,
+                )
+                logger.info(
+                    "Wrote diagnostic trace for message %s",
+                    assistant_msg.message_id,
+                )
+            except Exception:
+                logger.warning("Failed to capture chat trace", exc_info=True)
 
         # Capture usage (non-critical — never block message delivery)
         try:

@@ -300,6 +300,7 @@ export function EngineerView() {
       <MessageList
         messages={messages}
         recommendations={recDetails}
+        sessionId={selectedSessionId}
         activeJobType={activeJobType}
         jobProgress={jobProgress ?? undefined}
         onApply={handleApply}

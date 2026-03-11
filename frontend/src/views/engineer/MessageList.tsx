@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useState } from "react";
+import { Button } from "../../components/ui";
 import { UserMessage } from "./UserMessage";
 import { AssistantMessage } from "./AssistantMessage";
 import { RecommendationCard } from "./RecommendationCard";
@@ -7,6 +8,8 @@ import { TypingIndicator } from "./TypingIndicator";
 import { AnalysisProgress } from "./AnalysisProgress";
 import { UsageSummaryBar } from "./UsageSummaryBar";
 import { UsageDetailModal } from "./UsageDetailModal";
+import { TraceModal } from "./TraceModal";
+import { useTrace } from "../../hooks/useTrace";
 import type {
   MessageResponse,
   RecommendationDetailResponse,
@@ -19,6 +22,7 @@ import type { JobProgress } from "../../store/jobStore";
 interface MessageListProps {
   messages: MessageResponse[];
   recommendations: RecommendationDetailResponse[];
+  sessionId: string | null;
   activeJobType: "engineer" | "chat" | null;
   jobProgress: JobProgress | undefined;
   onApply: (recommendationId: string) => void;
@@ -46,9 +50,56 @@ function buildFeed(
   return items;
 }
 
+function AssistantMessageWithTrace({
+  msg,
+  sessionId,
+  msgUsage,
+  onViewUsageDetails,
+}: {
+  msg: MessageResponse;
+  sessionId: string | null;
+  msgUsage?: MessageUsageResponse;
+  onViewUsageDetails: (id: string) => void;
+}) {
+  const [showTraceModal, setShowTraceModal] = useState(false);
+  const traceQuery = useTrace(sessionId, "message", msg.message_id);
+
+  return (
+    <div key={msg.message_id}>
+      <AssistantMessage
+        content={msg.content}
+        timestamp={msg.created_at}
+      />
+      <div className="ace-message-actions">
+        {msgUsage && (
+          <UsageSummaryBar
+            totals={msgUsage.totals}
+            onViewDetails={() => onViewUsageDetails(msg.message_id)}
+          />
+        )}
+        {traceQuery.data?.available && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowTraceModal(true)}
+          >
+            Trace
+          </Button>
+        )}
+      </div>
+      <TraceModal
+        open={showTraceModal}
+        onClose={() => setShowTraceModal(false)}
+        traceContent={traceQuery.data?.content ?? null}
+      />
+    </div>
+  );
+}
+
 export function MessageList({
   messages,
   recommendations,
+  sessionId,
   activeJobType,
   jobProgress,
   onApply,
@@ -108,18 +159,13 @@ export function MessageList({
           }
           const msgUsage = messageUsageMap?.get(msg.message_id);
           return (
-            <div key={msg.message_id}>
-              <AssistantMessage
-                content={msg.content}
-                timestamp={msg.created_at}
-              />
-              {msgUsage && (
-                <UsageSummaryBar
-                  totals={msgUsage.totals}
-                  onViewDetails={() => setUsageDetailMsgId(msg.message_id)}
-                />
-              )}
-            </div>
+            <AssistantMessageWithTrace
+              key={msg.message_id}
+              msg={msg}
+              sessionId={sessionId}
+              msgUsage={msgUsage}
+              onViewUsageDetails={setUsageDetailMsgId}
+            />
           );
         }
         const rec = item.data;
@@ -127,6 +173,7 @@ export function MessageList({
           <div key={rec.recommendation_id}>
             <RecommendationCard
               recommendation={rec}
+              sessionId={sessionId}
               onApply={onApply}
               usage={usageMap?.get(rec.recommendation_id)}
             />

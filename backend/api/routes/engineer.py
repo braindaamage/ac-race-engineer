@@ -39,6 +39,7 @@ from api.engineer.serializers import (
     RecommendationUsageResponse,
     SetupChangeDetail,
     ToolCallInfo,
+    TraceResponse,
     UsageTotals,
 )
 from api.jobs.worker import run_job
@@ -353,6 +354,44 @@ async def get_recommendation_usage(
 
 
 # ---------------------------------------------------------------------------
+# GET /sessions/{session_id}/recommendations/{recommendation_id}/trace
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/{session_id}/recommendations/{recommendation_id}/trace",
+    response_model=TraceResponse,
+)
+async def get_recommendation_trace(
+    request: Request, session_id: str, recommendation_id: str
+) -> TraceResponse:
+    db_path = request.app.state.db_path
+
+    session = get_session(db_path, session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
+
+    recs = get_recommendations(db_path, session_id)
+    rec = next((r for r in recs if r.recommendation_id == recommendation_id), None)
+    if rec is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recommendation not found: {recommendation_id}",
+        )
+
+    from ac_engineer.engineer.trace import read_trace
+    from api.paths import get_traces_dir
+
+    content = read_trace(get_traces_dir(), "rec", recommendation_id)
+    return TraceResponse(
+        available=content is not None,
+        content=content,
+        trace_type="recommendation",
+        id=recommendation_id,
+    )
+
+
+# ---------------------------------------------------------------------------
 # POST /sessions/{session_id}/recommendations/{recommendation_id}/apply
 # ---------------------------------------------------------------------------
 
@@ -427,6 +466,44 @@ async def apply_recommendation_endpoint(
         status="applied",
         backup_path=backup_path,
         changes_applied=len(outcomes),
+    )
+
+
+# ---------------------------------------------------------------------------
+# GET /sessions/{session_id}/messages/{message_id}/trace
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/{session_id}/messages/{message_id}/trace",
+    response_model=TraceResponse,
+)
+async def get_message_trace(
+    request: Request, session_id: str, message_id: str
+) -> TraceResponse:
+    db_path = request.app.state.db_path
+
+    session = get_session(db_path, session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
+
+    msgs = get_messages(db_path, session_id)
+    msg = next((m for m in msgs if m.message_id == message_id), None)
+    if msg is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Message not found: {message_id}",
+        )
+
+    from ac_engineer.engineer.trace import read_trace
+    from api.paths import get_traces_dir
+
+    content = read_trace(get_traces_dir(), "msg", message_id)
+    return TraceResponse(
+        available=content is not None,
+        content=content,
+        trace_type="message",
+        id=message_id,
     )
 
 

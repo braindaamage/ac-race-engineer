@@ -33,6 +33,7 @@ class ConfigResponse(BaseModel):
     ui_theme: str
     api_key: str
     onboarding_completed: bool
+    diagnostic_mode: bool
 
 
 class ConfigUpdateRequest(BaseModel):
@@ -47,6 +48,7 @@ class ConfigUpdateRequest(BaseModel):
     ui_theme: str | None = None
     api_key: str | None = None
     onboarding_completed: bool | None = None
+    diagnostic_mode: bool | None = None
 
 
 class PathValidationResult(BaseModel):
@@ -101,6 +103,7 @@ def _config_to_response(config) -> ConfigResponse:
         ui_theme=config.ui_theme,
         api_key=_mask_api_key(config.api_key),
         onboarding_completed=config.onboarding_completed,
+        diagnostic_mode=config.diagnostic_mode,
     )
 
 

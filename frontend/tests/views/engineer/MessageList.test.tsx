@@ -1,6 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MessageList } from "../../../src/views/engineer/MessageList";
+
+vi.mock("../../../src/hooks/useTrace", () => ({
+  useTrace: () => ({ data: undefined, isLoading: false }),
+}));
 import type {
   MessageResponse,
   RecommendationDetailResponse,
@@ -54,6 +58,7 @@ describe("MessageList", () => {
       <MessageList
         messages={[]}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -68,6 +73,7 @@ describe("MessageList", () => {
       <MessageList
         messages={msgs}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -84,6 +90,7 @@ describe("MessageList", () => {
       <MessageList
         messages={msgs}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -98,6 +105,7 @@ describe("MessageList", () => {
       <MessageList
         messages={[]}
         recommendations={recs}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -117,6 +125,7 @@ describe("MessageList", () => {
       <MessageList
         messages={msgs}
         recommendations={recs}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -145,6 +154,7 @@ describe("MessageList", () => {
       <MessageList
         messages={[]}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType="engineer"
         jobProgress={progress}
         onApply={() => {}}
@@ -159,6 +169,7 @@ describe("MessageList", () => {
       <MessageList
         messages={[]}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType="chat"
         jobProgress={undefined}
         onApply={() => {}}
@@ -182,6 +193,7 @@ describe("MessageList", () => {
       <MessageList
         messages={[]}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType="engineer"
         jobProgress={progress}
         onApply={() => {}}
@@ -213,6 +225,7 @@ describe("MessageList", () => {
       <MessageList
         messages={msgs}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -231,6 +244,7 @@ describe("MessageList", () => {
       <MessageList
         messages={msgs}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -264,6 +278,7 @@ describe("MessageList", () => {
       <MessageList
         messages={msgs}
         recommendations={[]}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}
@@ -292,6 +307,7 @@ describe("MessageList", () => {
       <MessageList
         messages={[]}
         recommendations={recs}
+        sessionId="sess-1"
         activeJobType={null}
         jobProgress={undefined}
         onApply={() => {}}

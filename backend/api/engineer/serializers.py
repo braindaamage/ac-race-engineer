@@ -171,3 +171,17 @@ class MessageUsageResponse(BaseModel):
     message_id: str
     totals: UsageTotals
     agents: list[AgentUsageDetail] = []
+
+
+# ---------------------------------------------------------------------------
+# Trace response model (Phase 11.2)
+# ---------------------------------------------------------------------------
+
+
+class TraceResponse(BaseModel):
+    """Response for trace endpoints."""
+
+    available: bool
+    content: str | None = None
+    trace_type: str
+    id: str

@@ -16,6 +16,7 @@ export interface ConfigResponse {
   ui_theme: string;
   api_key: string;
   onboarding_completed: boolean;
+  diagnostic_mode: boolean;
 }
 
 export interface ConfigUpdateRequest {
@@ -26,6 +27,7 @@ export interface ConfigUpdateRequest {
   ui_theme?: string;
   api_key?: string;
   onboarding_completed?: boolean;
+  diagnostic_mode?: boolean;
 }
 
 export interface ValidatePathRequest {
