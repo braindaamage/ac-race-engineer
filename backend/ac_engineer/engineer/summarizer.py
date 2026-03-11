@@ -9,9 +9,11 @@ from typing import TYPE_CHECKING
 
 from ac_engineer.knowledge.signals import detect_signals
 
+from .conversion import to_physical
 from .models import (
     CornerIssue,
     LapSummary,
+    ParameterRange,
     SessionSummary,
     StintSummary,
 )
@@ -36,6 +38,7 @@ def summarize_session(
     *,
     max_corner_issues: int = 5,
     setup_ini_contents: str | None = None,
+    parameter_ranges: dict[str, ParameterRange] | None = None,
 ) -> SessionSummary:
     """Compress an analyzed session into a compact, token-efficient summary.
 
@@ -78,6 +81,13 @@ def summarize_session(
     # Populate active_setup_parameters from .ini contents if provided
     if setup_ini_contents and active_setup_parameters is None:
         active_setup_parameters = _parse_setup_ini(setup_ini_contents)
+
+    # Convert raw storage values to physical units
+    if active_setup_parameters and parameter_ranges:
+        for section, params in active_setup_parameters.items():
+            pr = parameter_ranges.get(section)
+            if pr and isinstance(params.get("VALUE"), (int, float)):
+                params["VALUE"] = to_physical(params["VALUE"], pr)
 
     # Average understeer ratio across all flying lap corners
     avg_understeer = _compute_avg_understeer(flying_laps)

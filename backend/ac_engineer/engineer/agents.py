@@ -33,6 +33,7 @@ from .models import (
     SetupChange,
     SpecialistResult,
 )
+from .conversion import to_physical
 from .setup_reader import read_parameter_ranges
 from .setup_writer import validate_changes
 from .tools import (
@@ -653,6 +654,17 @@ async def analyze_with_engineer(
     else:
         ranges = read_parameter_ranges(install_path, summary.car_name)
 
+    # Convert raw storage values to physical units in the summary
+    if summary.active_setup_parameters and ranges:
+        converted_params = {}
+        for section, params in summary.active_setup_parameters.items():
+            pr = ranges.get(section)
+            if pr and isinstance(params.get("VALUE"), (int, float)):
+                converted_params[section] = {**params, "VALUE": to_physical(params["VALUE"], pr)}
+            else:
+                converted_params[section] = params
+        summary = summary.model_copy(update={"active_setup_parameters": converted_params})
+
     # Route signals to domains
     domains = route_signals(summary.signals, summary.active_setup_parameters)
 
@@ -967,7 +979,7 @@ async def apply_recommendation(
     from .models import SetupChange as EngSetupChange
 
     # Read parameter ranges for re-validation
-    ranges = {}
+    ranges: dict[str, ParameterRange] = {}
     if ac_install_path and car_name:
         ranges = read_parameter_ranges(ac_install_path, car_name)
 
@@ -993,7 +1005,7 @@ async def apply_recommendation(
         raise FileNotFoundError(f"Setup file not found: {setup_path}")
 
     create_backup(setup_path)
-    outcomes = apply_changes(setup_path, validation_results)
+    outcomes = apply_changes(setup_path, validation_results, parameter_ranges=ranges)
 
     # Update status
     update_recommendation_status(db_path, recommendation_id, "applied")

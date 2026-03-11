@@ -45,10 +45,14 @@ def get_cached_parameters(
         ).fetchone()
         if row is None:
             return None
+        params = _deserialize_parameters(row["parameters_json"])
+        # Detect stale cache entries that lack show_clicks metadata
+        if any(pr.show_clicks is None for pr in params.values()):
+            return None
         return ResolvedParameters(
             car_name=row["car_name"],
             tier=ResolutionTier(row["tier"]),
-            parameters=_deserialize_parameters(row["parameters_json"]),
+            parameters=params,
             has_defaults=bool(row["has_defaults"]),
             resolved_at=row["resolved_at"],
         )

@@ -104,6 +104,8 @@ class ParameterRange(BaseModel):
     max_value: float
     step: float
     default_value: float | None = None
+    show_clicks: int | None = None
+    storage_convention: str | None = None
 
     @field_validator("max_value")
     @classmethod
@@ -157,8 +159,13 @@ class SetupChange(BaseModel):
     parameter: str = Field(
         description="Parameter name within the section. In AC setup files this is always 'VALUE'.",
     )
-    value_before: float | None = None
-    value_after: float
+    value_before: float | None = Field(
+        default=None,
+        description="Previous value in physical units (after domain conversion).",
+    )
+    value_after: float = Field(
+        description="Proposed value in physical units (after domain conversion).",
+    )
     reasoning: str
     expected_effect: str
     confidence: Literal["high", "medium", "low"]

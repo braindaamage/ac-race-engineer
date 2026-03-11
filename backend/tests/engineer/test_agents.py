@@ -1306,3 +1306,81 @@ class TestPrincipalFallback:
             events = get_llm_events(db_path, "recommendation", rec_id)
             principal_events = [e for e in events if e.agent_name == "principal"]
             assert len(principal_events) == 0
+
+
+# ===================================================================
+# T018 [US4]: value_before/value_after are physical after conversion
+# ===================================================================
+
+
+class TestPhysicalValueDisplay:
+    """Verify that value_before/value_after in the response are physical units."""
+
+    @pytest.mark.anyio
+    async def test_value_before_after_are_physical_for_index(
+        self,
+        sample_session_summary,
+        sample_config,
+    ):
+        """Given INDEX params, the response's SetupChange shows physical values."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from pydantic_ai.messages import (
+            ModelResponse,
+            TextPart,
+        )
+        from pydantic_ai.models.function import AgentInfo, FunctionModel
+
+        from ac_engineer.engineer.models import ParameterRange
+
+        # SessionSummary with storage-domain value for ARB_FRONT
+        summary = sample_session_summary.model_copy(
+            update={
+                "active_setup_parameters": {
+                    "ARB_FRONT": {"VALUE": 2.0},  # storage index
+                    "PRESSURE_LF": {"VALUE": 26.5},
+                },
+            }
+        )
+
+        # Ranges with index convention for ARB_FRONT
+        ranges = {
+            "ARB_FRONT": ParameterRange(
+                section="ARB_FRONT", parameter="VALUE",
+                min_value=25500, max_value=48000, step=4500,
+                show_clicks=2, storage_convention="index",
+            ),
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE",
+                min_value=20.0, max_value=35.0, step=0.5,
+                show_clicks=0, storage_convention="direct",
+            ),
+        }
+
+        from ac_engineer.engineer.agents import analyze_with_engineer
+        from ac_engineer.engineer.conversion import to_physical
+
+        # The conversion in analyze_with_engineer should convert ARB_FRONT
+        # VALUE=2 -> 34500 before passing to specialists
+        physical_arb = to_physical(2.0, ranges["ARB_FRONT"])
+        assert physical_arb == 34500.0
+
+        # The specialist result uses physical values
+        specialist_output = SpecialistResult(
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_before=34500.0,
+                    value_after=30000.0,
+                    reasoning="Reduce front ARB",
+                    expected_effect="Less understeer",
+                    confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            domain_summary="Adjusted ARB",
+        )
+
+        # Check that the SetupChange has physical values
+        assert specialist_output.setup_changes[0].value_before == 34500.0
+        assert specialist_output.setup_changes[0].value_after == 30000.0

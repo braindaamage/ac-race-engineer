@@ -21,19 +21,19 @@
 
 ### Tests
 
-- [ ] T001 Create conversion unit tests with all 20 test cases enumerated in plan.md Phase A in `backend/tests/engineer/test_conversion.py`. Tests cover: classify_parameter (5 cases: index, direct, scaled, None, unknown), to_physical (4 cases: index, scaled, direct, None convention), to_storage (7 cases: index exact, index snap, index clamp low, index clamp high, scaled, scaled rounding, direct), round-trip (3 cases: index parametric, scaled, direct), edge case (step zero fallback). The `test_to_storage_scaled_rounding` case verifies that physical=-1.15 with scale_factor=0.1 produces storage=-12 (rounded from -11.5, not truncated to -11 or left as -11.5). All tests must initially FAIL since conversion.py does not exist yet.
+- [x] T001 Create conversion unit tests with all 20 test cases enumerated in plan.md Phase A in `backend/tests/engineer/test_conversion.py`. Tests cover: classify_parameter (5 cases: index, direct, scaled, None, unknown), to_physical (4 cases: index, scaled, direct, None convention), to_storage (7 cases: index exact, index snap, index clamp low, index clamp high, scaled, scaled rounding, direct), round-trip (3 cases: index parametric, scaled, direct), edge case (step zero fallback). The `test_to_storage_scaled_rounding` case verifies that physical=-1.15 with scale_factor=0.1 produces storage=-12 (rounded from -11.5, not truncated to -11 or left as -11.5). All tests must initially FAIL since conversion.py does not exist yet.
 
 ### Implementation
 
-- [ ] T002 Create `backend/ac_engineer/engineer/conversion.py` with: SCALE_FACTORS constant (`{"CAMBER": 0.1}`), `_get_scale_factor(section)` helper, `classify_parameter(section, show_clicks)` implementing FR-001 decision tree (SHOW_CLICKS=2→"index", =0+CAMBER→"scaled", =0→"direct", else→"direct"), `to_physical(storage_value, param_range)` per data-model.md formulas, `to_storage(physical_value, param_range)` with index snapping via round() and clamping to [0, max_index]. For SCALED parameters, `to_storage` must round the result to the nearest integer since AC stores camber as integer tenths of degree: `round(physical_value / scale_factor)`. Import only ParameterRange from models.py. All functions must be pure — no I/O, no database, no LLM calls.
+- [x] T002 Create `backend/ac_engineer/engineer/conversion.py` with: SCALE_FACTORS constant (`{"CAMBER": 0.1}`), `_get_scale_factor(section)` helper, `classify_parameter(section, show_clicks)` implementing FR-001 decision tree (SHOW_CLICKS=2→"index", =0+CAMBER→"scaled", =0→"direct", else→"direct"), `to_physical(storage_value, param_range)` per data-model.md formulas, `to_storage(physical_value, param_range)` with index snapping via round() and clamping to [0, max_index]. For SCALED parameters, `to_storage` must round the result to the nearest integer since AC stores camber as integer tenths of degree: `round(physical_value / scale_factor)`. Import only ParameterRange from models.py. All functions must be pure — no I/O, no database, no LLM calls.
 
-- [ ] T003 Run T001 tests — all 20 must now pass. Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) to confirm zero regressions from the new module.
+- [x] T003 Run T001 tests — all 20 must now pass. Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) to confirm zero regressions from the new module.
 
-- [ ] T004 [P] Add `show_clicks: int | None = None` and `storage_convention: str | None = None` fields to ParameterRange in `backend/ac_engineer/engineer/models.py`. Both fields must default to None for backward compatibility with existing serialized data and test fixtures. Add Field description to SetupChange.value_before and value_after noting they are in physical units.
+- [x] T004 [P] Add `show_clicks: int | None = None` and `storage_convention: str | None = None` fields to ParameterRange in `backend/ac_engineer/engineer/models.py`. Both fields must default to None for backward compatibility with existing serialized data and test fixtures. Add Field description to SetupChange.value_before and value_after noting they are in physical units.
 
-- [ ] T005 Modify `_parse_setup_ini()` in `backend/ac_engineer/resolver/resolver.py` to read SHOW_CLICKS as int from each section (optional, default None). Call `classify_parameter(section_name, show_clicks)` from conversion.py to compute storage_convention. Pass both `show_clicks` and `storage_convention` to the ParameterRange constructor. Only Tier 1 and Tier 2 call this function — Tier 3 correctly gets show_clicks=None. **Depends on T004** — ParameterRange fields must exist before the resolver can set them.
+- [x] T005 Modify `_parse_setup_ini()` in `backend/ac_engineer/resolver/resolver.py` to read SHOW_CLICKS as int from each section (optional, default None). Call `classify_parameter(section_name, show_clicks)` from conversion.py to compute storage_convention. Pass both `show_clicks` and `storage_convention` to the ParameterRange constructor. Only Tier 1 and Tier 2 call this function — Tier 3 correctly gets show_clicks=None. **Depends on T004** — ParameterRange fields must exist before the resolver can set them.
 
-- [ ] T006 Run full backend test suite to confirm T004 and T005 cause zero regressions. The new ParameterRange fields default to None, so all existing ParameterRange constructions remain valid.
+- [x] T006 Run full backend test suite to confirm T004 and T005 cause zero regressions. The new ParameterRange fields default to None, so all existing ParameterRange constructions remain valid.
 
 **Checkpoint**: conversion.py exists with full test coverage. ParameterRange has new fields. Resolver reads SHOW_CLICKS. No pipeline behavior has changed yet.
 
@@ -47,25 +47,25 @@
 
 ### Tests
 
-- [ ] T007 [P] [US1] Add test in `backend/tests/engineer/test_summarizer.py`: given a setup .ini with an INDEX parameter (ARB_FRONT VALUE=2) and a parameter_ranges dict with show_clicks=2/min=25500/step=4500/storage_convention="index", verify that `summarize_session()` with `parameter_ranges` kwarg produces `active_setup_parameters["ARB_FRONT"]["VALUE"] == 34500.0`.
+- [x] T007 [P] [US1] Add test in `backend/tests/engineer/test_summarizer.py`: given a setup .ini with an INDEX parameter (ARB_FRONT VALUE=2) and a parameter_ranges dict with show_clicks=2/min=25500/step=4500/storage_convention="index", verify that `summarize_session()` with `parameter_ranges` kwarg produces `active_setup_parameters["ARB_FRONT"]["VALUE"] == 34500.0`.
 
-- [ ] T008 [P] [US2] Add test in `backend/tests/engineer/test_summarizer.py`: given a setup .ini with CAMBER_LR VALUE=-18 and a parameter_ranges dict with show_clicks=0/storage_convention="scaled", verify that `summarize_session()` produces `active_setup_parameters["CAMBER_LR"]["VALUE"] == -1.8`.
+- [x] T008 [P] [US2] Add test in `backend/tests/engineer/test_summarizer.py`: given a setup .ini with CAMBER_LR VALUE=-18 and a parameter_ranges dict with show_clicks=0/storage_convention="scaled", verify that `summarize_session()` produces `active_setup_parameters["CAMBER_LR"]["VALUE"] == -1.8`.
 
-- [ ] T009 [P] [US1] Add test in `backend/tests/engineer/test_setup_writer.py`: given a ValidationResult with proposed_value=30000.0 for an INDEX parameter (ARB_FRONT, min=25500, step=4500, storage_convention="index"), verify that `apply_changes()` with `parameter_ranges` kwarg writes `VALUE=1` (not VALUE=30000.0) to the .ini file.
+- [x] T009 [P] [US1] Add test in `backend/tests/engineer/test_setup_writer.py`: given a ValidationResult with proposed_value=30000.0 for an INDEX parameter (ARB_FRONT, min=25500, step=4500, storage_convention="index"), verify that `apply_changes()` with `parameter_ranges` kwarg writes `VALUE=1` (not VALUE=30000.0) to the .ini file.
 
-- [ ] T010 [P] [US2] Add test in `backend/tests/engineer/test_setup_writer.py`: given a ValidationResult with proposed_value=-1.0 for CAMBER_LR (storage_convention="scaled"), verify that `apply_changes()` writes `VALUE=-10.0` to the .ini file.
+- [x] T010 [P] [US2] Add test in `backend/tests/engineer/test_setup_writer.py`: given a ValidationResult with proposed_value=-1.0 for CAMBER_LR (storage_convention="scaled"), verify that `apply_changes()` writes `VALUE=-10.0` to the .ini file.
 
 ### Implementation
 
-- [ ] T011 [US1] [US2] Add `parameter_ranges: dict[str, ParameterRange] | None = None` keyword parameter to `summarize_session()` in `backend/ac_engineer/engineer/summarizer.py`. After `_parse_setup_ini()` returns `active_setup_parameters` (line ~80), iterate the dict: for each section with a matching ParameterRange, call `to_physical(value, param_range)` to convert the VALUE. If parameter_ranges is None, skip conversion entirely (backward compatible). Do NOT modify `_parse_setup_ini()` — it remains a pure .ini parser.
+- [x] T011 [US1] [US2] Add `parameter_ranges: dict[str, ParameterRange] | None = None` keyword parameter to `summarize_session()` in `backend/ac_engineer/engineer/summarizer.py`. After `_parse_setup_ini()` returns `active_setup_parameters` (line ~80), iterate the dict: for each section with a matching ParameterRange, call `to_physical(value, param_range)` to convert the VALUE. If parameter_ranges is None, skip conversion entirely (backward compatible). Do NOT modify `_parse_setup_ini()` — it remains a pure .ini parser.
 
-- [ ] T012 [US1] [US2] Add `parameter_ranges: dict[str, ParameterRange] | None = None` parameter to `apply_changes()` in `backend/ac_engineer/engineer/setup_writer.py`. Before writing each VALUE to the .ini (line ~171), if parameter_ranges is provided and the section has a matching range, call `to_storage(effective_value, param_range)` to convert back to storage format. If parameter_ranges is None or section not found, write value unchanged (backward compatible).
+- [x] T012 [US1] [US2] Add `parameter_ranges: dict[str, ParameterRange] | None = None` parameter to `apply_changes()` in `backend/ac_engineer/engineer/setup_writer.py`. Before writing each VALUE to the .ini (line ~171), if parameter_ranges is provided and the section has a matching range, call `to_storage(effective_value, param_range)` to convert back to storage format. If parameter_ranges is None or section not found, write value unchanged (backward compatible).
 
-- [ ] T013 [US1] [US2] Update `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py` to pass `parameter_ranges` to `summarize_session()` so the inbound conversion is active during analysis.
+- [x] T013 [US1] [US2] Update `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py` to pass `parameter_ranges` to `summarize_session()` so the inbound conversion is active during analysis.
 
-- [ ] T014 [US1] [US2] Update `apply_recommendation()` in `backend/ac_engineer/engineer/agents.py` to pass `parameter_ranges` to `apply_changes()` so the outbound conversion is active when writing recommendations.
+- [x] T014 [US1] [US2] Update `apply_recommendation()` in `backend/ac_engineer/engineer/agents.py` to pass `parameter_ranges` to `apply_changes()` so the outbound conversion is active when writing recommendations.
 
-- [ ] T015 [US1] [US2] Run T007–T010 tests — all must pass. Run full backend test suite to confirm zero regressions.
+- [x] T015 [US1] [US2] Run T007–T010 tests — all must pass. Run full backend test suite to confirm zero regressions.
 
 **Checkpoint**: INDEX and SCALED parameters are now converted at both boundaries. The LLM sees physical values and the .ini file receives correct storage values. US1 and US2 acceptance scenarios are satisfied.
 
@@ -79,15 +79,15 @@
 
 ### Tests
 
-- [ ] T016 [P] [US3] Add test in `backend/tests/engineer/test_summarizer.py`: given PRESSURE_LF VALUE=18 with parameter_ranges containing show_clicks=0/storage_convention="direct", verify `summarize_session()` produces `active_setup_parameters["PRESSURE_LF"]["VALUE"] == 18.0` (unchanged).
+- [x] T016 [P] [US3] Add test in `backend/tests/engineer/test_summarizer.py`: given PRESSURE_LF VALUE=18 with parameter_ranges containing show_clicks=0/storage_convention="direct", verify `summarize_session()` produces `active_setup_parameters["PRESSURE_LF"]["VALUE"] == 18.0` (unchanged).
 
-- [ ] T017 [P] [US3] Add test in `backend/tests/engineer/test_setup_writer.py`: given proposed_value=16.0 for PRESSURE_LF (storage_convention="direct"), verify `apply_changes()` writes `VALUE=16.0` (unchanged).
+- [x] T017 [P] [US3] Add test in `backend/tests/engineer/test_setup_writer.py`: given proposed_value=16.0 for PRESSURE_LF (storage_convention="direct"), verify `apply_changes()` writes `VALUE=16.0` (unchanged).
 
-- [ ] T018 [P] [US4] Add test in `backend/tests/engineer/test_agents.py`: given an INDEX parameter with storage value_before=2 (physical: 34500) and a FunctionModel that proposes value_after=30000, verify the resulting SetupChange in EngineerResponse has value_before=34500 and value_after=30000 (both physical).
+- [x] T018 [P] [US4] Add test in `backend/tests/engineer/test_agents.py`: given an INDEX parameter with storage value_before=2 (physical: 34500) and a FunctionModel that proposes value_after=30000, verify the resulting SetupChange in EngineerResponse has value_before=34500 and value_after=30000 (both physical).
 
 ### Implementation
 
-- [ ] T019 [US3] [US4] No new implementation code needed for US3 or US4 — DIRECT passthrough and physical display are automatic consequences of Phases 1-2. If T016–T018 pass, these stories are verified. If any fail, diagnose and fix the conversion path for the failing case.
+- [x] T019 [US3] [US4] No new implementation code needed for US3 or US4 — DIRECT passthrough and physical display are automatic consequences of Phases 1-2. If T016–T018 pass, these stories are verified. If any fail, diagnose and fix the conversion path for the failing case.
 
 **Checkpoint**: DIRECT parameters verified as passthrough. value_before/value_after confirmed as physical units. US3 and US4 acceptance scenarios are satisfied.
 
@@ -101,15 +101,15 @@
 
 ### Tests
 
-- [ ] T020 [P] [US5] Add test in `backend/tests/resolver/test_cache.py`: save a ResolvedParameters to cache with ParameterRange objects that have show_clicks=None. Call `get_cached_parameters()`. Verify it returns None (stale detection triggered).
+- [x] T020 [P] [US5] Add test in `backend/tests/resolver/test_cache.py`: save a ResolvedParameters to cache with ParameterRange objects that have show_clicks=None. Call `get_cached_parameters()`. Verify it returns None (stale detection triggered).
 
-- [ ] T021 [P] [US5] Add test in `backend/tests/resolver/test_cache.py`: save a ResolvedParameters to cache with ParameterRange objects that have show_clicks=2. Call `get_cached_parameters()`. Verify it returns the cached entry (not stale).
+- [x] T021 [P] [US5] Add test in `backend/tests/resolver/test_cache.py`: save a ResolvedParameters to cache with ParameterRange objects that have show_clicks=2. Call `get_cached_parameters()`. Verify it returns the cached entry (not stale).
 
 ### Implementation
 
-- [ ] T022 [US5] Modify `get_cached_parameters()` in `backend/ac_engineer/resolver/cache.py`: after deserializing the ResolvedParameters, check if any ParameterRange has `show_clicks is None`. If so, return None to trigger lazy re-resolution. The DB schema has `CHECK(tier IN (1, 2))` so Tier 3 is never cached — no tier check needed.
+- [x] T022 [US5] Modify `get_cached_parameters()` in `backend/ac_engineer/resolver/cache.py`: after deserializing the ResolvedParameters, check if any ParameterRange has `show_clicks is None`. If so, return None to trigger lazy re-resolution. The DB schema has `CHECK(tier IN (1, 2))` so Tier 3 is never cached — no tier check needed.
 
-- [ ] T023 [US5] Run T020–T021 tests — both must pass. Run full resolver test suite (`conda run -n ac-race-engineer pytest backend/tests/resolver/ -v`) to confirm zero regressions.
+- [x] T023 [US5] Run T020–T021 tests — both must pass. Run full resolver test suite (`conda run -n ac-race-engineer pytest backend/tests/resolver/ -v`) to confirm zero regressions.
 
 **Checkpoint**: Stale cache entries are lazily detected and re-resolved. US5 acceptance scenarios are satisfied.
 
@@ -119,11 +119,11 @@
 
 **Purpose**: Exports, full regression, integration verification.
 
-- [ ] T024 [P] Export conversion functions from `backend/ac_engineer/engineer/__init__.py`: add `classify_parameter`, `to_physical`, `to_storage`, `SCALE_FACTORS` to public imports.
+- [x] T024 [P] Export conversion functions from `backend/ac_engineer/engineer/__init__.py`: add `classify_parameter`, `to_physical`, `to_storage`, `SCALE_FACTORS` to public imports.
 
-- [ ] T025 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`). All 1410+ existing tests plus all new tests must pass. This verifies SC-004 (no regressions) and SC-005 (round-trip integrity via test_conversion.py).
+- [x] T025 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`). All 1410+ existing tests plus all new tests must pass. This verifies SC-004 (no regressions) and SC-005 (round-trip integrity via test_conversion.py).
 
-- [ ] T026 Run full frontend test suite (`cd frontend && npm run test`) and TypeScript check (`npx tsc --noEmit`). No frontend changes were made, but verify no transitive breakage from API response changes.
+- [x] T026 Run full frontend test suite (`cd frontend && npm run test`) and TypeScript check (`npx tsc --noEmit`). No frontend changes were made, but verify no transitive breakage from API response changes.
 
 ---
 
