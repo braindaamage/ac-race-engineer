@@ -17,6 +17,13 @@ from api.watcher.scanner import scan_sessions_dir
 logger = logging.getLogger(__name__)
 
 
+class HealthAccessFilter(logging.Filter):
+    """Suppress GET /health from uvicorn access logs to reduce noise."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return "GET /health" not in record.getMessage()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.job_manager = JobManager()
@@ -88,5 +95,7 @@ def create_app() -> FastAPI:
     app.include_router(knowledge_router)
     app.include_router(ws_jobs_router)
     register_error_handlers(app)
+
+    logging.getLogger("uvicorn.access").addFilter(HealthAccessFilter())
 
     return app
