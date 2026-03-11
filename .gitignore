@@ -6,8 +6,10 @@ data/sessions/*
 data/setups/*
 data/*.db
 data/config.json
+data/traces/*
 !data/sessions/.gitkeep
 !data/setups/.gitkeep
+!data/traces/.gitkeep
 examples/
 .venv/
 venv/

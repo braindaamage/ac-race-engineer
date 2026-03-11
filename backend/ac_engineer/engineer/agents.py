@@ -612,7 +612,7 @@ async def analyze_with_engineer(
             from pydantic_ai.usage import UsageLimits
             result = await agent.run(
                 user_prompt, deps=deps,
-                usage_limits=UsageLimits(request_limit=5),
+                usage_limits=UsageLimits(request_limit=10),
             )
             duration_ms = int((time.perf_counter() - start_time) * 1000)
 
