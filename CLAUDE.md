@@ -7,7 +7,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - ac_app/ → App in-game para AC: captura telemetría a CSV (20-30Hz), Python ~3.3 embebido, Fases 1-1.5 COMPLETADAS
 - backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/, config/, storage/, acd_reader/, resolver/
   - config/   → ACConfig model + read_config / write_config / update_config
-  - storage/  → SQLite init + CRUD functions para sessions, recommendations, setup_changes, messages
+  - storage/  → SQLite init + CRUD functions para sessions, recommendations, setup_changes, messages, llm_events
   - engineer/ → summarizer, setup_reader/writer, agents (Pydantic AI specialists), tools, skills/ (markdown prompts)
   - acd_reader/ → Descifrado de archivos data.acd (propietario AC), zero-dependency
   - resolver/ → Resolución de parámetros en 3 tiers (open data → ACD → session fallback), caché SQLite
@@ -29,7 +29,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - data/sessions/ → Archivos de telemetría (.csv) y metadata (.meta.json) por sesión
 - data/setups/ → Archivos de setup .ini
 - data/config.json → Configuración de usuario (ac_install_path, llm_provider, llm_model, api_key)
-- data/ac_engineer.db → Base de datos SQLite (5 tablas: sessions, recommendations, setup_changes, messages, parameter_cache)
+- data/ac_engineer.db → Base de datos SQLite (7 tablas: sessions, recommendations, setup_changes, messages, parameter_cache, llm_events, llm_tool_calls)
 
 ## Stack
 - Python 3.11+ (backend, conda env `ac-race-engineer`)
@@ -45,8 +45,8 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 
 ## Imports públicos
 - `from ac_engineer.config import read_config, write_config, update_config, ACConfig`
-- `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages`
-- `from ac_engineer.engineer import summarize_session, read_parameter_ranges, validate_changes, apply_changes, analyze_with_engineer, apply_recommendation, build_model`
+- `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages, save_llm_event, get_llm_events, LlmEvent, LlmToolCall`
+- `from ac_engineer.engineer import summarize_session, read_parameter_ranges, validate_changes, apply_changes, analyze_with_engineer, apply_recommendation, build_model, extract_tool_calls`
 - `from ac_engineer.acd_reader import read_acd, AcdResult`
 - `from ac_engineer.resolver import resolve_parameters, list_cars, get_cached_parameters, invalidate_cache, invalidate_all_caches, ResolvedParameters, ResolutionTier, CarStatus`
 
@@ -63,6 +63,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 7 ✅ Desktop App (Tauri + React: sessions, analysis, compare, engineer chat, settings) — 329 tests
 - Fase 8.1 ✅ ACD File Reader (descifrado de archivos data.acd propietarios de AC) — 20 tests
 - Fase 8.2 ✅ Setup Resolver (resolución de parámetros en 3 tiers, caché, API, UI) — 93 tests
+- Fase 9 ✅ LLM Usage Tracking & Optimization (storage, capture, UI, token/prompt optimization, tool scoping, tracking redesign) — 104 tests
 
 ## Reglas de desarrollo
 - Todo tipo de coche debe funcionar (vanilla y mods), no hardcodear por coche
@@ -81,4 +82,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 8 completadas (1241 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 81, API 209, acd_reader 20, resolver 81, frontend 341, watcher+jobs 47). El proyecto tiene funcionalidad end-to-end completa con resolución de parámetros para el 100% de los coches.
+Fases 1 a 9 completadas (1332 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 81, API 209, acd_reader 20, resolver 81, frontend 370, watcher+jobs 47, usage tracking ~62). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM.
