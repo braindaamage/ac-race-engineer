@@ -64,6 +64,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 8.1 ✅ ACD File Reader (descifrado de archivos data.acd propietarios de AC) — 20 tests
 - Fase 8.2 ✅ Setup Resolver (resolución de parámetros en 3 tiers, caché, API, UI) — 93 tests
 - Fase 9 ✅ LLM Usage Tracking & Optimization (storage, capture, UI, token/prompt optimization, tool scoping, tracking redesign) — 104 tests
+- Fase 10 ✅ Domain-Scoped Setup Context (filtrado de parámetros de setup por dominio en prompts de agentes especialistas) — 11 tests
 
 ## Reglas de desarrollo
 - Todo tipo de coche debe funcionar (vanilla y mods), no hardcodear por coche
@@ -82,4 +83,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 9 completadas (1332 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 81, API 209, acd_reader 20, resolver 81, frontend 370, watcher+jobs 47, usage tracking ~62). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM.
+Fases 1 a 10 completadas (1343 tests totales: parser 143, analyzer 141, knowledge 48, config 34, storage 28, engineer core 68, engineer agents 92, API 209, acd_reader 20, resolver 81, frontend 370, watcher+jobs 47, usage tracking ~62). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM y filtrado de contexto por dominio.

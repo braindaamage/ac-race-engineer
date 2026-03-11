@@ -7,6 +7,7 @@ import pytest
 from ac_engineer.config import ACConfig
 from ac_engineer.engineer.agents import (
     AERO_SECTIONS,
+    DOMAIN_PARAMS,
     DOMAIN_PRIORITY,
     DOMAIN_TOOLS,
     SIGNAL_DOMAINS,
@@ -517,3 +518,153 @@ class TestAgentTurnLimit:
 
         assert "error" in response.summary.lower() or "could not" in response.summary.lower()
         assert response.confidence == "low"
+
+
+# ===================================================================
+# Domain-scoped setup context tests (Phase 10)
+# ===================================================================
+
+
+class TestDomainScopedParams:
+    """Tests for domain-scoped setup parameter filtering in _build_user_prompt."""
+
+    @pytest.fixture
+    def multi_domain_summary(self):
+        """SessionSummary with sections spanning all domains."""
+        from ac_engineer.engineer.models import SessionSummary
+
+        return SessionSummary(
+            session_id="test_domain",
+            car_name="test_car",
+            track_name="test_track",
+            total_lap_count=5,
+            flying_lap_count=3,
+            best_lap_time_s=89.5,
+            signals=["high_understeer"],
+            active_setup_parameters={
+                "SPRING_RATE_LF": {"VALUE": 80000},
+                "DAMP_BUMP_LF": {"VALUE": 5},
+                "ARB_FRONT": {"VALUE": 3},
+                "RIDE_HEIGHT_0": {"VALUE": 60},
+                "BRAKE_BIAS": {"VALUE": 57.0},
+                "PRESSURE_LF": {"VALUE": 26.5},
+                "CAMBER_LF": {"VALUE": -2.0},
+                "TOE_OUT_LF": {"VALUE": 0.10},
+                "WING_1": {"VALUE": 5},
+                "WING_2": {"VALUE": 7},
+            },
+        )
+
+    # --- T004: User Story 1 tests ---
+
+    def test_balance_domain_gets_only_balance_sections(self, multi_domain_summary):
+        prompt = _build_user_prompt(multi_domain_summary, ["high_understeer"], domain="balance")
+        assert "SPRING_RATE_LF" in prompt
+        assert "DAMP_BUMP_LF" in prompt
+        assert "ARB_FRONT" in prompt
+        assert "RIDE_HEIGHT_0" in prompt
+        assert "BRAKE_BIAS" in prompt
+        assert "PRESSURE_LF" not in prompt
+        assert "CAMBER_LF" not in prompt
+        assert "TOE_OUT_LF" not in prompt
+        assert "WING_1" not in prompt
+        assert "WING_2" not in prompt
+
+    def test_tyre_domain_gets_only_tyre_sections(self, multi_domain_summary):
+        prompt = _build_user_prompt(multi_domain_summary, ["tyre_temp_spread_high"], domain="tyre")
+        assert "PRESSURE_LF" in prompt
+        assert "CAMBER_LF" in prompt
+        assert "TOE_OUT_LF" in prompt
+        assert "SPRING_RATE_LF" not in prompt
+        assert "ARB_FRONT" not in prompt
+        assert "WING_1" not in prompt
+
+    def test_aero_domain_gets_only_aero_sections(self, multi_domain_summary):
+        prompt = _build_user_prompt(multi_domain_summary, ["high_understeer"], domain="aero")
+        assert "WING_1" in prompt
+        assert "WING_2" in prompt
+        assert "SPRING_RATE_LF" not in prompt
+        assert "PRESSURE_LF" not in prompt
+        assert "ARB_FRONT" not in prompt
+
+    def test_technique_domain_gets_no_setup_params(self, multi_domain_summary):
+        prompt = _build_user_prompt(multi_domain_summary, ["low_consistency"], domain="technique")
+        assert "### Current Setup Parameters" not in prompt
+        assert "No setup parameters available" in prompt
+
+    def test_principal_domain_gets_no_setup_params(self, multi_domain_summary):
+        prompt = _build_user_prompt(multi_domain_summary, ["high_understeer"], domain="principal")
+        assert "### Current Setup Parameters" not in prompt
+        assert "No setup parameters available" in prompt
+
+    def test_domain_none_includes_all_params(self, multi_domain_summary):
+        prompt = _build_user_prompt(multi_domain_summary, ["high_understeer"], domain=None)
+        assert "SPRING_RATE_LF" in prompt
+        assert "PRESSURE_LF" in prompt
+        assert "WING_1" in prompt
+        assert "CAMBER_LF" in prompt
+        assert "ARB_FRONT" in prompt
+
+    # --- T005: User Story 2 — tool fallback access ---
+
+    def test_tool_fallback_access_unaffected(self, multi_domain_summary):
+        """AgentDeps.parameter_ranges is never filtered — tools can access any parameter."""
+        from ac_engineer.engineer.models import AgentDeps, ParameterRange
+
+        ranges = {
+            "SPRING_RATE_LF": ParameterRange(section="SPRING_RATE_LF", parameter="VALUE", min_value=50000, max_value=120000, step=5000),
+            "PRESSURE_LF": ParameterRange(section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5),
+        }
+        deps = AgentDeps(
+            session_summary=multi_domain_summary,
+            parameter_ranges=ranges,
+            domain_signals=["tyre_temp_spread_high"],
+            knowledge_fragments=[],
+        )
+        # Build prompt filtered to tyre — balance sections excluded from prompt
+        prompt = _build_user_prompt(multi_domain_summary, ["tyre_temp_spread_high"], domain="tyre")
+        assert "SPRING_RATE_LF" not in prompt
+        # But deps still has balance ranges — tool can access them
+        assert "SPRING_RATE_LF" in deps.parameter_ranges
+
+    # --- T006: User Story 3 — mod cars ---
+
+    def test_unrecognized_section_falls_back_to_balance(self, multi_domain_summary):
+        summary = multi_domain_summary.model_copy(update={
+            "active_setup_parameters": {
+                **multi_domain_summary.active_setup_parameters,
+                "CUSTOM_MOD_PARAM": {"VALUE": 42},
+            },
+        })
+        prompt = _build_user_prompt(summary, ["high_understeer"], domain="balance")
+        assert "CUSTOM_MOD_PARAM" in prompt
+
+    def test_unrecognized_section_excluded_from_other_domains(self, multi_domain_summary):
+        summary = multi_domain_summary.model_copy(update={
+            "active_setup_parameters": {
+                **multi_domain_summary.active_setup_parameters,
+                "CUSTOM_MOD_PARAM": {"VALUE": 42},
+            },
+        })
+        prompt = _build_user_prompt(summary, ["tyre_temp_spread_high"], domain="tyre")
+        assert "CUSTOM_MOD_PARAM" not in prompt
+
+    def test_empty_setup_params_preserves_existing_behavior(self):
+        from ac_engineer.engineer.models import SessionSummary
+
+        summary = SessionSummary(
+            session_id="test_empty",
+            car_name="c",
+            track_name="t",
+            total_lap_count=5,
+            flying_lap_count=3,
+            signals=["high_understeer"],
+            active_setup_parameters={},
+        )
+        prompt = _build_user_prompt(summary, ["high_understeer"], domain="balance")
+        assert "No setup parameters available" in prompt
+
+    def test_summary_not_mutated_after_filtering(self, multi_domain_summary):
+        original_params = dict(multi_domain_summary.active_setup_parameters)
+        _build_user_prompt(multi_domain_summary, ["tyre_temp_spread_high"], domain="tyre")
+        assert multi_domain_summary.active_setup_parameters == original_params
