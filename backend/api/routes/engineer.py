@@ -242,7 +242,7 @@ async def get_recommendation_detail(
             session_id=rec.session_id,
             status=rec.status,
             summary=rec.summary,
-            explanation=cached.explanation,
+            explanation=rec.explanation or cached.explanation,
             confidence=cached.confidence,
             signals_addressed=cached.signals_addressed,
             setup_changes=setup_changes,
@@ -266,6 +266,7 @@ async def get_recommendation_detail(
         session_id=rec.session_id,
         status=rec.status,
         summary=rec.summary,
+        explanation=rec.explanation,
         setup_changes=setup_changes,
         created_at=rec.created_at,
     )

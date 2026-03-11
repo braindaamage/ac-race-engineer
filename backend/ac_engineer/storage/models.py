@@ -49,6 +49,7 @@ class Recommendation(BaseModel):
     session_id: str = ""
     status: str = "proposed"
     summary: str = ""
+    explanation: str = ""
     created_at: str = ""
     changes: list[SetupChange] = Field(default_factory=list)
 

@@ -15,6 +15,7 @@ def save_recommendation(
     session_id: str,
     summary: str,
     changes: list[SetupChange],
+    explanation: str = "",
 ) -> Recommendation:
     """Create a new recommendation with setup changes. Returns populated Recommendation."""
     conn = _connect(db_path)
@@ -31,9 +32,9 @@ def save_recommendation(
 
         conn.execute(
             """INSERT INTO recommendations
-               (recommendation_id, session_id, status, summary, created_at)
-               VALUES (?, ?, 'proposed', ?, ?)""",
-            (recommendation_id, session_id, summary, created_at),
+               (recommendation_id, session_id, status, summary, explanation, created_at)
+               VALUES (?, ?, 'proposed', ?, ?, ?)""",
+            (recommendation_id, session_id, summary, explanation, created_at),
         )
 
         populated_changes: list[SetupChange] = []
@@ -66,6 +67,7 @@ def save_recommendation(
             session_id=session_id,
             status="proposed",
             summary=summary,
+            explanation=explanation,
             created_at=created_at,
             changes=populated_changes,
         )

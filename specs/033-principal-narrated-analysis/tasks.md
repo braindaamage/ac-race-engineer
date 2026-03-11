@@ -19,8 +19,8 @@
 
 **Purpose**: Add the structured output model and adapt the principal agent prompt — prerequisites for the synthesis implementation.
 
-- [ ] T001 Add `PrincipalNarrative` Pydantic model (summary: str, explanation: str) in `backend/ac_engineer/engineer/models.py`
-- [ ] T002 [P] Adapt the user prompt in `_synthesize_with_principal()` (agents.py, from T007) to include explicit instructions for two distinct fields — summary (2–4 sentences, ≤80 words, executive headline, driver-friendly language, no raw parameter names) and explanation (multi-paragraph, ≤300 words, cause-effect, trade-offs, technique integration, expected feel). The system prompt continues to use `principal.md` as-is (loaded via `_load_skill_prompt("principal")`) — do NOT modify `principal.md` because it is also used by the chat agent in pipeline.py. All synthesis-specific output formatting instructions go in the user prompt, not the system prompt.
+- [x] T001 Add `PrincipalNarrative` Pydantic model (summary: str, explanation: str) in `backend/ac_engineer/engineer/models.py`
+- [x] T002 [P] Adapt the user prompt in `_synthesize_with_principal()` (agents.py, from T007) to include explicit instructions for two distinct fields — summary (2–4 sentences, ≤80 words, executive headline, driver-friendly language, no raw parameter names) and explanation (multi-paragraph, ≤300 words, cause-effect, trade-offs, technique integration, expected feel). The system prompt continues to use `principal.md` as-is (loaded via `_load_skill_prompt("principal")`) — do NOT modify `principal.md` because it is also used by the chat agent in pipeline.py. All synthesis-specific output formatting instructions go in the user prompt, not the system prompt.
 
 ---
 
@@ -30,10 +30,10 @@
 
 **⚠️ CRITICAL**: No user story work that persists data can begin until this phase is complete.
 
-- [ ] T003 Add migration to `_MIGRATIONS` list in `backend/ac_engineer/storage/db.py`: `ALTER TABLE recommendations ADD COLUMN explanation TEXT NOT NULL DEFAULT ''`
-- [ ] T004 [P] Update `save_recommendation()` in `backend/ac_engineer/storage/recommendations.py` to accept `explanation: str = ""` parameter and INSERT it into the recommendations table
-- [ ] T005 [P] Update `get_recommendations()` and related queries in `backend/ac_engineer/storage/recommendations.py` to SELECT and return the `explanation` field in the Recommendation return object
-- [ ] T006 Add tests for explanation column in `backend/tests/storage/test_recommendations.py`: migration applies cleanly, save_recommendation persists explanation, get_recommendations returns explanation, default empty string for legacy rows
+- [x] T003 Add migration to `_MIGRATIONS` list in `backend/ac_engineer/storage/db.py`: `ALTER TABLE recommendations ADD COLUMN explanation TEXT NOT NULL DEFAULT ''`
+- [x] T004 [P] Update `save_recommendation()` in `backend/ac_engineer/storage/recommendations.py` to accept `explanation: str = ""` parameter and INSERT it into the recommendations table
+- [x] T005 [P] Update `get_recommendations()` and related queries in `backend/ac_engineer/storage/recommendations.py` to SELECT and return the `explanation` field in the Recommendation return object
+- [x] T006 Add tests for explanation column in `backend/tests/storage/test_recommendations.py`: migration applies cleanly, save_recommendation persists explanation, get_recommendations returns explanation, default empty string for legacy rows
 
 **Checkpoint**: Database schema supports explanation field. Storage CRUD works with explanation.
 
@@ -47,11 +47,11 @@
 
 ### Implementation for US1+US2
 
-- [ ] T007 [US1] Implement `_synthesize_with_principal()` in `backend/ac_engineer/engineer/agents.py`: build a Pydantic AI Agent with `result_type=PrincipalNarrative`, no tools, system prompt from `_load_skill_prompt("principal")`, model from `build_model(config)`, `usage_limits=UsageLimits(request_limit=5)`. Format user prompt with: domain_summaries, setup_changes (section/parameter/reasoning/expected_effect), driver_feedback (area/observation/suggestion), signals_addressed. Return PrincipalNarrative on success.
-- [ ] T008 [US1] Wire `_synthesize_with_principal()` into `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: call it AFTER `_resolve_conflicts()` and `_post_validate_changes()` complete, passing the final EngineerResponse and specialist_results. On success, replace `response.summary` and `response.explanation` with the principal agent's output. Wrap in try/except Exception with logging — on failure, keep concatenated text (FR-011 fallback).
-- [ ] T009 [US1] Add LLM usage tracking for the principal agent call in `backend/ac_engineer/engineer/agents.py`: build `LlmEvent` with `agent_name="principal"`, `event_type="analysis"`, extract usage from result, call `save_llm_event()`. Follow existing specialist agent tracking pattern.
-- [ ] T010 [US1] Update `make_engineer_job()` in `backend/api/engineer/pipeline.py`: pass `response.explanation` to `save_recommendation()` call so the explanation is persisted to SQLite alongside the summary.
-- [ ] T011 [US1] Add tests for principal synthesis in `backend/tests/engineer/test_agents.py`: (a) _synthesize_with_principal returns PrincipalNarrative with distinct summary and explanation using FunctionModel, (b) analyze_with_engineer produces non-concatenated summary and explanation, (c) LlmEvent is created with agent_name="principal" and event_type="analysis", (d) principal agent receives no tools (agent has empty tools list).
+- [x] T007 [US1] Implement `_synthesize_with_principal()` in `backend/ac_engineer/engineer/agents.py`: build a Pydantic AI Agent with `result_type=PrincipalNarrative`, no tools, system prompt from `_load_skill_prompt("principal")`, model from `build_model(config)`, `usage_limits=UsageLimits(request_limit=5)`. Format user prompt with: domain_summaries, setup_changes (section/parameter/reasoning/expected_effect), driver_feedback (area/observation/suggestion), signals_addressed. Return PrincipalNarrative on success.
+- [x] T008 [US1] Wire `_synthesize_with_principal()` into `analyze_with_engineer()` in `backend/ac_engineer/engineer/agents.py`: call it AFTER `_resolve_conflicts()` and `_post_validate_changes()` complete, passing the final EngineerResponse and specialist_results. On success, replace `response.summary` and `response.explanation` with the principal agent's output. Wrap in try/except Exception with logging — on failure, keep concatenated text (FR-011 fallback).
+- [x] T009 [US1] Add LLM usage tracking for the principal agent call in `backend/ac_engineer/engineer/agents.py`: build `LlmEvent` with `agent_name="principal"`, `event_type="analysis"`, extract usage from result, call `save_llm_event()`. Follow existing specialist agent tracking pattern.
+- [x] T010 [US1] Update `make_engineer_job()` in `backend/api/engineer/pipeline.py`: pass `response.explanation` to `save_recommendation()` call so the explanation is persisted to SQLite alongside the summary.
+- [x] T011 [US1] Add tests for principal synthesis in `backend/tests/engineer/test_agents.py`: (a) _synthesize_with_principal returns PrincipalNarrative with distinct summary and explanation using FunctionModel, (b) analyze_with_engineer produces non-concatenated summary and explanation, (c) LlmEvent is created with agent_name="principal" and event_type="analysis", (d) principal agent receives no tools (agent has empty tools list).
 
 **Checkpoint**: Analysis pipeline produces principal-authored summary and explanation. Explanation is persisted to DB. Usage is tracked.
 
@@ -65,7 +65,7 @@
 
 ### Implementation for US5
 
-- [ ] T012 [US5] Add fallback tests in `backend/tests/engineer/test_agents.py`: (a) when _synthesize_with_principal raises Exception, analyze_with_engineer still completes with concatenated domain_summaries as summary and explanation, (b) no error is propagated — EngineerResponse is returned normally, (c) LlmEvent for principal is NOT saved on failure (no partial tracking).
+- [x] T012 [US5] Add fallback tests in `backend/tests/engineer/test_agents.py`: (a) when _synthesize_with_principal raises Exception, analyze_with_engineer still completes with concatenated domain_summaries as summary and explanation, (b) no error is propagated — EngineerResponse is returned normally, (c) LlmEvent for principal is NOT saved on failure (no partial tracking).
 
 **Checkpoint**: Fallback behavior verified — principal agent failures never block analysis.
 
@@ -79,8 +79,8 @@
 
 ### Implementation for US4
 
-- [ ] T013 [US4] Update `get_recommendation_detail()` in `backend/api/routes/engineer.py`: read `explanation` from the DB Recommendation object (via `get_recommendations()`). When cache is available, prefer cache for fields like confidence/signals_addressed but always include explanation from DB. When cache is missing, explanation comes from DB (no longer empty string).
-- [ ] T014 [US4] Add API tests in `backend/tests/api/test_engineer_routes.py`: (a) GET recommendation detail returns explanation field from DB, (b) when JSON cache is missing, explanation is still returned from DB, (c) legacy recommendations (empty explanation) return explanation as empty string.
+- [x] T013 [US4] Update `get_recommendation_detail()` in `backend/api/routes/engineer.py`: read `explanation` from the DB Recommendation object (via `get_recommendations()`). When cache is available, prefer cache for fields like confidence/signals_addressed but always include explanation from DB. When cache is missing, explanation comes from DB (no longer empty string).
+- [x] T014 [US4] Add API tests in `backend/tests/api/test_engineer_routes.py`: (a) GET recommendation detail returns explanation field from DB, (b) when JSON cache is missing, explanation is still returned from DB, (c) legacy recommendations (empty explanation) return explanation as empty string.
 
 **Checkpoint**: Explanation survives cache eviction. API always returns explanation from durable storage.
 
@@ -94,8 +94,8 @@
 
 ### Implementation for US3
 
-- [ ] T015 [US3] Add collapsible explanation section in `frontend/src/views/engineer/RecommendationCard.tsx`: collapsed by default, toggle on click, render explanation with paragraph breaks (split on `\n\n`). Hide section entirely when `recommendation.explanation` is empty string. Use CSS design tokens for styling (no hardcoded colors).
-- [ ] T016 [US3] Add frontend tests in `frontend/tests/views/engineer/RecommendationCard.test.tsx`: (a) explanation section is collapsed by default when explanation is non-empty, (b) clicking expand shows full explanation with paragraph formatting, (c) when explanation is empty string, no expandable section is rendered, (d) summary remains visible regardless of explanation state.
+- [x] T015 [US3] Add collapsible explanation section in `frontend/src/views/engineer/RecommendationCard.tsx`: collapsed by default, toggle on click, render explanation with paragraph breaks (split on `\n\n`). Hide section entirely when `recommendation.explanation` is empty string. Use CSS design tokens for styling (no hardcoded colors).
+- [x] T016 [US3] Add frontend tests in `frontend/tests/views/engineer/RecommendationCard.test.tsx`: (a) explanation section is collapsed by default when explanation is non-empty, (b) clicking expand shows full explanation with paragraph formatting, (c) when explanation is empty string, no expandable section is rendered, (d) summary remains visible regardless of explanation state.
 
 **Checkpoint**: Driver can view full explanation in one click. Empty explanation is gracefully hidden.
 
@@ -105,8 +105,8 @@
 
 **Purpose**: Validate all stories work together, no regressions.
 
-- [ ] T017 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and fix any regressions
-- [ ] T018 Run full frontend test suite (`cd frontend && npm run test`) and TypeScript strict check (`npx tsc --noEmit`) and fix any regressions
+- [x] T017 Run full backend test suite (`conda run -n ac-race-engineer pytest backend/tests/ -v`) and fix any regressions
+- [x] T018 Run full frontend test suite (`cd frontend && npm run test`) and TypeScript strict check (`npx tsc --noEmit`) and fix any regressions
 
 ---
 
