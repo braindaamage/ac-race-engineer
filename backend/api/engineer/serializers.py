@@ -159,3 +159,11 @@ class RecommendationUsageResponse(BaseModel):
     recommendation_id: str
     totals: UsageTotals
     agents: list[AgentUsageDetail] = []
+
+
+class MessageUsageResponse(BaseModel):
+    """Response for GET /sessions/{sid}/messages/{mid}/usage."""
+
+    message_id: str
+    totals: UsageTotals
+    agents: list[AgentUsageDetail] = []

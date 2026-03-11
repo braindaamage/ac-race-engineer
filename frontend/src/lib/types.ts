@@ -398,3 +398,9 @@ export interface RecommendationUsageResponse {
   totals: UsageTotals;
   agents: AgentUsageDetail[];
 }
+
+export interface MessageUsageResponse {
+  message_id: string;
+  totals: UsageTotals;
+  agents: AgentUsageDetail[];
+}

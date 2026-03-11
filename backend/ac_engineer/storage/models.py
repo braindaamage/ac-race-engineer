@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel, Field
 
 VALID_SESSION_STATES = ("discovered", "parsed", "analyzed", "engineered")
@@ -65,30 +63,30 @@ class Message(BaseModel):
     created_at: str = ""
 
 
-VALID_DOMAINS = ("balance", "tyre", "aero", "technique")
+class LlmToolCall(BaseModel):
+    """A single tool invocation within an LLM event."""
 
-
-class ToolCallDetail(BaseModel):
-    """A single tool invocation within an agent execution."""
-
-    detail_id: str = ""
-    usage_id: str = ""
+    id: str = ""
+    event_id: str = ""
     tool_name: str = Field(..., min_length=1)
-    token_count: int = Field(..., ge=0)
-    called_at: str = ""
+    response_tokens: int = Field(..., ge=0)
+    call_index: int = Field(..., ge=0)
 
 
-class AgentUsage(BaseModel):
-    """A specialist agent execution within an engineer recommendation."""
+class LlmEvent(BaseModel):
+    """An LLM call event, decoupled from any specific feature."""
 
-    usage_id: str = ""
-    recommendation_id: str = ""
-    domain: Literal["balance", "tyre", "aero", "technique"]
+    id: str = ""
+    session_id: str = Field(..., min_length=1)
+    event_type: str = Field(..., min_length=1)
+    agent_name: str = Field(..., min_length=1)
     model: str = Field(..., min_length=1)
     input_tokens: int = Field(..., ge=0)
     output_tokens: int = Field(..., ge=0)
+    request_count: int = Field(..., ge=0)
     tool_call_count: int = Field(..., ge=0)
-    turn_count: int = Field(..., ge=0)
     duration_ms: int = Field(..., ge=0)
     created_at: str = ""
-    tool_calls: list[ToolCallDetail] = Field(default_factory=list)
+    context_type: str | None = None
+    context_id: str | None = None
+    tool_calls: list[LlmToolCall] = Field(default_factory=list)

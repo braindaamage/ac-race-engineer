@@ -23,7 +23,7 @@ from ac_engineer.config.io import get_effective_model
 from ac_engineer.knowledge.index import SIGNAL_MAP
 from ac_engineer.knowledge.loader import get_docs_cache
 from ac_engineer.knowledge.models import KnowledgeFragment
-from ac_engineer.storage.models import AgentUsage, ToolCallDetail
+from ac_engineer.storage.models import LlmEvent, LlmToolCall
 
 from .models import (
     AgentDeps,
@@ -182,24 +182,27 @@ def build_model(config: ACConfig) -> Model:
 # ---------------------------------------------------------------------------
 
 
-def _extract_tool_calls(result) -> list[ToolCallDetail]:
+def extract_tool_calls(result) -> list[LlmToolCall]:
     """Extract tool call details from a Pydantic AI agent result.
 
     Iterates all_messages(), finds ToolReturnPart instances in ModelRequest
     messages, and estimates token count as len(str(content)) // 4.
     """
-    tool_calls: list[ToolCallDetail] = []
+    tool_calls: list[LlmToolCall] = []
+    call_index = 0
     for message in result.all_messages():
         if isinstance(message, ModelRequest):
             for part in message.parts:
                 if isinstance(part, ToolReturnPart):
-                    token_count = len(str(part.content)) // 4
+                    response_tokens = len(str(part.content)) // 4
                     tool_calls.append(
-                        ToolCallDetail(
+                        LlmToolCall(
                             tool_name=part.tool_name,
-                            token_count=token_count,
+                            response_tokens=response_tokens,
+                            call_index=call_index,
                         )
                     )
+                    call_index += 1
     return tool_calls
 
 
@@ -539,7 +542,7 @@ async def analyze_with_engineer(
 
     # Run specialist agents
     specialist_results: dict[str, SpecialistResult] = {}
-    collected_usage: list[AgentUsage] = []
+    collected_usage: list[LlmEvent] = []
     effective_model = get_effective_model(config)
 
     for domain in domains:
@@ -580,30 +583,32 @@ async def analyze_with_engineer(
 
             specialist_results[domain] = result.output
 
-            # Extract usage data (T002)
+            # Extract usage data
             try:
                 usage = result.usage()
-                tool_calls = _extract_tool_calls(result)
-                agent_usage = AgentUsage(
-                    domain=domain,
+                tool_calls = extract_tool_calls(result)
+                llm_event = LlmEvent(
+                    session_id=summary.session_id,
+                    event_type="analysis",
+                    agent_name=domain,
                     model=effective_model,
                     input_tokens=usage.input_tokens or 0,
                     output_tokens=usage.output_tokens or 0,
+                    request_count=usage.requests or 0,
                     tool_call_count=usage.tool_calls or 0,
-                    turn_count=usage.requests or 0,
                     duration_ms=duration_ms,
                     tool_calls=tool_calls,
                 )
-                collected_usage.append(agent_usage)
+                collected_usage.append(llm_event)
 
-                # Log usage summary (T004)
+                # Log usage summary
                 logger.info(
                     "Agent usage: domain=%s input_tokens=%d output_tokens=%d "
                     "tool_call_count=%d duration_ms=%d",
                     domain,
-                    agent_usage.input_tokens,
-                    agent_usage.output_tokens,
-                    agent_usage.tool_call_count,
+                    llm_event.input_tokens,
+                    llm_event.output_tokens,
+                    llm_event.tool_call_count,
                     duration_ms,
                 )
             except Exception:
@@ -664,16 +669,19 @@ async def analyze_with_engineer(
     except Exception:
         logger.warning("Failed to persist recommendation", exc_info=True)
 
-    # Persist usage data (T003)
+    # Persist usage data
     if recommendation_id and collected_usage:
         try:
-            from ac_engineer.storage.usage import save_agent_usage
+            from ac_engineer.storage.usage import save_llm_event
 
             for usage_record in collected_usage:
                 usage_record = usage_record.model_copy(
-                    update={"recommendation_id": recommendation_id}
+                    update={
+                        "context_type": "recommendation",
+                        "context_id": recommendation_id,
+                    }
                 )
-                save_agent_usage(db_path, usage_record)
+                save_llm_event(db_path, usage_record)
         except Exception:
             logger.warning("Failed to persist usage data", exc_info=True)
 

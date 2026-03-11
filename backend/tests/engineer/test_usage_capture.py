@@ -1,8 +1,8 @@
 """Tests for usage capture logic in the engineer pipeline.
 
 Covers:
-- _extract_tool_calls() helper with mocked message history
-- _extract_tool_calls() with no tool calls returns empty list
+- extract_tool_calls() helper with mocked message history
+- extract_tool_calls() with no tool calls returns empty list
 - Token estimation matches len(str(content)) // 4
 - Full analyze_with_engineer() pipeline with FunctionModel verifying usage persistence
 - Usage persistence failure does not prevent recommendation delivery
@@ -30,17 +30,17 @@ from pydantic_ai.models.function import FunctionModel
 from pydantic_ai.usage import RunUsage
 
 from ac_engineer.config import ACConfig
-from ac_engineer.engineer.agents import _extract_tool_calls, analyze_with_engineer
+from ac_engineer.engineer.agents import extract_tool_calls, analyze_with_engineer
 from ac_engineer.engineer.models import (
     ParameterRange,
     SessionSummary,
     SpecialistResult,
 )
 from ac_engineer.storage.db import init_db
-from ac_engineer.storage.models import AgentUsage, ToolCallDetail
+from ac_engineer.storage.models import LlmEvent, LlmToolCall
 from ac_engineer.storage.sessions import save_session
 from ac_engineer.storage.models import SessionRecord
-from ac_engineer.storage.usage import get_agent_usage
+from ac_engineer.storage.usage import get_llm_events
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ class _FakeResult:
 
 
 # ---------------------------------------------------------------------------
-# T005a: _extract_tool_calls with ToolReturnPart objects
+# extract_tool_calls with ToolReturnPart objects
 # ---------------------------------------------------------------------------
 
 
@@ -96,28 +96,30 @@ class TestExtractToolCalls:
             ),
         ]
         fake_result = _FakeResult(messages=messages)
-        tool_calls = _extract_tool_calls(fake_result)
+        tool_calls = extract_tool_calls(fake_result)
 
         assert len(tool_calls) == 3
         assert tool_calls[0].tool_name == "search_kb"
         assert tool_calls[1].tool_name == "get_setup_range"
         assert tool_calls[2].tool_name == "get_current_value"
+        # Verify call_index ordering
+        assert tool_calls[0].call_index == 0
+        assert tool_calls[1].call_index == 1
+        assert tool_calls[2].call_index == 2
 
-    # T005b: No tool calls returns empty list
     def test_no_tool_calls_returns_empty(self):
         messages = [
             ModelRequest(parts=[UserPromptPart(content="hello")]),
         ]
         fake_result = _FakeResult(messages=messages)
-        tool_calls = _extract_tool_calls(fake_result)
+        tool_calls = extract_tool_calls(fake_result)
         assert tool_calls == []
 
     def test_empty_messages_returns_empty(self):
         fake_result = _FakeResult(messages=[])
-        tool_calls = _extract_tool_calls(fake_result)
+        tool_calls = extract_tool_calls(fake_result)
         assert tool_calls == []
 
-    # T005c: Token estimation matches len(str(content)) // 4
     def test_token_estimation(self):
         content = "This is a test content with some words in it"
         messages = [
@@ -132,10 +134,10 @@ class TestExtractToolCalls:
             ),
         ]
         fake_result = _FakeResult(messages=messages)
-        tool_calls = _extract_tool_calls(fake_result)
+        tool_calls = extract_tool_calls(fake_result)
 
         expected_tokens = len(str(content)) // 4
-        assert tool_calls[0].token_count == expected_tokens
+        assert tool_calls[0].response_tokens == expected_tokens
 
     def test_token_estimation_dict_content(self):
         content = {"key": "value", "nested": {"a": 1}}
@@ -151,10 +153,10 @@ class TestExtractToolCalls:
             ),
         ]
         fake_result = _FakeResult(messages=messages)
-        tool_calls = _extract_tool_calls(fake_result)
+        tool_calls = extract_tool_calls(fake_result)
 
         expected_tokens = len(str(content)) // 4
-        assert tool_calls[0].token_count == expected_tokens
+        assert tool_calls[0].response_tokens == expected_tokens
 
     def test_ignores_non_model_request_messages(self):
         """ModelResponse messages should not be scanned for tool returns."""
@@ -166,12 +168,12 @@ class TestExtractToolCalls:
             ),
         ]
         fake_result = _FakeResult(messages=messages)
-        tool_calls = _extract_tool_calls(fake_result)
+        tool_calls = extract_tool_calls(fake_result)
         assert tool_calls == []
 
 
 # ---------------------------------------------------------------------------
-# T005d: Full pipeline with FunctionModel
+# Full pipeline with FunctionModel
 # ---------------------------------------------------------------------------
 
 
@@ -249,8 +251,7 @@ def _function_model_handler(messages, info):
 
 @pytest.mark.asyncio
 async def test_pipeline_persists_usage(db_path, sample_config, sample_summary):
-    """Full analyze_with_engineer pipeline persists usage records via save_agent_usage."""
-    # Seed the session so save_recommendation can find it
+    """Full analyze_with_engineer pipeline persists LlmEvent records."""
     save_session(
         db_path,
         SessionRecord(
@@ -292,14 +293,17 @@ async def test_pipeline_persists_usage(db_path, sample_config, sample_summary):
     assert len(recs) >= 1
     rec_id = recs[0].recommendation_id
 
-    usage_records = get_agent_usage(db_path, rec_id)
+    usage_records = get_llm_events(db_path, "recommendation", rec_id)
     assert len(usage_records) >= 1
 
-    # Check the balance domain was captured
-    domains = [u.domain for u in usage_records]
-    assert "balance" in domains
+    # Check the balance agent was captured
+    agent_names = [u.agent_name for u in usage_records]
+    assert "balance" in agent_names
 
-    balance_usage = next(u for u in usage_records if u.domain == "balance")
+    balance_usage = next(u for u in usage_records if u.agent_name == "balance")
+    assert balance_usage.event_type == "analysis"
+    assert balance_usage.context_type == "recommendation"
+    assert balance_usage.context_id == rec_id
     assert balance_usage.input_tokens >= 0
     assert balance_usage.output_tokens >= 0
     assert balance_usage.duration_ms >= 0
@@ -307,7 +311,7 @@ async def test_pipeline_persists_usage(db_path, sample_config, sample_summary):
 
 
 # ---------------------------------------------------------------------------
-# T005e: Usage persistence failure does not prevent recommendation delivery
+# Usage persistence failure does not prevent recommendation delivery
 # ---------------------------------------------------------------------------
 
 
@@ -315,7 +319,7 @@ async def test_pipeline_persists_usage(db_path, sample_config, sample_summary):
 async def test_usage_failure_does_not_block_recommendation(
     db_path, sample_config, sample_summary
 ):
-    """If save_agent_usage raises, the recommendation is still returned."""
+    """If save_llm_event raises, the recommendation is still returned."""
     save_session(
         db_path,
         SessionRecord(
@@ -340,7 +344,7 @@ async def test_usage_failure_does_not_block_recommendation(
     with (
         patch("ac_engineer.engineer.agents.build_model", return_value=model),
         patch(
-            "ac_engineer.storage.usage.save_agent_usage",
+            "ac_engineer.storage.usage.save_llm_event",
             side_effect=RuntimeError("DB error"),
         ),
     ):
@@ -357,7 +361,7 @@ async def test_usage_failure_does_not_block_recommendation(
 
 
 # ---------------------------------------------------------------------------
-# T005f: Logging output includes expected fields
+# Logging output includes expected fields
 # ---------------------------------------------------------------------------
 
 

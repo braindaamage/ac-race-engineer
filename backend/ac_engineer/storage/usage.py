@@ -1,4 +1,4 @@
-"""Agent usage CRUD operations."""
+"""LLM event CRUD operations."""
 
 from __future__ import annotations
 
@@ -7,61 +7,63 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .db import _connect
-from .models import AgentUsage, ToolCallDetail
+from .models import LlmEvent, LlmToolCall
 
 
-def save_agent_usage(db_path: str | Path, usage: AgentUsage) -> AgentUsage:
-    """Persist an agent usage record with tool call details atomically."""
+def save_llm_event(db_path: str | Path, event: LlmEvent) -> LlmEvent:
+    """Persist an LLM event record with tool call details atomically."""
     conn = _connect(db_path)
     try:
-        usage_id = uuid.uuid4().hex
-        created_at = datetime.now(timezone.utc).isoformat()
+        event_id = event.id or uuid.uuid4().hex
+        created_at = event.created_at or datetime.now(timezone.utc).isoformat()
 
         conn.execute(
-            """INSERT INTO agent_usage
-               (usage_id, recommendation_id, domain, model,
-                input_tokens, output_tokens, tool_call_count,
-                turn_count, duration_ms, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO llm_events
+               (id, session_id, event_type, agent_name, model,
+                input_tokens, output_tokens, request_count,
+                tool_call_count, duration_ms, created_at,
+                context_type, context_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                usage_id,
-                usage.recommendation_id,
-                usage.domain,
-                usage.model,
-                usage.input_tokens,
-                usage.output_tokens,
-                usage.tool_call_count,
-                usage.turn_count,
-                usage.duration_ms,
+                event_id,
+                event.session_id,
+                event.event_type,
+                event.agent_name,
+                event.model,
+                event.input_tokens,
+                event.output_tokens,
+                event.request_count,
+                event.tool_call_count,
+                event.duration_ms,
                 created_at,
+                event.context_type,
+                event.context_id,
             ),
         )
 
-        populated_tool_calls: list[ToolCallDetail] = []
-        for tc in usage.tool_calls:
-            detail_id = uuid.uuid4().hex
-            called_at = datetime.now(timezone.utc).isoformat()
+        populated_tool_calls: list[LlmToolCall] = []
+        for tc in event.tool_calls:
+            tc_id = tc.id or uuid.uuid4().hex
             conn.execute(
-                """INSERT INTO tool_call_details
-                   (detail_id, usage_id, tool_name, token_count, called_at)
+                """INSERT INTO llm_tool_calls
+                   (id, event_id, tool_name, response_tokens, call_index)
                    VALUES (?, ?, ?, ?, ?)""",
-                (detail_id, usage_id, tc.tool_name, tc.token_count, called_at),
+                (tc_id, event_id, tc.tool_name, tc.response_tokens, tc.call_index),
             )
             populated_tool_calls.append(
                 tc.model_copy(
                     update={
-                        "detail_id": detail_id,
-                        "usage_id": usage_id,
-                        "called_at": called_at,
+                        "id": tc_id,
+                        "event_id": event_id,
                     }
                 )
             )
 
         conn.commit()
 
-        return usage.model_copy(
+        return event.model_copy(
             update={
-                "usage_id": usage_id,
+                "id": event_id,
                 "created_at": created_at,
                 "tool_calls": populated_tool_calls,
             }
@@ -70,26 +72,26 @@ def save_agent_usage(db_path: str | Path, usage: AgentUsage) -> AgentUsage:
         conn.close()
 
 
-def get_agent_usage(
-    db_path: str | Path, recommendation_id: str
-) -> list[AgentUsage]:
-    """Return all usage records for a recommendation with tool calls populated."""
+def get_llm_events(
+    db_path: str | Path, context_type: str, context_id: str
+) -> list[LlmEvent]:
+    """Return all LLM event records for a context with tool calls populated."""
     conn = _connect(db_path)
     try:
-        usage_rows = conn.execute(
-            "SELECT * FROM agent_usage WHERE recommendation_id = ? ORDER BY created_at ASC",
-            (recommendation_id,),
+        event_rows = conn.execute(
+            "SELECT * FROM llm_events WHERE context_type = ? AND context_id = ? ORDER BY created_at ASC",
+            (context_type, context_id),
         ).fetchall()
 
-        results: list[AgentUsage] = []
-        for usage_row in usage_rows:
-            usage_dict = dict(usage_row)
+        results: list[LlmEvent] = []
+        for event_row in event_rows:
+            event_dict = dict(event_row)
             detail_rows = conn.execute(
-                "SELECT * FROM tool_call_details WHERE usage_id = ?",
-                (usage_dict["usage_id"],),
+                "SELECT * FROM llm_tool_calls WHERE event_id = ? ORDER BY call_index ASC",
+                (event_dict["id"],),
             ).fetchall()
-            tool_calls = [ToolCallDetail(**dict(dr)) for dr in detail_rows]
-            results.append(AgentUsage(**usage_dict, tool_calls=tool_calls))
+            tool_calls = [LlmToolCall(**dict(dr)) for dr in detail_rows]
+            results.append(LlmEvent(**event_dict, tool_calls=tool_calls))
 
         return results
     finally:
