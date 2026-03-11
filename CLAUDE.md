@@ -68,6 +68,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 10 ✅ Domain-Scoped Setup Context (filtrado de parámetros de setup por dominio en prompts de agentes especialistas) — 11 tests
 - Fase 11.1 ✅ Cache Token Tracking (cache_read/write tokens en pipeline de uso LLM, UI condicional) — ~66 tests
 - Fase 11.2 ✅ Agent Diagnostic Traces (trazas Markdown de conversaciones multi-turn, toggle en Settings, API + modal) — ~60 tests
+- Fase 12 ✅ Principal Narrated Analysis (síntesis narrativa del agente principal: summary ejecutivo + explanation detallado, persistencia en DB, sección expandible en frontend) — 18 tests
 
 ## Reglas de desarrollo
 - Todo tipo de coche debe funcionar (vanilla y mods), no hardcodear por coche
@@ -86,4 +87,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 11 completadas (1392 tests totales: backend 1006, frontend 386). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM, filtrado de contexto por dominio, cache token tracking y trazas diagnósticas de agentes.
+Fases 1 a 12 completadas (1410 tests totales: backend 1020, frontend 390). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM, filtrado de contexto por dominio, cache token tracking, trazas diagnósticas de agentes y narrativa coherente del agente principal.

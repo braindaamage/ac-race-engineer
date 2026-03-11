@@ -304,6 +304,49 @@ class TestRecommendationDetailEndpoint:
         resp = await client.get("/sessions/nonexistent/recommendations/abc")
         assert resp.status_code == 404
 
+    @pytest.mark.asyncio
+    async def test_explanation_from_db_when_cache_missing(self, client, db_path) -> None:
+        """When JSON cache is missing, explanation is returned from DB."""
+        save_session(db_path, _session())
+        rec = save_recommendation(
+            db_path, "test_session", "Fix understeer",
+            [StorageSetupChange(section="ARB", parameter="FRONT", old_value="5", new_value="3", reasoning="test")],
+            explanation="Narrative explanation from principal agent.",
+        )
+        resp = await client.get(f"/sessions/test_session/recommendations/{rec.recommendation_id}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["explanation"] == "Narrative explanation from principal agent."
+
+    @pytest.mark.asyncio
+    async def test_explanation_from_db_with_cache(self, client, db_path, sessions_dir) -> None:
+        """When cache is available, explanation comes from DB (durable source)."""
+        save_session(db_path, _session())
+        rec = save_recommendation(
+            db_path, "test_session", "Fix understeer",
+            [StorageSetupChange(section="ARB", parameter="FRONT", old_value="5", new_value="3", reasoning="test")],
+            explanation="DB explanation text.",
+        )
+        cache_dir = get_cache_dir(sessions_dir, "test_session")
+        save_engineer_response(cache_dir, rec.recommendation_id, _fake_engineer_response("test_session"))
+        resp = await client.get(f"/sessions/test_session/recommendations/{rec.recommendation_id}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["explanation"] == "DB explanation text."
+
+    @pytest.mark.asyncio
+    async def test_legacy_recommendation_empty_explanation(self, client, db_path) -> None:
+        """Legacy recommendations (pre-migration) return explanation as empty string."""
+        save_session(db_path, _session())
+        rec = save_recommendation(
+            db_path, "test_session", "Old summary",
+            [StorageSetupChange(section="ARB", parameter="FRONT", old_value="5", new_value="3", reasoning="test")],
+        )
+        resp = await client.get(f"/sessions/test_session/recommendations/{rec.recommendation_id}")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["explanation"] == ""
+
 
 # ---------------------------------------------------------------------------
 # POST /sessions/{session_id}/recommendations/{recommendation_id}/apply

@@ -38,6 +38,7 @@ export function RecommendationCard({
   const isApplied = recommendation.status === "applied";
   const [showUsageModal, setShowUsageModal] = useState(false);
   const [showTraceModal, setShowTraceModal] = useState(false);
+  const [explanationExpanded, setExplanationExpanded] = useState(false);
   const traceQuery = useTrace(sessionId, "recommendation", recommendation.recommendation_id);
 
   return (
@@ -66,6 +67,26 @@ export function RecommendationCard({
                 : "Rejected"}
           </Badge>
         </div>
+
+        {recommendation.explanation !== "" && (
+          <div className="ace-recommendation-card__explanation">
+            <button
+              type="button"
+              className="ace-recommendation-card__explanation-toggle"
+              onClick={() => setExplanationExpanded(!explanationExpanded)}
+              aria-expanded={explanationExpanded}
+            >
+              {explanationExpanded ? "Hide details" : "Show details"}
+            </button>
+            {explanationExpanded && (
+              <div className="ace-recommendation-card__explanation-content">
+                {recommendation.explanation.split("\n\n").map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {recommendation.setup_changes.length > 0 && (
           <div className="ace-recommendation-card__changes">

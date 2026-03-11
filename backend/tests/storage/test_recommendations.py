@@ -104,3 +104,37 @@ class TestUpdateRecommendationStatus:
     def test_invalid_status_raises(self, db_path: Path) -> None:
         with pytest.raises(ValueError, match="Status must be"):
             update_recommendation_status(db_path, "any_id", "invalid")
+
+
+class TestExplanationColumn:
+    """Tests for the explanation column on recommendations (Phase 12)."""
+
+    def test_save_recommendation_persists_explanation(self, db_path: Path) -> None:
+        _setup_session(db_path)
+        rec = save_recommendation(
+            db_path, "sess1", "Summary", _sample_changes(),
+            explanation="Detailed narrative explanation.",
+        )
+        assert rec.explanation == "Detailed narrative explanation."
+
+    def test_get_recommendations_returns_explanation(self, db_path: Path) -> None:
+        _setup_session(db_path)
+        save_recommendation(
+            db_path, "sess1", "Summary", _sample_changes(),
+            explanation="Multi-paragraph explanation.",
+        )
+        recs = get_recommendations(db_path, "sess1")
+        assert len(recs) == 1
+        assert recs[0].explanation == "Multi-paragraph explanation."
+
+    def test_default_empty_string_when_no_explanation(self, db_path: Path) -> None:
+        _setup_session(db_path)
+        rec = save_recommendation(db_path, "sess1", "Summary", _sample_changes())
+        assert rec.explanation == ""
+
+    def test_legacy_rows_have_empty_explanation(self, db_path: Path) -> None:
+        """Rows created before the migration have explanation = ''."""
+        _setup_session(db_path)
+        save_recommendation(db_path, "sess1", "Summary", _sample_changes())
+        recs = get_recommendations(db_path, "sess1")
+        assert recs[0].explanation == ""

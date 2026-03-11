@@ -141,4 +141,54 @@ describe("RecommendationCard", () => {
     const mediumBadges = screen.getAllByText("medium");
     expect(mediumBadges.length).toBeGreaterThanOrEqual(1);
   });
+
+  // -------------------------------------------------------------------
+  // Explanation section tests (Phase 12)
+  // -------------------------------------------------------------------
+
+  it("shows explanation toggle collapsed by default when explanation is non-empty", () => {
+    render(
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
+    );
+    const toggle = screen.getByRole("button", { name: "Show details" });
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    // Explanation text should not be visible
+    expect(screen.queryByText("Understeer detected in slow corners")).not.toBeInTheDocument();
+  });
+
+  it("expands explanation on click and shows paragraph content", () => {
+    const rec = {
+      ...baseRecommendation,
+      explanation: "First paragraph about understeer.\n\nSecond paragraph about trade-offs.",
+    };
+    render(
+      <RecommendationCard recommendation={rec} sessionId="sess-1" onApply={() => {}} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
+    expect(screen.getByText("First paragraph about understeer.")).toBeInTheDocument();
+    expect(screen.getByText("Second paragraph about trade-offs.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Hide details" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("hides explanation section when explanation is empty string", () => {
+    const rec = { ...baseRecommendation, explanation: "" };
+    render(
+      <RecommendationCard recommendation={rec} sessionId="sess-1" onApply={() => {}} />,
+    );
+    expect(screen.queryByRole("button", { name: "Show details" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Hide details" })).not.toBeInTheDocument();
+  });
+
+  it("summary remains visible regardless of explanation state", () => {
+    render(
+      <RecommendationCard recommendation={baseRecommendation} sessionId="sess-1" onApply={() => {}} />,
+    );
+    // Summary visible before expand
+    expect(screen.getByText("Stiffen front anti-roll bar")).toBeInTheDocument();
+    // Expand explanation
+    fireEvent.click(screen.getByRole("button", { name: "Show details" }));
+    // Summary still visible after expand
+    expect(screen.getByText("Stiffen front anti-roll bar")).toBeInTheDocument();
+  });
 });

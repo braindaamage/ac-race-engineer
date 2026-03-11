@@ -12,15 +12,18 @@ from ac_engineer.engineer.agents import (
     DOMAIN_TOOLS,
     SIGNAL_DOMAINS,
     _build_specialist_agent,
+    _build_synthesis_prompt,
     _build_user_prompt,
     _combine_results,
     _select_knowledge_fragments,
+    _synthesize_with_principal,
     get_model_string,
     route_signals,
 )
 from ac_engineer.engineer.models import (
     DriverFeedback,
     EngineerResponse,
+    PrincipalNarrative,
     SetupChange,
     SpecialistResult,
 )
@@ -816,3 +819,490 @@ class TestAnalyzeWithEngineerTraceCapture:
 
         # No trace files should exist
         assert not traces_dir.exists() or len(list(traces_dir.glob("rec_*.md"))) == 0
+
+
+# ===================================================================
+# Phase 12: Principal Agent Synthesis tests
+# ===================================================================
+
+
+class TestSynthesizeWithPrincipal:
+    """Tests for _synthesize_with_principal and integration with analyze_with_engineer."""
+
+    @staticmethod
+    def _make_principal_function_model():
+        """Create a FunctionModel that returns valid PrincipalNarrative JSON."""
+        from pydantic_ai.messages import ModelResponse, TextPart
+        from pydantic_ai.models.function import FunctionModel
+
+        def handler(messages, info):
+            text = (
+                '{"summary": "The car suffers from moderate understeer in slow corners, '
+                'caused by excessive front roll stiffness. Softening the front anti-roll bar '
+                'and adjusting front tyre pressures will improve turn-in response.", '
+                '"explanation": "Your car is pushing through the slow-speed corners because '
+                'the front axle lacks mechanical grip relative to the rear. The balance and '
+                'tyre specialists identified that the front anti-roll bar is too stiff and '
+                'front tyre pressures are slightly high.\\n\\nBy softening the front bar, we '
+                'allow the front outside tyre to load more progressively, generating better '
+                'grip at turn-in. The small pressure reduction complements this by enlarging '
+                'the front contact patch.\\n\\nOn track you should feel the car rotate more '
+                'willingly into corners 3 and 7 where understeer was most pronounced."}'
+            )
+            return ModelResponse(parts=[TextPart(content=text)])
+
+        return FunctionModel(handler)
+
+    @pytest.mark.asyncio
+    async def test_synthesize_returns_principal_narrative(self):
+        """_synthesize_with_principal returns a result with PrincipalNarrative output."""
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        response = EngineerResponse(
+            session_id="test",
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="Soften front",
+                    expected_effect="Better turn-in", confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            signals_addressed=["high_understeer"],
+            summary="concatenated text",
+            explanation="concatenated text",
+            confidence="high",
+        )
+        specialist_results = {
+            "balance": SpecialistResult(
+                setup_changes=response.setup_changes,
+                driver_feedback=[],
+                domain_summary="Balance analysis: front ARB too stiff.",
+            ),
+        }
+
+        from unittest.mock import patch
+
+        with patch(
+            "ac_engineer.engineer.agents.build_model",
+            return_value=self._make_principal_function_model(),
+        ):
+            result = await _synthesize_with_principal(
+                response, specialist_results, config,
+            )
+
+        narrative = result.output
+        assert isinstance(narrative, PrincipalNarrative)
+        assert len(narrative.summary) > 0
+        assert len(narrative.explanation) > 0
+        assert narrative.summary != narrative.explanation
+
+    @pytest.mark.asyncio
+    async def test_principal_agent_has_no_tools(self):
+        """The principal synthesis agent is created with no tools."""
+        from pydantic_ai import Agent as PydanticAgent
+        from unittest.mock import patch
+
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        response = EngineerResponse(
+            session_id="test",
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="test",
+                    expected_effect="test", confidence="high",
+                ),
+            ],
+            summary="test", explanation="test", confidence="high",
+        )
+        specialist_results = {
+            "balance": SpecialistResult(
+                setup_changes=response.setup_changes,
+                driver_feedback=[],
+                domain_summary="Test.",
+            ),
+        }
+
+        agents_created = []
+        original_agent_init = PydanticAgent.__init__
+
+        def capturing_init(self_agent, *args, **kwargs):
+            original_agent_init(self_agent, *args, **kwargs)
+            agents_created.append(self_agent)
+
+        with patch(
+            "ac_engineer.engineer.agents.build_model",
+            return_value=self._make_principal_function_model(),
+        ), patch.object(PydanticAgent, "__init__", capturing_init):
+            await _synthesize_with_principal(response, specialist_results, config)
+
+        # The agent should have been created with no tools registered
+        assert len(agents_created) == 1
+        assert len(agents_created[0]._function_toolset.tools) == 0
+
+    @pytest.mark.asyncio
+    async def test_analyze_produces_principal_authored_summary(self, sample_session_summary, tmp_path):
+        """analyze_with_engineer replaces concatenated text with principal-authored narrative."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+        from ac_engineer.storage.models import SessionRecord
+        from ac_engineer.storage.sessions import save_session
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        save_session(db_path, SessionRecord(
+            session_id="test_session_001", car="test_car", track="test_track",
+            session_date="2026-03-11T12:00:00", lap_count=5, best_lap_time=89.5,
+            state="analyzed",
+        ))
+
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        ranges = {
+            "PRESSURE_LF": __import__("ac_engineer.engineer.models", fromlist=["ParameterRange"]).ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5,
+            ),
+        }
+
+        # Mock specialist agent
+        mock_specialist_result = MagicMock()
+        mock_specialist_result.output = SpecialistResult(
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="test", expected_effect="test", confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            domain_summary="Balance: front ARB too stiff.",
+        )
+        mock_specialist_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 100
+        mock_usage.output_tokens = 50
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_specialist_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_specialist_result)
+        mock_agent.tool = MagicMock()
+
+        # Mock principal synthesis
+        mock_narrative = PrincipalNarrative(
+            summary="Principal-authored summary about understeer.",
+            explanation="Principal-authored explanation about why the car understeers and how changes help.",
+        )
+        mock_synthesis_result = MagicMock()
+        mock_synthesis_result.output = mock_narrative
+        mock_synthesis_result.usage.return_value = mock_usage
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"), \
+             patch("ac_engineer.engineer.agents._synthesize_with_principal", return_value=mock_synthesis_result):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                sample_session_summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        assert response.summary == "Principal-authored summary about understeer."
+        assert response.explanation == "Principal-authored explanation about why the car understeers and how changes help."
+
+    @pytest.mark.asyncio
+    async def test_llm_event_created_for_principal(self, sample_session_summary, tmp_path):
+        """LlmEvent with agent_name='principal' and event_type='analysis' is persisted."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+        from ac_engineer.storage.models import SessionRecord
+        from ac_engineer.storage.sessions import save_session
+        from ac_engineer.storage.usage import get_llm_events
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        save_session(db_path, SessionRecord(
+            session_id="test_session_001", car="test_car", track="test_track",
+            session_date="2026-03-11T12:00:00", lap_count=5, best_lap_time=89.5,
+            state="analyzed",
+        ))
+
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        from ac_engineer.engineer.models import ParameterRange
+        ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5,
+            ),
+        }
+
+        mock_specialist_result = MagicMock()
+        mock_specialist_result.output = SpecialistResult(
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="test", expected_effect="test", confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            domain_summary="Balance: front ARB too stiff.",
+        )
+        mock_specialist_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 200
+        mock_usage.output_tokens = 80
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_specialist_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_specialist_result)
+        mock_agent.tool = MagicMock()
+
+        mock_narrative = PrincipalNarrative(
+            summary="Principal summary.",
+            explanation="Principal explanation.",
+        )
+        mock_synthesis_result = MagicMock()
+        mock_synthesis_result.output = mock_narrative
+        mock_principal_usage = MagicMock()
+        mock_principal_usage.input_tokens = 500
+        mock_principal_usage.output_tokens = 150
+        mock_principal_usage.cache_read_tokens = 0
+        mock_principal_usage.cache_write_tokens = 0
+        mock_principal_usage.requests = 1
+        mock_principal_usage.tool_calls = 0
+        mock_synthesis_result.usage.return_value = mock_principal_usage
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"), \
+             patch("ac_engineer.engineer.agents._synthesize_with_principal", return_value=mock_synthesis_result):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                sample_session_summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        # Find the recommendation to get its context_id
+        from ac_engineer.storage.recommendations import get_recommendations
+        recs = get_recommendations(db_path, "test_session_001")
+        assert len(recs) >= 1
+        rec_id = recs[-1].recommendation_id
+
+        events = get_llm_events(db_path, "recommendation", rec_id)
+        principal_events = [e for e in events if e.agent_name == "principal"]
+        assert len(principal_events) == 1
+        assert principal_events[0].event_type == "analysis"
+        assert principal_events[0].input_tokens == 500
+        assert principal_events[0].output_tokens == 150
+
+
+# ===================================================================
+# Phase 12: Graceful Degradation tests (US5)
+# ===================================================================
+
+
+class TestPrincipalFallback:
+    """Tests for graceful degradation when principal agent synthesis fails."""
+
+    @pytest.mark.asyncio
+    async def test_fallback_on_synthesis_failure(self, sample_session_summary, tmp_path):
+        """When _synthesize_with_principal raises, analyze_with_engineer keeps concatenated text."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+        from ac_engineer.storage.models import SessionRecord
+        from ac_engineer.storage.sessions import save_session
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        save_session(db_path, SessionRecord(
+            session_id="test_session_001", car="test_car", track="test_track",
+            session_date="2026-03-11T12:00:00", lap_count=5, best_lap_time=89.5,
+            state="analyzed",
+        ))
+
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        from ac_engineer.engineer.models import ParameterRange
+        ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5,
+            ),
+        }
+
+        mock_specialist_result = MagicMock()
+        mock_specialist_result.output = SpecialistResult(
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="test", expected_effect="test", confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            domain_summary="Balance: front ARB analysis.",
+        )
+        mock_specialist_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 100
+        mock_usage.output_tokens = 50
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_specialist_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_specialist_result)
+        mock_agent.tool = MagicMock()
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"), \
+             patch("ac_engineer.engineer.agents._synthesize_with_principal", side_effect=Exception("LLM provider error")):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                sample_session_summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        # Response should still be valid with concatenated text
+        assert response.summary  # non-empty
+        assert "Balance" in response.summary  # concatenated domain summary
+        assert response.confidence != "low" or len(response.setup_changes) > 0  # not a failure response
+
+    @pytest.mark.asyncio
+    async def test_fallback_returns_normal_response(self, sample_session_summary, tmp_path):
+        """On principal failure, EngineerResponse is returned normally (no error)."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+        from ac_engineer.storage.models import SessionRecord
+        from ac_engineer.storage.sessions import save_session
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        save_session(db_path, SessionRecord(
+            session_id="test_session_001", car="test_car", track="test_track",
+            session_date="2026-03-11T12:00:00", lap_count=5, best_lap_time=89.5,
+            state="analyzed",
+        ))
+
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        from ac_engineer.engineer.models import ParameterRange
+        ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5,
+            ),
+        }
+
+        mock_specialist_result = MagicMock()
+        mock_specialist_result.output = SpecialistResult(
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="test", expected_effect="test", confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            domain_summary="Balance: OK.",
+        )
+        mock_specialist_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 100
+        mock_usage.output_tokens = 50
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_specialist_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_specialist_result)
+        mock_agent.tool = MagicMock()
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"), \
+             patch("ac_engineer.engineer.agents._synthesize_with_principal", side_effect=RuntimeError("Network timeout")):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                sample_session_summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        # Should be a normal EngineerResponse, not an error
+        assert len(response.setup_changes) == 1
+        assert response.session_id == "test_session_001"
+
+    @pytest.mark.asyncio
+    async def test_no_principal_llm_event_on_failure(self, sample_session_summary, tmp_path):
+        """On principal failure, no LlmEvent for principal is saved."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from ac_engineer.storage.db import init_db
+        from ac_engineer.storage.models import SessionRecord
+        from ac_engineer.storage.sessions import save_session
+        from ac_engineer.storage.usage import get_llm_events
+
+        db_path = tmp_path / "test.db"
+        init_db(db_path)
+        save_session(db_path, SessionRecord(
+            session_id="test_session_001", car="test_car", track="test_track",
+            session_date="2026-03-11T12:00:00", lap_count=5, best_lap_time=89.5,
+            state="analyzed",
+        ))
+
+        config = ACConfig(llm_provider="anthropic", api_key="test-key")
+        from ac_engineer.engineer.models import ParameterRange
+        ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE", min_value=20.0, max_value=35.0, step=0.5,
+            ),
+        }
+
+        mock_specialist_result = MagicMock()
+        mock_specialist_result.output = SpecialistResult(
+            setup_changes=[
+                SetupChange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    value_after=2.0, reasoning="test", expected_effect="test", confidence="high",
+                ),
+            ],
+            driver_feedback=[],
+            domain_summary="Balance: OK.",
+        )
+        mock_specialist_result.all_messages.return_value = []
+        mock_usage = MagicMock()
+        mock_usage.input_tokens = 100
+        mock_usage.output_tokens = 50
+        mock_usage.cache_read_tokens = 0
+        mock_usage.cache_write_tokens = 0
+        mock_usage.requests = 1
+        mock_usage.tool_calls = 0
+        mock_specialist_result.usage.return_value = mock_usage
+
+        mock_agent = MagicMock()
+        mock_agent.run = AsyncMock(return_value=mock_specialist_result)
+        mock_agent.tool = MagicMock()
+
+        with patch("ac_engineer.engineer.agents._build_specialist_agent", return_value=mock_agent), \
+             patch("ac_engineer.engineer.agents.build_model", return_value="test-model"), \
+             patch("ac_engineer.engineer.agents._synthesize_with_principal", side_effect=Exception("Fail")):
+            from ac_engineer.engineer.agents import analyze_with_engineer
+
+            response = await analyze_with_engineer(
+                sample_session_summary, config, db_path,
+                parameter_ranges=ranges,
+            )
+
+        from ac_engineer.storage.recommendations import get_recommendations
+        recs = get_recommendations(db_path, "test_session_001")
+        if recs:
+            rec_id = recs[-1].recommendation_id
+            events = get_llm_events(db_path, "recommendation", rec_id)
+            principal_events = [e for e in events if e.agent_name == "principal"]
+            assert len(principal_events) == 0

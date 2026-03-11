@@ -209,6 +209,18 @@ class SpecialistResult(BaseModel):
         return self
 
 
+class PrincipalNarrative(BaseModel):
+    """Structured output from the principal agent synthesis step.
+
+    Two distinct fields produced in a single LLM call:
+    - summary: executive headline (2–4 sentences, ≤80 words)
+    - explanation: detailed narrative (multi-paragraph, ≤300 words)
+    """
+
+    summary: str
+    explanation: str
+
+
 class AgentDeps(BaseModel):
     """Shared context passed to all specialist agents via RunContext."""
 

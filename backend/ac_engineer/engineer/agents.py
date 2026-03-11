@@ -29,6 +29,7 @@ from .models import (
     AgentDeps,
     DriverFeedback,
     EngineerResponse,
+    PrincipalNarrative,
     SetupChange,
     SpecialistResult,
 )
@@ -522,6 +523,100 @@ def _post_validate_changes(
 
 
 # ---------------------------------------------------------------------------
+# Principal agent synthesis (Phase 12)
+# ---------------------------------------------------------------------------
+
+
+def _build_synthesis_prompt(
+    response: EngineerResponse,
+    specialist_results: dict[str, SpecialistResult],
+) -> str:
+    """Format specialist outputs into a user prompt for the principal agent synthesis."""
+    lines: list[str] = []
+
+    # Domain summaries
+    lines.append("## Specialist Domain Summaries\n")
+    for domain in sorted(specialist_results.keys(), key=lambda d: DOMAIN_PRIORITY.get(d, 99)):
+        result = specialist_results[domain]
+        lines.append(f"**{domain.title()}**: {result.domain_summary}\n")
+
+    # Setup changes
+    if response.setup_changes:
+        lines.append("## Setup Changes\n")
+        for c in response.setup_changes:
+            lines.append(
+                f"- [{c.section}] {c.parameter}: {c.value_before} → {c.value_after}"
+            )
+            lines.append(f"  Reasoning: {c.reasoning}")
+            lines.append(f"  Expected effect: {c.expected_effect}\n")
+
+    # Driver feedback
+    if response.driver_feedback:
+        lines.append("## Driver Feedback\n")
+        for fb in response.driver_feedback:
+            lines.append(f"- **{fb.area}**: {fb.observation}")
+            lines.append(f"  Suggestion: {fb.suggestion}\n")
+
+    # Signals addressed
+    if response.signals_addressed:
+        lines.append("## Signals Addressed\n")
+        for sig in response.signals_addressed:
+            lines.append(f"- {sig}")
+        lines.append("")
+
+    # Output instructions
+    lines.append("## Your Task\n")
+    lines.append(
+        "Synthesize the specialist findings above into two distinct fields:\n"
+        "\n"
+        "**summary**: An executive headline of 2–4 sentences (≤80 words). "
+        "State the dominant problem, its severity, and the correction direction. "
+        "Use driver-friendly language — no raw parameter names like 'ARB_FRONT' or 'PRESSURE_LF'. "
+        "Instead say 'front anti-roll bar' or 'front tyre pressure'.\n"
+        "\n"
+        "**explanation**: A detailed narrative of multiple paragraphs (≤300 words). "
+        "Connect specialist findings causally — explain WHY the car behaves this way "
+        "and HOW the changes work together. Discuss trade-offs between domains. "
+        "Integrate technique suggestions naturally. "
+        "Close with what the driver should expect to feel on track. "
+        "Do NOT repeat the individual change reasoning fields verbatim — synthesize them."
+    )
+
+    return "\n".join(lines)
+
+
+async def _synthesize_with_principal(
+    response: EngineerResponse,
+    specialist_results: dict[str, SpecialistResult],
+    config: ACConfig,
+):
+    """Invoke the principal agent to produce a narrative summary and explanation.
+
+    Uses structured output (result_type=PrincipalNarrative), no tools.
+    Returns the full RunResult so the caller can extract usage.
+    """
+    from pydantic_ai.usage import UsageLimits
+
+    model = build_model(config)
+    system_prompt = _load_skill_prompt("principal")
+
+    agent: Agent[None, PrincipalNarrative] = Agent(
+        model,
+        output_type=PrincipalNarrative,
+        system_prompt=system_prompt,
+    )
+
+    user_prompt = _build_synthesis_prompt(response, specialist_results)
+
+    result = await agent.run(
+        user_prompt,
+        usage_limits=UsageLimits(request_limit=5),
+    )
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Main orchestrator
 # ---------------------------------------------------------------------------
 
@@ -693,6 +788,59 @@ async def analyze_with_engineer(
         "setup_changes": _resolve_conflicts(response.setup_changes),
     })
 
+    # Principal agent synthesis (Phase 12)
+    try:
+        synthesis_start = time.perf_counter()
+        synthesis_result = await _synthesize_with_principal(
+            response, specialist_results, config,
+        )
+        synthesis_duration_ms = int((time.perf_counter() - synthesis_start) * 1000)
+        narrative = synthesis_result.output
+        response = response.model_copy(update={
+            "summary": narrative.summary,
+            "explanation": narrative.explanation,
+        })
+
+        # Track principal agent usage (T009)
+        try:
+            usage = synthesis_result.usage()
+            llm_event = LlmEvent(
+                session_id=summary.session_id,
+                event_type="analysis",
+                agent_name="principal",
+                model=effective_model,
+                input_tokens=usage.input_tokens or 0,
+                output_tokens=usage.output_tokens or 0,
+                cache_read_tokens=usage.cache_read_tokens or 0,
+                cache_write_tokens=usage.cache_write_tokens or 0,
+                request_count=usage.requests or 0,
+                tool_call_count=0,
+                duration_ms=synthesis_duration_ms,
+                tool_calls=[],
+            )
+            collected_usage.append(llm_event)
+        except Exception:
+            logger.warning("Failed to extract principal agent usage", exc_info=True)
+
+        # Capture principal diagnostic trace
+        if diagnostic_mode:
+            try:
+                from .trace import serialize_agent_trace
+
+                system_prompt = _load_skill_prompt("principal")
+                user_prompt = _build_synthesis_prompt(response, specialist_results)
+                trace_dict = serialize_agent_trace(
+                    "principal", system_prompt, user_prompt, synthesis_result,
+                )
+                collected_traces.append(trace_dict)
+            except Exception:
+                logger.warning("Failed to serialize principal trace", exc_info=True)
+    except Exception:
+        logger.warning(
+            "Principal agent synthesis failed, keeping concatenated text",
+            exc_info=True,
+        )
+
     # Persist recommendation
     recommendation_id: str | None = None
     try:
@@ -714,6 +862,7 @@ async def analyze_with_engineer(
             summary.session_id,
             response.summary,
             storage_changes,
+            explanation=response.explanation,
         )
         recommendation_id = rec.recommendation_id
     except Exception:
