@@ -1,5 +1,5 @@
 import { Modal } from "../../components/ui";
-import type { RecommendationDetailResponse } from "../../lib/types";
+import type { RecommendationDetailResponse, SetupChangeDetail } from "../../lib/types";
 
 interface ApplyConfirmModalProps {
   open: boolean;
@@ -7,6 +7,16 @@ interface ApplyConfirmModalProps {
   onConfirm: () => void;
   recommendation: RecommendationDetailResponse | null;
   isApplying: boolean;
+}
+
+function formatStorageCell(change: SetupChangeDetail): string {
+  const { storage_convention, storage_value_before, storage_value_after } = change;
+  if (!storage_convention || storage_convention === "direct") return "\u2014";
+  if (storage_value_after == null) return "\u2014";
+  const before = storage_value_before != null ? String(storage_value_before) : "?";
+  const after = String(storage_value_after);
+  if (storage_convention === "index") return `click ${before} \u2192 ${after}`;
+  return `${before} \u2192 ${after}`;
 }
 
 export function ApplyConfirmModal({
@@ -43,6 +53,7 @@ export function ApplyConfirmModal({
               <th>Parameter</th>
               <th>Current</th>
               <th>New</th>
+              <th>Setup File</th>
             </tr>
           </thead>
           <tbody>
@@ -52,6 +63,7 @@ export function ApplyConfirmModal({
                 <td>{change.parameter}</td>
                 <td>{change.old_value}</td>
                 <td>{change.new_value}</td>
+                <td className="ace-apply-modal__storage">{formatStorageCell(change)}</td>
               </tr>
             ))}
           </tbody>

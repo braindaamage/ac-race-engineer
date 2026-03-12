@@ -166,6 +166,18 @@ class SetupChange(BaseModel):
     value_after: float = Field(
         description="Proposed value in physical units (after domain conversion).",
     )
+    storage_value_before: float | None = Field(
+        default=None,
+        description="Raw .ini storage value before the change (index, scaled, or direct).",
+    )
+    storage_value_after: float | None = Field(
+        default=None,
+        description="Raw .ini storage value after the change (index, scaled, or direct).",
+    )
+    storage_convention: str | None = Field(
+        default=None,
+        description="Storage convention: 'index', 'scaled', or 'direct'.",
+    )
     reasoning: str
     expected_effect: str
     confidence: Literal["high", "medium", "low"]

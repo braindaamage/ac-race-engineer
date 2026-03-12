@@ -40,6 +40,9 @@ class SetupChangeDetail(BaseModel):
     reasoning: str
     expected_effect: str = ""
     confidence: str = "medium"
+    storage_value_before: float | None = None
+    storage_value_after: float | None = None
+    storage_convention: str | None = None
 
 
 class DriverFeedbackDetail(BaseModel):

@@ -386,6 +386,12 @@
   font-family: var(--font-mono);
 }
 
+.ace-apply-modal__storage {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
 /* --------------------------------------------------------------------------
    Usage Summary Bar
    -------------------------------------------------------------------------- */

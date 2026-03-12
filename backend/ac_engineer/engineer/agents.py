@@ -33,7 +33,7 @@ from .models import (
     SetupChange,
     SpecialistResult,
 )
-from .conversion import to_physical
+from .conversion import to_physical, to_storage
 from .setup_reader import read_parameter_ranges
 from .setup_writer import validate_changes
 from .tools import (
@@ -523,6 +523,31 @@ def _post_validate_changes(
     return updated
 
 
+def _populate_storage_fields(
+    changes: list[SetupChange],
+    ranges: dict[str, ParameterRange],
+) -> list[SetupChange]:
+    """Annotate each SetupChange with raw storage values and convention."""
+    result: list[SetupChange] = []
+    for change in changes:
+        pr = ranges.get(change.section)
+        if pr is None:
+            result.append(change)
+            continue
+        storage_after = to_storage(change.value_after, pr)
+        storage_before = (
+            to_storage(change.value_before, pr)
+            if change.value_before is not None
+            else None
+        )
+        result.append(change.model_copy(update={
+            "storage_value_before": storage_before,
+            "storage_value_after": storage_after,
+            "storage_convention": pr.storage_convention or "direct",
+        }))
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Principal agent synthesis (Phase 12)
 # ---------------------------------------------------------------------------
@@ -798,6 +823,11 @@ async def analyze_with_engineer(
     # Resolve conflicts
     response = response.model_copy(update={
         "setup_changes": _resolve_conflicts(response.setup_changes),
+    })
+
+    # Populate storage fields for frontend display
+    response = response.model_copy(update={
+        "setup_changes": _populate_storage_fields(response.setup_changes, ranges),
     })
 
     # Principal agent synthesis (Phase 12)

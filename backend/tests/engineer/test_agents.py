@@ -1384,3 +1384,113 @@ class TestPhysicalValueDisplay:
         # Check that the SetupChange has physical values
         assert specialist_output.setup_changes[0].value_before == 34500.0
         assert specialist_output.setup_changes[0].value_after == 30000.0
+
+
+class TestPopulateStorageFields:
+    """Verify _populate_storage_fields annotates changes with storage values."""
+
+    def test_index_param_gets_storage_values(self):
+        from ac_engineer.engineer.agents import _populate_storage_fields
+        from ac_engineer.engineer.models import ParameterRange
+
+        ranges = {
+            "ARB_FRONT": ParameterRange(
+                section="ARB_FRONT", parameter="VALUE",
+                min_value=25500, max_value=48000, step=4500,
+                show_clicks=2, storage_convention="index",
+            ),
+        }
+        changes = [
+            SetupChange(
+                section="ARB_FRONT", parameter="VALUE",
+                value_before=34500.0, value_after=30000.0,
+                reasoning="test", expected_effect="test", confidence="high",
+            ),
+        ]
+        result = _populate_storage_fields(changes, ranges)
+        assert result[0].storage_convention == "index"
+        assert result[0].storage_value_before == 2.0  # (34500-25500)/4500
+        assert result[0].storage_value_after == 1.0   # (30000-25500)/4500
+
+    def test_scaled_param_gets_storage_values(self):
+        from ac_engineer.engineer.agents import _populate_storage_fields
+        from ac_engineer.engineer.models import ParameterRange
+
+        ranges = {
+            "CAMBER_LF": ParameterRange(
+                section="CAMBER_LF", parameter="VALUE",
+                min_value=-5.0, max_value=0.0, step=0.1,
+                show_clicks=0, storage_convention="scaled",
+            ),
+        }
+        changes = [
+            SetupChange(
+                section="CAMBER_LF", parameter="VALUE",
+                value_before=-1.8, value_after=-0.8,
+                reasoning="test", expected_effect="test", confidence="high",
+            ),
+        ]
+        result = _populate_storage_fields(changes, ranges)
+        assert result[0].storage_convention == "scaled"
+        assert result[0].storage_value_before == -18.0
+        assert result[0].storage_value_after == -8.0
+
+    def test_direct_param_gets_direct_convention(self):
+        from ac_engineer.engineer.agents import _populate_storage_fields
+        from ac_engineer.engineer.models import ParameterRange
+
+        ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE",
+                min_value=20.0, max_value=35.0, step=0.5,
+                show_clicks=0, storage_convention="direct",
+            ),
+        }
+        changes = [
+            SetupChange(
+                section="PRESSURE_LF", parameter="VALUE",
+                value_before=26.0, value_after=27.0,
+                reasoning="test", expected_effect="test", confidence="high",
+            ),
+        ]
+        result = _populate_storage_fields(changes, ranges)
+        assert result[0].storage_convention == "direct"
+        assert result[0].storage_value_before == 26.0
+        assert result[0].storage_value_after == 27.0
+
+    def test_unknown_section_skipped(self):
+        from ac_engineer.engineer.agents import _populate_storage_fields
+
+        changes = [
+            SetupChange(
+                section="UNKNOWN", parameter="VALUE",
+                value_before=1.0, value_after=2.0,
+                reasoning="test", expected_effect="test", confidence="high",
+            ),
+        ]
+        result = _populate_storage_fields(changes, {})
+        assert result[0].storage_convention is None
+        assert result[0].storage_value_before is None
+        assert result[0].storage_value_after is None
+
+    def test_none_value_before_handled(self):
+        from ac_engineer.engineer.agents import _populate_storage_fields
+        from ac_engineer.engineer.models import ParameterRange
+
+        ranges = {
+            "ARB_FRONT": ParameterRange(
+                section="ARB_FRONT", parameter="VALUE",
+                min_value=25500, max_value=48000, step=4500,
+                show_clicks=2, storage_convention="index",
+            ),
+        }
+        changes = [
+            SetupChange(
+                section="ARB_FRONT", parameter="VALUE",
+                value_before=None, value_after=30000.0,
+                reasoning="test", expected_effect="test", confidence="high",
+            ),
+        ]
+        result = _populate_storage_fields(changes, ranges)
+        assert result[0].storage_value_before is None
+        assert result[0].storage_value_after == 1.0
