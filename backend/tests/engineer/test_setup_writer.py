@@ -167,8 +167,8 @@ class TestApplyChanges:
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
 
-        assert cp.get("CAMBER_LF", "VALUE") == "-3.0"
-        assert cp.get("CAMBER_RF", "VALUE") == "-2.0"  # unchanged
+        assert cp.get("CAMBER_LF", "VALUE") == "-3"
+        assert cp.get("CAMBER_RF", "VALUE") == "-2.0"  # unchanged (original file value)
         assert cp.get("PRESSURE_LF", "VALUE") == "26.5"  # unchanged
 
     def test_backup_created_before_modify(self, sample_setup_ini: Path):
@@ -204,7 +204,7 @@ class TestApplyChanges:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
-        assert cp.get("CAMBER_LF", "VALUE") == "-4.0"
+        assert cp.get("CAMBER_LF", "VALUE") == "-4"
 
     def test_other_sections_preserved(self, sample_setup_ini: Path):
         import configparser
@@ -230,7 +230,7 @@ class TestApplyChanges:
         assert len(outcomes) == 1
         assert outcomes[0].section == "CAMBER_LF"
         assert outcomes[0].old_value == "-2.0"
-        assert outcomes[0].new_value == "-3.0"
+        assert outcomes[0].new_value == "-3"
 
     def test_clamped_value_used_when_invalid(self, sample_setup_ini: Path):
         ranges = _make_ranges()
@@ -242,7 +242,7 @@ class TestApplyChanges:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
-        assert cp.get("CAMBER_LF", "VALUE") == "-5.0"
+        assert cp.get("CAMBER_LF", "VALUE") == "-5"
 
     def test_nonexistent_section_skipped(self, sample_setup_ini: Path):
         """A change targeting a section not in the .ini is skipped, not added."""
@@ -308,7 +308,7 @@ class TestIndexParameterWriteConversion:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
-        assert cp.get("ARB_FRONT", "VALUE") == "1.0"
+        assert cp.get("ARB_FRONT", "VALUE") == "1"
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +337,7 @@ class TestScaledParameterWriteConversion:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(setup_path))
-        assert cp.get("CAMBER_LR", "VALUE") == "-10.0"
+        assert cp.get("CAMBER_LR", "VALUE") == "-10"
 
 
 # ---------------------------------------------------------------------------
@@ -363,4 +363,4 @@ class TestDirectParameterWritePassthrough:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
-        assert cp.get("PRESSURE_LF", "VALUE") == "16.0"
+        assert cp.get("PRESSURE_LF", "VALUE") == "16"

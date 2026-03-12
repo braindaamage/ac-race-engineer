@@ -176,7 +176,11 @@ def apply_changes(
         if cp.has_option(section, "VALUE"):
             old_value = cp.get(section, "VALUE")
 
-        new_val_str = str(effective)
+        # AC .ini files expect integer formatting for whole numbers
+        if isinstance(effective, float) and effective == int(effective):
+            new_val_str = str(int(effective))
+        else:
+            new_val_str = str(effective)
         cp.set(section, "VALUE", new_val_str)
 
         outcomes.append(ChangeOutcome(

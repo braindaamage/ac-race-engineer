@@ -978,10 +978,14 @@ async def apply_recommendation(
     # Build ValidationResults from stored changes
     from .models import SetupChange as EngSetupChange
 
-    # Read parameter ranges for re-validation
+    # Resolve parameter ranges (with show_clicks/storage_convention) for
+    # re-validation and outbound storage conversion.
     ranges: dict[str, ParameterRange] = {}
     if ac_install_path and car_name:
-        ranges = read_parameter_ranges(ac_install_path, car_name)
+        from ac_engineer.resolver import resolve_parameters
+
+        resolved = resolve_parameters(ac_install_path, car_name, db_path)
+        ranges = resolved.parameters
 
     # Convert stored changes to SetupChange for validation
     proposed_changes = []
