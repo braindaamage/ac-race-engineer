@@ -32,8 +32,8 @@ const testRecommendation: RecommendationDetailResponse = {
       reasoning: "Complement ARB",
       expected_effect: "More front grip",
       confidence: "medium",
-      storage_value_before: null,
-      storage_value_after: null,
+      storage_value_before: 80000,
+      storage_value_after: 85000,
       storage_convention: "direct",
     },
   ],
@@ -175,7 +175,7 @@ describe("ApplyConfirmModal", () => {
     expect(screen.getByText("click 2 → 4")).toBeInTheDocument();
   });
 
-  it("renders direct convention as em dash", () => {
+  it("renders direct convention as X → Y", () => {
     render(
       <ApplyConfirmModal
         open={true}
@@ -185,8 +185,7 @@ describe("ApplyConfirmModal", () => {
         isApplying={false}
       />,
     );
-    const dashes = screen.getAllByText("—");
-    expect(dashes.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("80000 → 85000")).toBeInTheDocument();
   });
 
   it("renders scaled convention as X → Y", () => {

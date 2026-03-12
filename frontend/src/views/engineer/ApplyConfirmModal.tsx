@@ -11,7 +11,6 @@ interface ApplyConfirmModalProps {
 
 function formatStorageCell(change: SetupChangeDetail): string {
   const { storage_convention, storage_value_before, storage_value_after } = change;
-  if (!storage_convention || storage_convention === "direct") return "\u2014";
   if (storage_value_after == null) return "\u2014";
   const before = storage_value_before != null ? String(storage_value_before) : "?";
   const after = String(storage_value_after);
