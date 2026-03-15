@@ -3,3 +3,8 @@
   display: flex;
   flex-direction: column;
 }
+
+.ace-session-layout__content {
+  flex: 1;
+  overflow-y: auto;
+}

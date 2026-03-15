@@ -25,20 +25,24 @@
 
 .ace-car-data__table th {
   text-align: left;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-strong);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .ace-car-data__table td {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
   font-size: var(--font-size-sm);
   color: var(--text-primary);
   border-bottom: 1px solid var(--border);
+}
+
+.ace-car-data__table tbody tr:hover {
+  background: var(--bg-hover);
 }
 
 .ace-car-data__name {
@@ -55,8 +59,8 @@
 }
 
 .ace-car-data__status--resolved {
-  background: color-mix(in srgb, var(--green-500) 15%, transparent);
-  color: var(--green-500);
+  background: color-mix(in srgb, var(--color-positive) 15%, transparent);
+  color: var(--color-positive);
 }
 
 .ace-car-data__status--unresolved {

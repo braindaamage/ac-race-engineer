@@ -86,3 +86,7 @@ body {
 .ace-mono {
   font-family: var(--font-mono);
 }
+
+.ace-hidden {
+  display: none !important;
+}

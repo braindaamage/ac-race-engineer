@@ -100,10 +100,6 @@
   color: var(--text-muted);
 }
 
-.ace-hidden {
-  display: none;
-}
-
 .ace-car-card__body {
   padding: var(--space-4);
 }

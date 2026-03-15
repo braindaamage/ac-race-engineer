@@ -15,11 +15,20 @@
   margin: 0;
 }
 
+.ace-settings__section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
 .ace-settings__section-title {
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
-  margin: 0 0 var(--space-3) 0;
+  margin: 0 0 var(--space-4) 0;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
 .ace-settings__field {
@@ -51,12 +60,17 @@
 
 .ace-settings__provider-select {
   padding: var(--space-2) var(--space-3);
-  background: var(--bg-surface);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: var(--font-size-sm);
   width: 100%;
+}
+
+.ace-settings__provider-select:focus {
+  outline: none;
+  border-color: var(--color-ai);
 }
 
 .ace-settings__key-row {
@@ -67,7 +81,7 @@
 .ace-settings__key-input {
   flex: 1;
   padding: var(--space-2) var(--space-3);
-  background: var(--bg-surface);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -77,7 +91,7 @@
 
 .ace-settings__key-input:focus {
   outline: none;
-  border-color: var(--color-brand);
+  border-color: var(--color-ai);
 }
 
 .ace-settings__test-row {
@@ -109,7 +123,7 @@
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .ace-settings__rerun-btn:hover {

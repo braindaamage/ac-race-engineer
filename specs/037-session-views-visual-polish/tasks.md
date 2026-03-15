@@ -19,9 +19,9 @@
 
 **Purpose**: Verify existing tokens cover all needed values, fix any gaps, establish baseline test pass
 
-- [ ] T001 Run full frontend test suite (`cd frontend && npm run test`) and TypeScript check (`npx tsc --noEmit`) to establish baseline — all tests must pass before any changes
-- [ ] T002 [P] Audit `frontend/src/tokens.css` for completeness against contracts/design.md token mapping. Verify all referenced tokens exist. If any tokens are missing (unlikely), add them following the existing primitive → semantic pattern.
-- [ ] T003 [P] Fix the hardcoded `rgba(255, 255, 255, 0.7)` in `frontend/src/views/engineer/EngineerView.css` (line ~84, `.ace-message--user .ace-message__timestamp`) — replace with `color-mix(in srgb, white 70%, transparent)` for token compliance per constitution Principle XII.
+- [x] T001 Run full frontend test suite (`cd frontend && npm run test`) and TypeScript check (`npx tsc --noEmit`) to establish baseline — all tests must pass before any changes
+- [x] T002 [P] Audit `frontend/src/tokens.css` for completeness against contracts/design.md token mapping. Verify all referenced tokens exist. If any tokens are missing (unlikely), add them following the existing primitive → semantic pattern.
+- [x] T003 [P] Fix the hardcoded `rgba(255, 255, 255, 0.7)` in `frontend/src/views/engineer/EngineerView.css` (line ~84, `.ace-message--user .ace-message__timestamp`) — replace with `color-mix(in srgb, white 70%, transparent)` for token compliance per constitution Principle XII.
 
 ---
 
@@ -33,7 +33,7 @@
 
 ### Implementation
 
-- [ ] T004 [US1] Create `frontend/src/components/layout/SessionHeader.tsx` — new component that renders the session detail context header:
+- [x] T004 [US1] Create `frontend/src/components/layout/SessionHeader.tsx` — new component that renders the session detail context header:
   - Props: receives `sessionId` from router params
   - Data: calls `useSessions()` to find the SessionRecord by session_id, calls `useCarTracks(session.car)` to resolve display names and image URLs
   - Layout: horizontal bar with:
@@ -44,7 +44,7 @@
   - Handles loading state: show Skeleton while data fetches
   - Handles missing data: raw identifiers as fallback for display names, placeholder icons for images
 
-- [ ] T005 [US1] Create `frontend/src/components/layout/SessionHeader.css` — styles for the session header:
+- [x] T005 [US1] Create `frontend/src/components/layout/SessionHeader.css` — styles for the session header:
   - `.ace-session-header` — flex row, items-center, padding space-4/space-6, bg-surface, border-bottom border, gap space-6
   - `.ace-session-header__car` — flex row, items-center, gap space-3
   - `.ace-session-header__track` — flex row, items-center, gap space-3
@@ -57,20 +57,20 @@
   - Responsive: stack vertically on narrow viewports
   - All colors from design tokens, JetBrains Mono for numeric values
 
-- [ ] T006 [US1] Modify `frontend/src/components/layout/SessionLayout.tsx` — add SessionHeader above the Outlet:
+- [x] T006 [US1] Modify `frontend/src/components/layout/SessionLayout.tsx` — add SessionHeader above the Outlet:
   - Import SessionHeader
   - Read `sessionId` from `useParams()`
   - Render `<SessionHeader sessionId={sessionId} />` above `<Outlet />`
   - Keep existing flex-column layout, SessionHeader is non-scrollable, Outlet area scrolls
 
-- [ ] T007 [US1] Update `frontend/src/components/layout/SessionLayout.css` — ensure the layout accommodates the new header:
+- [x] T007 [US1] Update `frontend/src/components/layout/SessionLayout.css` — ensure the layout accommodates the new header:
   - SessionLayout remains flex column, height 100%
   - SessionHeader is fixed-height (non-scrollable)
   - Outlet wrapper gets flex: 1 and overflow-y: auto
 
 ### Tests
 
-- [ ] T008 [US1] Create `frontend/tests/components/layout/SessionHeader.test.tsx`:
+- [x] T008 [US1] Create `frontend/tests/components/layout/SessionHeader.test.tsx`:
   - Test renders car display name and track display name when data is available
   - Test renders session date, lap count, best lap time (formatted)
   - Test renders status badge with correct variant for each state (analyzed→info, engineered→success)
@@ -93,7 +93,7 @@
 
 ### Implementation
 
-- [ ] T009 [US2] Update `frontend/src/views/analysis/AnalysisView.css` — apply prototype-aligned styling:
+- [x] T009 [US2] Update `frontend/src/views/analysis/AnalysisView.css` — apply prototype-aligned styling:
   - Card containers: `border-radius: var(--radius-lg)` (12px, was radius-md/8px)
   - Section gaps: `gap: var(--space-6)` between major sections
   - Sidebar background: ensure consistent with bg-surface
@@ -104,7 +104,7 @@
   - Telemetry chart containers: card wrapper with bg-surface, border, radius-lg
   - Sector times: consistent spacing and badge styling
 
-- [ ] T010 [P] [US2] Update `frontend/src/views/analysis/TelemetryChart.tsx` — align chart stroke colors with brand palette:
+- [x] T010 [P] [US2] Update `frontend/src/views/analysis/TelemetryChart.tsx` — align chart stroke colors with brand palette:
   - Throttle: `#22C55E` (green-500)
   - Brake: `#EF4444` (red-500)
   - Steering: `#06B6D4` (cyan-500)
@@ -126,7 +126,7 @@
 
 ### Implementation
 
-- [ ] T011 [US3] Update `frontend/src/views/compare/CompareView.css` — apply prototype-aligned styling:
+- [x] T011 [US3] Update `frontend/src/views/compare/CompareView.css` — apply prototype-aligned styling:
   - Card containers: `border-radius: var(--radius-lg)`
   - Section gaps: `gap: var(--space-6)`
   - Stint items: updated padding, hover, selected left-border accent
@@ -149,7 +149,7 @@
 
 ### Implementation
 
-- [ ] T012 [US4] Update `frontend/src/views/engineer/EngineerView.css` — apply prototype-aligned styling:
+- [x] T012 [US4] Update `frontend/src/views/engineer/EngineerView.css` — apply prototype-aligned styling:
   - Engineer header: consistent with other view headers, bg-surface, border-bottom, padding space-4/space-6
   - Message list: gap space-4, padding space-4
   - User messages: rounded-lg (not xl), brand bg, consistent padding
@@ -178,7 +178,7 @@
 
 ### Implementation
 
-- [ ] T013 [US5] Update `frontend/src/views/settings/Settings.css` — apply prototype-aligned styling:
+- [x] T013 [US5] Update `frontend/src/views/settings/Settings.css` — apply prototype-aligned styling:
   - Settings container: keep max-width 720px centered layout
   - Section cards: bg-surface, border, radius-lg, padding space-6, gap space-6 between cards
   - Section headers: font-size-lg, font-weight-semibold, border-bottom border, padding-bottom space-4
@@ -188,7 +188,7 @@
   - Test connection row: consistent button and result styling
   - Footer: border-top, padding-top space-4, flex gap space-3
 
-- [ ] T014 [P] [US5] Update `frontend/src/views/settings/CarDataSection.css` — apply prototype-aligned styling:
+- [x] T014 [P] [US5] Update `frontend/src/views/settings/CarDataSection.css` — apply prototype-aligned styling:
   - Table: matches table styling contract
   - Status badges: consistent with Badge component variants (resolved → success, unresolved → neutral)
   - Invalidate buttons: consistent with ghost/secondary button styling
@@ -203,7 +203,7 @@
 
 **Purpose**: Cross-view audit, dead code removal, final verification
 
-- [ ] T015 [US6] Audit all 10 UI component CSS files for token compliance — verify no hardcoded hex colors in:
+- [x] T015 [US6] Audit all 10 UI component CSS files for token compliance — verify no hardcoded hex colors in:
   - `frontend/src/components/ui/Card.css`
   - `frontend/src/components/ui/Badge.css`
   - `frontend/src/components/ui/Button.css`
@@ -216,13 +216,13 @@
   - `frontend/src/components/ui/Tooltip.css`
   - Fix: Modal backdrop `rgba(0,0,0,0.5)` — acceptable as a universal backdrop overlay, document as exception. Skeleton fallback `rgba(255,255,255,0.08)` — acceptable as a fallback value after a token reference.
 
-- [ ] T016 [P] [US6] Search for and remove any dead CSS or unused code from pre-redesign navigation system. Check:
+- [x] T016 [P] [US6] Search for and remove any dead CSS or unused code from pre-redesign navigation system. Check:
   - Old sidebar references in layout CSS
   - Unused CSS classes in any view file
   - Commented-out code blocks related to removed navigation
   - Orphaned imports in layout components
 
-- [ ] T017 [US6] Verify both themes work correctly — switch between Night Grid (dark) and Garage Floor (light) themes and confirm:
+- [x] T017 [US6] Verify both themes work correctly — switch between Night Grid (dark) and Garage Floor (light) themes and confirm:
   - SessionHeader renders correctly in both themes
   - All updated view CSS uses semantic tokens that adapt to both themes
   - No color contrast issues introduced
@@ -234,9 +234,9 @@
 
 **Purpose**: Full test suite pass, TypeScript check, manual verification
 
-- [ ] T018 Run full frontend test suite: `cd frontend && npm run test` — verify all existing + new tests pass (target: ~435+ tests, 0 failures)
-- [ ] T019 Run TypeScript strict check: `cd frontend && npx tsc --noEmit` — verify zero type errors
-- [ ] T020 Manual verification walkthrough:
+- [x] T018 Run full frontend test suite: `cd frontend && npm run test` — verify all existing + new tests pass (target: ~435+ tests, 0 failures)
+- [x] T019 Run TypeScript strict check: `cd frontend && npx tsc --noEmit` — verify zero type errors
+- [x] T020 Manual verification walkthrough:
   1. Navigate Garage → Car → Tracks → Sessions → select a session
   2. Verify SessionHeader shows correct car/track/stats on Laps tab
   3. Switch to Setup tab — header persists, view styling consistent

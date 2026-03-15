@@ -25,12 +25,14 @@ interface ChannelConfig {
   domain?: [number, number];
 }
 
+// Chart stroke colors aligned with brand palette (tokens.css primitives).
+// Recharts requires hex strings — CSS variables don't work in SVG stroke props.
 const CHANNELS: ChannelConfig[] = [
-  { key: "throttle", label: "Throttle", color: "var(--green-500)", domain: [0, 1] },
-  { key: "brake", label: "Brake", color: "var(--red-500)", domain: [0, 1] },
-  { key: "steering", label: "Steering", color: "var(--blue-500)", domain: [-1, 1] },
-  { key: "speed_kmh", label: "Speed", color: "var(--amber-500)" },
-  { key: "gear", label: "Gear", color: "var(--gray-400)" },
+  { key: "throttle", label: "Throttle", color: "#22C55E", domain: [0, 1] },   // --green-500
+  { key: "brake", label: "Brake", color: "#EF4444", domain: [0, 1] },         // --red-500
+  { key: "steering", label: "Steering", color: "#06B6D4", domain: [-1, 1] },  // --cyan-500
+  { key: "speed_kmh", label: "Speed", color: "#F59E0B" },                     // --amber-500
+  { key: "gear", label: "Gear", color: "#6B7280" },                           // --gray-500
 ];
 
 function buildRows(

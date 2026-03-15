@@ -5,7 +5,7 @@
 .ace-compare {
   display: grid;
   grid-template-columns: 280px 1fr;
-  gap: var(--spacing-md);
+  gap: var(--space-6);
   height: 100%;
   overflow: hidden;
   padding: var(--space-6);
@@ -15,11 +15,15 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
 }
 
 .ace-compare__sidebar h2 {
-  margin: 0 0 var(--spacing-sm) 0;
+  margin: 0 0 var(--space-3) 0;
   font-size: var(--font-size-lg);
   color: var(--text-primary);
 }
@@ -36,21 +40,21 @@
 .ace-stint-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
   border: 1px solid transparent;
 }
 
 .ace-stint-item:hover {
-  background: var(--bg-elevated);
+  background: var(--bg-hover);
 }
 
 .ace-stint-item--selected {
   background: var(--bg-elevated);
-  border-color: var(--color-brand);
+  border-left: 3px solid var(--color-brand);
 }
 
 .ace-stint-item__number {
@@ -71,7 +75,7 @@
 
 .ace-stint-item__meta {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--space-3);
   font-size: var(--font-size-xs);
   color: var(--text-muted);
   font-family: var(--font-mono);
@@ -80,17 +84,18 @@
 /* Setup diff */
 
 .ace-diff-section {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--space-4);
 }
 
 .ace-diff-section__header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) 0;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -100,7 +105,7 @@
 .ace-diff-section__toggle {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
-  transition: transform 0.15s ease;
+  transition: transform var(--transition-fast);
 }
 
 .ace-diff-section__toggle--collapsed {
@@ -110,15 +115,15 @@
 .ace-diff-row {
   display: grid;
   grid-template-columns: 1fr auto auto auto;
-  gap: var(--spacing-sm);
+  gap: var(--space-3);
   align-items: center;
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--border);
   font-size: var(--font-size-sm);
 }
 
 .ace-diff-row:hover {
-  background: var(--bg-elevated);
+  background: var(--bg-hover);
 }
 
 .ace-diff-row__name {
@@ -139,19 +144,31 @@
   min-width: 24px;
 }
 
+.ace-diff-arrow--positive {
+  color: var(--color-positive);
+}
+
+.ace-diff-arrow--negative {
+  color: var(--color-error);
+}
+
 .ace-diff-info {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
-  padding: var(--spacing-xs) 0;
+  padding: var(--space-2) 0;
   font-style: italic;
 }
 
 /* Metrics panel */
 
 .ace-metrics-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--space-4);
 }
 
 .ace-metrics-panel h3 {
@@ -163,13 +180,13 @@
 .ace-metrics-primary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--spacing-md);
+  gap: var(--space-4);
 }
 
 .ace-metrics-item {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--space-1);
 }
 
 .ace-metrics-item__label {
@@ -196,13 +213,13 @@
 .ace-metrics-wheels {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-sm);
+  gap: var(--space-3);
 }
 
 .ace-metrics-wheel {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: var(--space-1);
   text-align: center;
 }
 

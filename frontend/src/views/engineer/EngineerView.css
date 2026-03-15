@@ -13,7 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -41,7 +42,7 @@
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 /* --------------------------------------------------------------------------
@@ -63,7 +64,7 @@
 
 .ace-message--assistant {
   align-self: flex-start;
-  background: var(--bg-elevated);
+  background: var(--bg-surface);
   color: var(--text-primary);
   border: 1px solid var(--border);
 }
@@ -81,7 +82,7 @@
 }
 
 .ace-message--user .ace-message__timestamp {
-  color: rgba(255, 255, 255, 0.7);
+  color: color-mix(in srgb, white 70%, transparent);
 }
 
 /* --------------------------------------------------------------------------
@@ -91,6 +92,10 @@
 .ace-recommendation-card {
   align-self: flex-start;
   max-width: 90%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
 }
 
 .ace-recommendation-card--proposed {
@@ -166,9 +171,9 @@
    -------------------------------------------------------------------------- */
 
 .ace-setup-change {
-  padding: var(--space-2) var(--space-3);
-  background: var(--bg-surface);
-  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background: var(--bg);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
 
@@ -215,9 +220,9 @@
    -------------------------------------------------------------------------- */
 
 .ace-driver-feedback {
-  padding: var(--space-3);
+  padding: var(--space-4);
   background: var(--bg-surface);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   border-left: 3px solid var(--color-warning);
 }
@@ -329,7 +334,7 @@
   padding: var(--space-2) var(--space-3);
   font-family: var(--font-ui);
   font-size: var(--font-size-sm);
-  background: var(--bg-surface);
+  background: var(--bg);
   color: var(--text-primary);
   line-height: var(--line-height-normal);
   min-height: 40px;
@@ -368,17 +373,23 @@
 
 .ace-apply-modal__table th {
   text-align: left;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border-strong);
   color: var(--text-secondary);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .ace-apply-modal__table td {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--border);
   color: var(--text-primary);
+}
+
+.ace-apply-modal__table tbody tr:hover {
+  background: var(--bg-hover);
 }
 
 .ace-apply-modal__table td:nth-child(3),
@@ -389,7 +400,7 @@
 .ace-apply-modal__storage {
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--font-size-sm);
 }
 
 /* --------------------------------------------------------------------------
@@ -416,10 +427,6 @@
   color: var(--text-muted);
 }
 
-.ace-mono {
-  font-family: var(--font-mono);
-}
-
 /* --------------------------------------------------------------------------
    Usage Detail Modal
    -------------------------------------------------------------------------- */
@@ -427,10 +434,10 @@
 .ace-usage-modal__totals {
   display: flex;
   gap: var(--space-4);
-  padding: var(--space-3);
+  padding: var(--space-4);
   margin-bottom: var(--space-3);
   background: var(--bg-surface);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
 
@@ -459,9 +466,9 @@
 }
 
 .ace-usage-modal__agent {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--bg-surface);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
 
@@ -523,10 +530,10 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-x: auto;
-  padding: var(--space-3);
+  padding: var(--space-4);
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   margin: 0;
 }
