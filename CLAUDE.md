@@ -8,7 +8,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - backend/ac_engineer/ → Paquete Python core con submódulos: parser/, analyzer/, knowledge/, engineer/, config/, storage/, acd_reader/, resolver/
   - config/   → ACConfig model + read_config / write_config / update_config
   - storage/  → SQLite init + CRUD functions para sessions, recommendations, setup_changes, messages, llm_events
-  - engineer/ → summarizer, setup_reader/writer, agents (Pydantic AI specialists), tools, skills/ (markdown prompts), trace (diagnostic traces)
+  - engineer/ → summarizer, setup_reader/writer, agents (Pydantic AI specialists), tools, skills/ (markdown prompts), trace (diagnostic traces), conversion (storage↔physical domain translation)
   - acd_reader/ → Descifrado de archivos data.acd (propietario AC), zero-dependency
   - resolver/ → Resolución de parámetros en 3 tiers (open data → ACD → session fallback), caché SQLite
 - backend/api/ → Servidor FastAPI que expone los módulos de ac_engineer como endpoints HTTP
@@ -47,7 +47,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 ## Imports públicos
 - `from ac_engineer.config import read_config, write_config, update_config, ACConfig`
 - `from ac_engineer.storage import init_db, save_session, list_sessions, save_recommendation, update_recommendation_status, save_message, get_messages, save_llm_event, get_llm_events, LlmEvent, LlmToolCall`
-- `from ac_engineer.engineer import summarize_session, read_parameter_ranges, validate_changes, apply_changes, analyze_with_engineer, apply_recommendation, build_model, extract_tool_calls`
+- `from ac_engineer.engineer import summarize_session, read_parameter_ranges, validate_changes, apply_changes, analyze_with_engineer, apply_recommendation, build_model, extract_tool_calls, classify_parameter, to_physical, to_storage, SCALE_FACTORS`
 - `from ac_engineer.acd_reader import read_acd, AcdResult`
 - `from ac_engineer.resolver import resolve_parameters, list_cars, get_cached_parameters, invalidate_cache, invalidate_all_caches, ResolvedParameters, ResolutionTier, CarStatus`
 
@@ -69,6 +69,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - Fase 11.1 ✅ Cache Token Tracking (cache_read/write tokens en pipeline de uso LLM, UI condicional) — ~66 tests
 - Fase 11.2 ✅ Agent Diagnostic Traces (trazas Markdown de conversaciones multi-turn, toggle en Settings, API + modal) — ~60 tests
 - Fase 12 ✅ Principal Narrated Analysis (síntesis narrativa del agente principal: summary ejecutivo + explanation detallado, persistencia en DB, sección expandible en frontend) — 18 tests
+- Fase 13 ✅ Fix Setup Value Domains (conversión storage↔physical para INDEX/SCALED/DIRECT, clasificación por SHOW_CLICKS, invalidación lazy de caché, columna Setup File en UI) — 39 tests
 
 ## Reglas de desarrollo
 - Todo tipo de coche debe funcionar (vanilla y mods), no hardcodear por coche
@@ -76,6 +77,7 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - El LLM NO hace cálculos numéricos, recibe métricas ya procesadas
 - Los cambios de setup del LLM vienen via Pydantic AI tools (function calling), no texto libre
 - Validar siempre que los cambios estén en rangos posibles antes de escribir el .ini
+- Los valores de setup tienen 3 dominios de almacenamiento (INDEX/SCALED/DIRECT según SHOW_CLICKS); el LLM siempre trabaja en unidades físicas y la conversión a storage es determinística en engineer/conversion.py
 - Las explicaciones al usuario deben ser claras para alguien que sabe poco de setup
 - Detectar datos inconsistentes de mods con físicas rotas y avisar
 
@@ -87,4 +89,4 @@ Ingeniero de carreras con IA para Assetto Corsa (original). Lee telemetría post
 - NUNCA instalar paquetes ni ejecutar scripts en el env base de conda o en system Python
 
 ## Fase actual
-Fases 1 a 12 completadas (1410 tests totales: backend 1020, frontend 390). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM, filtrado de contexto por dominio, cache token tracking, trazas diagnósticas de agentes y narrativa coherente del agente principal.
+Fases 1 a 13 completadas (1449 tests totales: backend 1055, frontend 394). El proyecto tiene funcionalidad end-to-end completa con observabilidad de consumo LLM, filtrado de contexto por dominio, cache token tracking, trazas diagnósticas de agentes, narrativa coherente del agente principal y conversión correcta de dominios de valores de setup.
