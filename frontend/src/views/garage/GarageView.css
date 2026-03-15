@@ -1,0 +1,7 @@
+.ace-garage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: var(--space-6);
+}

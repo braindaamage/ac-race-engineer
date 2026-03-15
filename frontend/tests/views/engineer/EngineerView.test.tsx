@@ -1,22 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { EngineerView } from "../../../src/views/engineer/index";
-import type { ReactNode } from "react";
+import { renderWithRouter } from "../../helpers/renderWithRouter";
 
 // Mock stores
-vi.mock("../../../src/store/sessionStore", () => ({
-  useSessionStore: vi.fn((selector: unknown) => {
-    // Default: no session
-    const state = { selectedSessionId: null };
-    return (selector as (s: typeof state) => unknown)(state);
-  }),
-}));
-
-vi.mock("../../../src/store/uiStore", () => ({
-  useUIStore: { getState: () => ({ setActiveSection: vi.fn() }) },
-}));
-
 vi.mock("../../../src/store/notificationStore", () => ({
   useNotificationStore: vi.fn(() => vi.fn()),
 }));
@@ -62,7 +49,6 @@ vi.mock("../../../src/lib/wsManager", () => ({
   jobWSManager: { trackJob: vi.fn(), stopTracking: vi.fn() },
 }));
 
-import { useSessionStore } from "../../../src/store/sessionStore";
 import { useNotificationStore } from "../../../src/store/notificationStore";
 import { useSessions } from "../../../src/hooks/useSessions";
 import { useMessages } from "../../../src/hooks/useMessages";
@@ -70,7 +56,6 @@ import { useRecommendations } from "../../../src/hooks/useRecommendations";
 import { useJobProgress } from "../../../src/hooks/useJobProgress";
 import { apiGet, apiPost } from "../../../src/lib/api";
 
-const mockedUseSessionStore = vi.mocked(useSessionStore);
 const mockedUseSessions = vi.mocked(useSessions);
 const mockedUseMessages = vi.mocked(useMessages);
 const mockedUseRecommendations = vi.mocked(useRecommendations);
@@ -79,17 +64,15 @@ const mockedUseNotificationStore = vi.mocked(useNotificationStore);
 const mockedApiGet = vi.mocked(apiGet);
 const mockedApiPost = vi.mocked(apiPost);
 
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+function renderEngineer(sessionId: string) {
+  return renderWithRouter(<EngineerView />, {
+    path: "/session/:sessionId/engineer",
+    route: `/session/${sessionId}/engineer`,
   });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
 }
 
 function setupMocksForSession(overrides?: {
-  sessionId?: string | null;
+  sessionId?: string;
   sessionState?: string;
   messages?: unknown[];
   recommendations?: unknown[];
@@ -99,44 +82,37 @@ function setupMocksForSession(overrides?: {
   const messages = overrides?.messages ?? [];
   const recommendations = overrides?.recommendations ?? [];
 
-  mockedUseSessionStore.mockImplementation((selector: unknown) => {
-    const state = { selectedSessionId: sessionId };
-    return (selector as (s: typeof state) => unknown)(state);
-  });
-
   mockedUseNotificationStore.mockImplementation(() => vi.fn());
 
   mockedUseSessions.mockReturnValue({
-    sessions: sessionId
-      ? [
-          {
-            session_id: sessionId,
-            car: "ferrari_488",
-            track: "spa",
-            session_date: "2026-03-01T12:00:00Z",
-            lap_count: 10,
-            best_lap_time: 120.5,
-            state: sessionState,
-            session_type: "practice",
-            csv_path: null,
-            meta_path: null,
-          },
-        ]
-      : [],
+    sessions: [
+      {
+        session_id: sessionId,
+        car: "ferrari_488",
+        track: "spa",
+        session_date: "2026-03-01T12:00:00Z",
+        lap_count: 10,
+        best_lap_time: 120.5,
+        state: sessionState,
+        session_type: "practice",
+        csv_path: null,
+        meta_path: null,
+      },
+    ],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
   });
 
   mockedUseMessages.mockReturnValue({
-    data: { session_id: sessionId ?? "", messages },
+    data: { session_id: sessionId, messages },
     isLoading: false,
     error: null,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof useMessages>);
 
   mockedUseRecommendations.mockReturnValue({
-    data: { session_id: sessionId ?? "", recommendations },
+    data: { session_id: sessionId, recommendations },
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -152,22 +128,15 @@ describe("EngineerView", () => {
 
   // US1: Trigger Full Session Analysis
   describe("US1 — Trigger Full Session Analysis", () => {
-    it("shows 'Select a session' empty state when no session selected", () => {
-      // Use factory defaults (sessionId: null, sessions: [])
-      mockedUseNotificationStore.mockImplementation(() => vi.fn());
-      render(<EngineerView />, { wrapper: createWrapper() });
-      expect(screen.getByText("Select a session")).toBeInTheDocument();
-    });
-
     it("shows 'Analysis required' empty state when session not analyzed", () => {
       setupMocksForSession({ sessionState: "discovered" });
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       expect(screen.getByText("Analysis required")).toBeInTheDocument();
     });
 
     it("shows empty conversation with Analyze Session button when session is analyzed", () => {
       setupMocksForSession();
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       expect(screen.getByText(/No conversation yet/)).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: "Analyze Session" }),
@@ -178,7 +147,7 @@ describe("EngineerView", () => {
       setupMocksForSession();
       mockedApiPost.mockResolvedValue({ job_id: "j1", session_id: "sess-1" });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       fireEvent.click(
         screen.getByRole("button", { name: "Analyze Session" }),
       );
@@ -192,7 +161,7 @@ describe("EngineerView", () => {
 
     it("shows session info in header", () => {
       setupMocksForSession();
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       expect(screen.getByText(/ferrari_488/)).toBeInTheDocument();
       expect(screen.getByText(/spa/)).toBeInTheDocument();
     });
@@ -204,7 +173,7 @@ describe("EngineerView", () => {
       setupMocksForSession();
       mockedApiPost.mockResolvedValue({ job_id: "j2", message_id: "m1" });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       const textarea = screen.getByPlaceholderText("Ask your engineer...");
       fireEvent.change(textarea, {
         target: { value: "What about understeer?" },
@@ -221,7 +190,7 @@ describe("EngineerView", () => {
 
     it("input enabled when no job is running", () => {
       setupMocksForSession();
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       expect(
         screen.getByPlaceholderText("Ask your engineer..."),
       ).not.toBeDisabled();
@@ -288,7 +257,7 @@ describe("EngineerView", () => {
 
     it("renders recommendation cards in the feed", async () => {
       setupWithRec();
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       await waitFor(() => {
         expect(screen.getByText("Stiffen front ARB")).toBeInTheDocument();
       });
@@ -296,7 +265,7 @@ describe("EngineerView", () => {
 
     it("clicking Apply on recommendation card opens modal", async () => {
       setupWithRec();
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument();
       });
@@ -313,7 +282,7 @@ describe("EngineerView", () => {
         changes_applied: 1,
       });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       await waitFor(() => {
         expect(screen.getByRole("button", { name: "Apply" })).toBeInTheDocument();
       });
@@ -351,7 +320,7 @@ describe("EngineerView", () => {
         ],
       });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       expect(screen.getByText("What about Turn 3?")).toBeInTheDocument();
       expect(
         screen.getByText("Turn 3 shows understeer"),
@@ -413,7 +382,7 @@ describe("EngineerView", () => {
         });
       });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       await waitFor(() => {
         const appliedElements = screen.getAllByText("Applied");
         expect(appliedElements.length).toBeGreaterThanOrEqual(1);
@@ -435,7 +404,7 @@ describe("EngineerView", () => {
         ],
       });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       fireEvent.click(
         screen.getByRole("button", { name: "Analyze Session" }),
       );
@@ -455,7 +424,7 @@ describe("EngineerView", () => {
       });
       mockedApiPost.mockResolvedValue({ job_id: "j1", session_id: "sess-1" });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       fireEvent.click(
         screen.getByRole("button", { name: "Analyze Session" }),
       );
@@ -480,7 +449,7 @@ describe("EngineerView", () => {
         ],
       });
 
-      render(<EngineerView />, { wrapper: createWrapper() });
+      renderEngineer("sess-1");
       fireEvent.click(
         screen.getByRole("button", { name: "Analyze Session" }),
       );

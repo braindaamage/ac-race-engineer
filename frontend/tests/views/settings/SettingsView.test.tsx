@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { SettingsView } from "../../../src/views/settings";
+import { renderWithRouter } from "../../helpers/renderWithRouter";
 
 // Mock api
 vi.mock("../../../src/lib/api", () => ({
@@ -32,13 +32,11 @@ const defaultConfig = {
   diagnostic_mode: false,
 };
 
-function renderWithQuery(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+function renderSettings() {
+  return renderWithRouter(<SettingsView />, {
+    path: "/settings",
+    route: "/settings",
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
 }
 
 describe("SettingsView", () => {
@@ -53,7 +51,7 @@ describe("SettingsView", () => {
   });
 
   it("renders all 4 sections", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       expect(screen.getByText("Settings")).toBeDefined();
@@ -65,7 +63,7 @@ describe("SettingsView", () => {
   });
 
   it("populates form with config values", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       const inputs = screen.getAllByRole("textbox");
@@ -78,7 +76,7 @@ describe("SettingsView", () => {
   });
 
   it("Save button is disabled when not dirty", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       const saveBtn = screen.getByText("Save");
@@ -92,7 +90,7 @@ describe("SettingsView", () => {
       ac_install_path: "C:\\NewPath",
     });
 
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     // Wait for form to populate (AC path appears)
     await waitFor(() => {
@@ -126,7 +124,7 @@ describe("SettingsView", () => {
   });
 
   it("theme toggle buttons render", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       expect(screen.getByText("Night Grid")).toBeDefined();
@@ -135,7 +133,7 @@ describe("SettingsView", () => {
   });
 
   it("Re-run onboarding button shows wizard", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       expect(screen.getByText("Re-run onboarding wizard")).toBeDefined();
@@ -151,7 +149,7 @@ describe("SettingsView", () => {
   });
 
   it("Test Connection button is disabled without api key", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       const testBtn = screen.getByText("Test Connection");
@@ -160,7 +158,7 @@ describe("SettingsView", () => {
   });
 
   it("diagnostic mode toggle renders in Advanced section", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       expect(screen.getByText("Diagnostic Mode")).toBeDefined();
@@ -170,7 +168,7 @@ describe("SettingsView", () => {
   });
 
   it("diagnostic mode toggle makes form dirty", async () => {
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       expect(screen.getByText("Diagnostic Mode")).toBeDefined();
@@ -197,7 +195,7 @@ describe("SettingsView", () => {
       diagnostic_mode: true,
     });
 
-    renderWithQuery(<SettingsView />);
+    renderSettings();
 
     await waitFor(() => {
       expect(screen.getByText("Diagnostic Mode")).toBeDefined();

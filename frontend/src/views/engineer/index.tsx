@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient, useQueries } from "@tanstack/react-query";
 import { EmptyState, Button } from "../../components/ui";
-import { useSessionStore } from "../../store/sessionStore";
-import { useUIStore } from "../../store/uiStore";
 import { useNotificationStore } from "../../store/notificationStore";
 import { useSessions } from "../../hooks/useSessions";
 import { useMessages } from "../../hooks/useMessages";
@@ -24,10 +23,13 @@ import { Modal } from "../../components/ui";
 import "./EngineerView.css";
 
 export function EngineerView() {
-  const selectedSessionId = useSessionStore((s) => s.selectedSessionId);
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const { sessions } = useSessions();
   const queryClient = useQueryClient();
   const addNotification = useNotificationStore((s) => s.addNotification);
+
+  const selectedSessionId = sessionId ?? null;
 
   const session = useMemo(
     () => sessions.find((s) => s.session_id === selectedSessionId) ?? null,
@@ -150,7 +152,7 @@ export function EngineerView() {
     : chatJobId
       ? "chat"
       : null;
-  const jobProgress = engineerJobId ? engineerProgress : chatProgress;
+  const jobProgressData = engineerJobId ? engineerProgress : chatProgress;
   const isJobRunning = activeJobType !== null;
 
   // Re-analysis warning
@@ -252,23 +254,14 @@ export function EngineerView() {
 
   // Empty states
   if (!selectedSessionId) {
-    return (
-      <EmptyState
-        icon={<span>&#129302;</span>}
-        title="Select a session"
-        description="Go to Sessions and select a session to get AI-powered setup recommendations."
-        action={{
-          label: "Go to Sessions",
-          onClick: () => useUIStore.getState().setActiveSection("sessions"),
-        }}
-      />
-    );
+    navigate("/garage");
+    return null;
   }
 
   if (!isAnalyzed) {
     return (
       <EmptyState
-        icon={<span>&#128269;</span>}
+        icon={<i className="fa-solid fa-magnifying-glass" />}
         title="Analysis required"
         description="This session needs to be processed and analyzed before the engineer can review it."
       />
@@ -302,7 +295,7 @@ export function EngineerView() {
         recommendations={recDetails}
         sessionId={selectedSessionId}
         activeJobType={activeJobType}
-        jobProgress={jobProgress ?? undefined}
+        jobProgress={jobProgressData ?? undefined}
         onApply={handleApply}
         usageMap={recUsageMap}
         messageUsageMap={messageUsageMap}

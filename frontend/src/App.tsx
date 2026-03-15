@@ -1,10 +1,11 @@
 import { useEffect } from "react";
+import { RouterProvider } from "react-router-dom";
 import { useTheme } from "./hooks/useTheme";
 import { useBackendStatus } from "./hooks/useBackendStatus";
 import { useConfig } from "./hooks/useConfig";
 import { SplashScreen } from "./components/layout/SplashScreen";
-import { AppShell } from "./components/layout/AppShell";
 import { OnboardingWizard } from "./components/onboarding/OnboardingWizard";
+import { router } from "./router";
 
 export function App() {
   const { status, retry, shutdown } = useBackendStatus();
@@ -58,5 +59,5 @@ export function App() {
     );
   }
 
-  return <AppShell />;
+  return <RouterProvider router={router} />;
 }

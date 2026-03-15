@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { EmptyState, Skeleton } from "../../components/ui";
-import { useSessionStore } from "../../store/sessionStore";
-import { useUIStore } from "../../store/uiStore";
 import { useSessions } from "../../hooks/useSessions";
 import { useStints, useStintComparison } from "../../hooks/useStints";
 import { StintSelector } from "./StintSelector";
@@ -10,11 +9,12 @@ import { MetricsPanel } from "./MetricsPanel";
 import "./CompareView.css";
 
 export function CompareView() {
-  const selectedSessionId = useSessionStore((s) => s.selectedSessionId);
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const { sessions } = useSessions();
   const [selectedStints, setSelectedStints] = useState<[number, number | null]>([0, null]);
 
-  const { data: stintData, isLoading: stintsLoading } = useStints(selectedSessionId);
+  const { data: stintData, isLoading: stintsLoading } = useStints(sessionId ?? null);
 
   const stints = stintData?.stints ?? [];
 
@@ -31,7 +31,7 @@ export function CompareView() {
   const stintB = selectedStints[1];
 
   const { data: comparisonData } = useStintComparison(
-    selectedSessionId,
+    sessionId ?? null,
     stintA,
     stintB,
   );
@@ -50,32 +50,19 @@ export function CompareView() {
   }, []);
 
   // Empty state: no session selected
-  if (!selectedSessionId) {
-    return (
-      <EmptyState
-        icon={<span>&#128260;</span>}
-        title="Select a session to compare setups"
-        description="Go to Sessions and select a session to compare setup configurations."
-        action={{
-          label: "Go to Sessions",
-          onClick: () => useUIStore.getState().setActiveSection("sessions"),
-        }}
-      />
-    );
+  if (!sessionId) {
+    navigate("/garage");
+    return null;
   }
 
   // Check session state
-  const session = sessions.find((s) => s.session_id === selectedSessionId);
+  const session = sessions.find((s) => s.session_id === sessionId);
   if (session && session.state !== "analyzed" && session.state !== "engineered") {
     return (
       <EmptyState
-        icon={<span>&#9888;</span>}
+        icon={<i className="fa-solid fa-triangle-exclamation" />}
         title="Analysis required"
         description="This session needs to be processed and analyzed before setup comparison is available."
-        action={{
-          label: "Go to Sessions",
-          onClick: () => useUIStore.getState().setActiveSection("sessions"),
-        }}
       />
     );
   }
@@ -101,7 +88,7 @@ export function CompareView() {
   if (stints.length < 2) {
     return (
       <EmptyState
-        icon={<span>&#128260;</span>}
+        icon={<i className="fa-solid fa-code-compare" />}
         title="Not enough stints"
         description="Setup comparison requires at least 2 stints in the session. Run more stints with different setups."
       />
@@ -137,7 +124,7 @@ export function CompareView() {
           </div>
         ) : (
           <EmptyState
-            icon={<span>&#128260;</span>}
+            icon={<i className="fa-solid fa-code-compare" />}
             title="Select two stints"
             description="Select a second stint from the sidebar to compare setup configurations."
           />

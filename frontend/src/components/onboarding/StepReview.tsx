@@ -99,14 +99,14 @@ export function StepReview({
         </div>
         {skippedAiStep && (
           <p className="ace-onboarding__warning">
-            ⚠ Engineer feature won&apos;t work without AI configuration.
+            <i className="fa-solid fa-triangle-exclamation" />{" "}Engineer feature won&apos;t work without AI configuration.
           </p>
         )}
       </Card>
 
       {hasPathWarning && (
         <p className="ace-onboarding__warning">
-          ⚠ One or more paths have warnings. You can still finish, but some
+          <i className="fa-solid fa-triangle-exclamation" />{" "}One or more paths have warnings. You can still finish, but some
           features may not work correctly.
         </p>
       )}

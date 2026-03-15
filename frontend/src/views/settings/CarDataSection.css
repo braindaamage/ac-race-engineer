@@ -12,7 +12,7 @@
 }
 
 .ace-car-data__header-title {
-  font-size: var(--font-size-md, 1rem);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   margin: 0;

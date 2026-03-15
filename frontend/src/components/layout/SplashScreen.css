@@ -9,10 +9,9 @@
   gap: var(--space-6);
 }
 
-.ace-splash__title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--text-primary);
+.ace-splash__logo {
+  height: 80px;
+  width: auto;
 }
 
 .ace-splash__spinner {

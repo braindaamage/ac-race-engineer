@@ -1,31 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, waitFor } from "@testing-library/react";
 import { CompareView } from "../../../src/views/compare";
+import { renderWithRouter } from "../../helpers/renderWithRouter";
 
 // Mock api
 vi.mock("../../../src/lib/api", () => ({
   apiGet: vi.fn(),
-}));
-
-// Mock stores
-let mockSelectedSessionId: string | null = null;
-
-vi.mock("../../../src/store/sessionStore", () => ({
-  useSessionStore: (selector: (s: Record<string, unknown>) => unknown) =>
-    selector({
-      selectedSessionId: mockSelectedSessionId,
-      selectSession: vi.fn(),
-      clearSession: vi.fn(),
-    }),
-}));
-
-vi.mock("../../../src/store/uiStore", () => ({
-  useUIStore: Object.assign(
-    (selector: (s: Record<string, unknown>) => unknown) =>
-      selector({ activeSection: "compare" }),
-    { getState: () => ({ setActiveSection: vi.fn() }) },
-  ),
 }));
 
 import { apiGet } from "../../../src/lib/api";
@@ -120,18 +100,15 @@ const singleStint = {
   stints: [testStints.stints[0]],
 };
 
-function renderWithQuery(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+function renderCompare(sessionId: string) {
+  return renderWithRouter(<CompareView />, {
+    path: "/session/:sessionId/setup",
+    route: `/session/${sessionId}/setup`,
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
 }
 
 describe("CompareView", () => {
   beforeEach(() => {
-    mockSelectedSessionId = null;
     mockedApiGet.mockImplementation((path: string) => {
       if (path.includes("/sessions") && !path.includes("/stints") && !path.includes("/compare")) {
         return Promise.resolve({ sessions: testSessions });
@@ -153,8 +130,7 @@ describe("CompareView", () => {
   // --- User Story 1 tests ---
 
   it("renders stint list when session has 2+ stints", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<CompareView />);
+    renderCompare("sess-1");
 
     await waitFor(() => {
       expect(screen.getByText("Stint 1")).toBeInTheDocument();
@@ -163,8 +139,7 @@ describe("CompareView", () => {
   });
 
   it("defaults selection to first two stints", async () => {
-    mockSelectedSessionId = "sess-1";
-    const { container } = renderWithQuery(<CompareView />);
+    const { container } = renderCompare("sess-1");
 
     await waitFor(() => {
       const selectedItems = container.querySelectorAll(".ace-stint-item--selected");
@@ -173,8 +148,7 @@ describe("CompareView", () => {
   });
 
   it("fetches comparison and shows setup diff", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<CompareView />);
+    renderCompare("sess-1");
 
     await waitFor(() => {
       expect(screen.getByText("WING")).toBeInTheDocument();
@@ -183,8 +157,7 @@ describe("CompareView", () => {
   });
 
   it("shows metrics panel with comparison data", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<CompareView />);
+    renderCompare("sess-1");
 
     await waitFor(() => {
       expect(screen.getByText("-0.450s")).toBeInTheDocument();
@@ -193,16 +166,8 @@ describe("CompareView", () => {
 
   // --- User Story 2 tests ---
 
-  it("shows 'select a session' EmptyState when no session selected", () => {
-    renderWithQuery(<CompareView />);
-
-    expect(screen.getByText("Select a session to compare setups")).toBeInTheDocument();
-    expect(screen.getByText("Go to Sessions")).toBeInTheDocument();
-  });
-
   it("shows 'analysis required' when session state is not analyzed", async () => {
-    mockSelectedSessionId = "sess-unanalyzed";
-    renderWithQuery(<CompareView />);
+    renderCompare("sess-unanalyzed");
 
     await waitFor(() => {
       expect(screen.getByText("Analysis required")).toBeInTheDocument();
@@ -210,7 +175,6 @@ describe("CompareView", () => {
   });
 
   it("shows 'comparison needs two stints' when session has only 1 stint", async () => {
-    mockSelectedSessionId = "sess-1";
     mockedApiGet.mockImplementation((path: string) => {
       if (path.includes("/sessions") && !path.includes("/stints") && !path.includes("/compare")) {
         return Promise.resolve({ sessions: testSessions });
@@ -220,7 +184,7 @@ describe("CompareView", () => {
       }
       return Promise.resolve({});
     });
-    renderWithQuery(<CompareView />);
+    renderCompare("sess-1");
 
     await waitFor(() => {
       expect(screen.getByText(/requires at least 2 stints/i)).toBeInTheDocument();
@@ -228,9 +192,8 @@ describe("CompareView", () => {
   });
 
   it("shows Skeleton loading state while stints are loading", () => {
-    mockSelectedSessionId = "sess-1";
     mockedApiGet.mockImplementation(() => new Promise(() => {})); // never resolves
-    const { container } = renderWithQuery(<CompareView />);
+    const { container } = renderCompare("sess-1");
 
     const skeletons = container.querySelectorAll("[class*='ace-skeleton']");
     expect(skeletons.length).toBeGreaterThan(0);

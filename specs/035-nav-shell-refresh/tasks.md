@@ -19,9 +19,9 @@
 
 **Purpose**: Install dependencies, copy assets, prepare imports
 
-- [ ] T001 Install react-router-dom v7 and @fortawesome/fontawesome-free via npm in `frontend/`
-- [ ] T002 Copy `frontend/prototypes/logo.png` to `frontend/src/assets/logo.png` (create `assets/` directory if needed)
-- [ ] T003 Import `@fortawesome/fontawesome-free/css/all.min.css` at the top of `frontend/src/main.tsx`
+- [x] T001 Install react-router-dom v7 and @fortawesome/fontawesome-free via npm in `frontend/`
+- [x] T002 Copy `frontend/prototypes/logo.png` to `frontend/src/assets/logo.png` (create `assets/` directory if needed)
+- [x] T003 Import `@fortawesome/fontawesome-free/css/all.min.css` at the top of `frontend/src/main.tsx`
 
 ---
 
@@ -29,13 +29,13 @@
 
 **Purpose**: Update the visual foundation — palette and undefined token fixes. MUST complete before any user story work begins.
 
-- [ ] T004 Update primitive color values in `frontend/src/tokens.css` — replace all color and gray-scale hex values per contracts/tokens.md Color Primitives and Gray Scale Primitives tables (22 token values)
-- [ ] T005 Add light theme semantic overrides in `frontend/src/tokens.css` — in the `[data-theme="light"]` block, override `--bg` to `#F8F9FA`, `--text-primary` to `#111827`, `--text-secondary` to `#6B7280`, and `--border` to `#E5E7EB` using explicit hex values per contracts/tokens.md Semantic Layer Impact section
-- [ ] T006 [P] Fix undefined token references in `frontend/src/views/analysis/AnalysisView.css` — replace `--spacing-lg` → `--space-6` (2×), `--border-primary` → `--border-strong` (1×), `--border-subtle` → `--border` (1×), `--color-success` → `--color-positive` (1×)
-- [ ] T007 [P] Fix undefined token references in `frontend/src/views/compare/CompareView.css` — replace `--spacing-lg` → `--space-6` (2×), `--border-subtle` → `--border` (1×), `--color-success` → `--color-positive` (1×)
-- [ ] T008 [P] Fix undefined token references in `frontend/src/views/sessions/SessionsView.css` — replace `--spacing-lg` → `--space-6` (2×)
-- [ ] T009 [P] Fix undefined token references in `frontend/src/views/settings/Settings.css` — replace `--brand` → `--color-brand` (1×), `--font-size-md` → `--font-size-base` (1×); and in `frontend/src/views/settings/CarDataSection.css` — replace `--font-size-md` → `--font-size-base` (1×)
-- [ ] T010 [P] Fix undefined token references in `frontend/src/components/onboarding/OnboardingWizard.css` — replace `--brand` → `--color-brand` (4×), `--success` → `--color-positive` (1×), `--error` → `--color-error` (1×), `--font-size-md` → `--font-size-base` (1×)
+- [x] T004 Update primitive color values in `frontend/src/tokens.css` — replace all color and gray-scale hex values per contracts/tokens.md Color Primitives and Gray Scale Primitives tables (22 token values)
+- [x] T005 Add light theme semantic overrides in `frontend/src/tokens.css` — in the `[data-theme="light"]` block, override `--bg` to `#F8F9FA`, `--text-primary` to `#111827`, `--text-secondary` to `#6B7280`, and `--border` to `#E5E7EB` using explicit hex values per contracts/tokens.md Semantic Layer Impact section
+- [x] T006 [P] Fix undefined token references in `frontend/src/views/analysis/AnalysisView.css` — replace `--spacing-lg` → `--space-6` (2×), `--border-primary` → `--border-strong` (1×), `--border-subtle` → `--border` (1×), `--color-success` → `--color-positive` (1×)
+- [x] T007 [P] Fix undefined token references in `frontend/src/views/compare/CompareView.css` — replace `--spacing-lg` → `--space-6` (2×), `--border-subtle` → `--border` (1×), `--color-success` → `--color-positive` (1×)
+- [x] T008 [P] Fix undefined token references in `frontend/src/views/sessions/SessionsView.css` — replace `--spacing-lg` → `--space-6` (2×)
+- [x] T009 [P] Fix undefined token references in `frontend/src/views/settings/Settings.css` — replace `--brand` → `--color-brand` (1×), `--font-size-md` → `--font-size-base` (1×); and in `frontend/src/views/settings/CarDataSection.css` — replace `--font-size-md` → `--font-size-base` (1×)
+- [x] T010 [P] Fix undefined token references in `frontend/src/components/onboarding/OnboardingWizard.css` — replace `--brand` → `--color-brand` (4×), `--success` → `--color-positive` (1×), `--error` → `--color-error` (1×), `--font-size-md` → `--font-size-base` (1×)
 
 **Checkpoint**: All tokens resolve correctly. Foundation ready for layout work.
 
@@ -51,53 +51,53 @@
 
 ### Router & App Integration
 
-- [ ] T012 [US1] Create route tree in `frontend/src/router.tsx` using `createBrowserRouter` — define all 9 routes per contracts/routes.md Route Tree: root redirect to /garage, /garage, /garage/:carId/tracks, /garage/:carId/tracks/:trackId/sessions, /session/:sessionId redirect to laps, /session/:sessionId/laps, /session/:sessionId/setup, /session/:sessionId/engineer, /settings, catch-all redirect to /garage. Use `Navigate` for redirects, `Outlet` for layout nesting per contracts/routes.md Layout Hierarchy.
-- [ ] T013 [US1] Modify `frontend/src/App.tsx` — replace the `<AppShell />` render with `<RouterProvider router={router} />` from router.tsx. Keep the existing backend status check, config loading, theme setup, and onboarding gate logic. The router should only render when the app is ready (backend up, config loaded, onboarding completed).
+- [x] T012 [US1] Create route tree in `frontend/src/router.tsx` using `createBrowserRouter` — define all 9 routes per contracts/routes.md Route Tree: root redirect to /garage, /garage, /garage/:carId/tracks, /garage/:carId/tracks/:trackId/sessions, /session/:sessionId redirect to laps, /session/:sessionId/laps, /session/:sessionId/setup, /session/:sessionId/engineer, /settings, catch-all redirect to /garage. Use `Navigate` for redirects, `Outlet` for layout nesting per contracts/routes.md Layout Hierarchy.
+- [x] T013 [US1] Modify `frontend/src/App.tsx` — replace the `<AppShell />` render with `<RouterProvider router={router} />` from router.tsx. Keep the existing backend status check, config loading, theme setup, and onboarding gate logic. The router should only render when the app is ready (backend up, config loaded, onboarding completed).
 
 ### Layout Components
 
-- [ ] T014 [US1] Rewrite `frontend/src/components/layout/AppShell.tsx` and `AppShell.css` — new root layout component: fixed Header (64px) at top, contextual TabBar below header, main content area (max-width 1920px centered, overflow-y auto) with `<Outlet />`, ToastContainer at bottom-right. No sidebar. Use `ace-` CSS prefix per project convention. Reference only semantic tokens for all colors.
-- [ ] T015 [US1] Create `frontend/src/components/layout/Header.tsx` and `Header.css` — fixed 64px header: logo image (`src/assets/logo.png`) + "AC Race Engineer" text on left, dynamic Breadcrumb component in center-left, settings gear icon (`fa-solid fa-gear`) as a Link to `/settings` on right. Use `ace-header` CSS prefix.
-- [ ] T016 [US1] Create `frontend/src/components/layout/Breadcrumb.tsx` and `Breadcrumb.css` — reads current route via `useMatches()` or `useLocation()` + `useParams()`, generates BreadcrumbSegment array per contracts/routes.md Breadcrumb Contract. Home icon (`fa-solid fa-house`), chevron separators (`fa-solid fa-chevron-right`), clickable Link segments for ancestors, plain text for current level. For session-level breadcrumbs, resolve car/track names from TanStack Query cache (useSessions data) or format raw params with `formatCarTrack` from `views/sessions/utils.ts`. Use `ace-breadcrumb` CSS prefix.
-- [ ] T017 [US1] Create `frontend/src/components/layout/TabBar.tsx` and `TabBar.css` — contextual tab bar per contracts/routes.md Tab Bar Contract: at garage/tracks/sessions/settings levels shows global nav tabs (Garage Home, Tracks, Sessions, Settings) with active state from current route; at session detail level shows work tabs (Lap Analysis, Setup Compare, Engineer) with active state from route suffix. Tabs are NavLink components. Active tab has visual indicator (red underline or background per prototype style). Use `ace-tabbar` CSS prefix. Global nav tabs that lack sufficient route context (e.g., "Tracks" at the /garage level where no carId exists, "Sessions" at /garage/:carId/tracks where no trackId exists) MUST be rendered as disabled/non-clickable (dimmed opacity) — similar to the existing sidebar pattern where items without a selected session are dimmed. Only tabs with full route context are clickable.
-- [ ] T018 [US2] Create `frontend/src/components/layout/SessionLayout.tsx` and `SessionLayout.css` — nested layout for `/session/:sessionId/*` routes. Renders `<Outlet />` for the active tab's view component. The tab bar rendering is handled by TabBar reading the route, so SessionLayout is a thin wrapper. Use `ace-session-layout` CSS prefix.
+- [x] T014 [US1] Rewrite `frontend/src/components/layout/AppShell.tsx` and `AppShell.css` — new root layout component: fixed Header (64px) at top, contextual TabBar below header, main content area (max-width 1920px centered, overflow-y auto) with `<Outlet />`, ToastContainer at bottom-right. No sidebar. Use `ace-` CSS prefix per project convention. Reference only semantic tokens for all colors.
+- [x] T015 [US1] Create `frontend/src/components/layout/Header.tsx` and `Header.css` — fixed 64px header: logo image (`src/assets/logo.png`) + "AC Race Engineer" text on left, dynamic Breadcrumb component in center-left, settings gear icon (`fa-solid fa-gear`) as a Link to `/settings` on right. Use `ace-header` CSS prefix.
+- [x] T016 [US1] Create `frontend/src/components/layout/Breadcrumb.tsx` and `Breadcrumb.css` — reads current route via `useMatches()` or `useLocation()` + `useParams()`, generates BreadcrumbSegment array per contracts/routes.md Breadcrumb Contract. Home icon (`fa-solid fa-house`), chevron separators (`fa-solid fa-chevron-right`), clickable Link segments for ancestors, plain text for current level. For session-level breadcrumbs, resolve car/track names from TanStack Query cache (useSessions data) or format raw params with `formatCarTrack` from `views/sessions/utils.ts`. Use `ace-breadcrumb` CSS prefix.
+- [x] T017 [US1] Create `frontend/src/components/layout/TabBar.tsx` and `TabBar.css` — contextual tab bar per contracts/routes.md Tab Bar Contract: at garage/tracks/sessions/settings levels shows global nav tabs (Garage Home, Tracks, Sessions, Settings) with active state from current route; at session detail level shows work tabs (Lap Analysis, Setup Compare, Engineer) with active state from route suffix. Tabs are NavLink components. Active tab has visual indicator (red underline or background per prototype style). Use `ace-tabbar` CSS prefix. Global nav tabs that lack sufficient route context (e.g., "Tracks" at the /garage level where no carId exists, "Sessions" at /garage/:carId/tracks where no trackId exists) MUST be rendered as disabled/non-clickable (dimmed opacity) — similar to the existing sidebar pattern where items without a selected session are dimmed. Only tabs with full route context are clickable.
+- [x] T018 [US2] Create `frontend/src/components/layout/SessionLayout.tsx` and `SessionLayout.css` — nested layout for `/session/:sessionId/*` routes. Renders `<Outlet />` for the active tab's view component. The tab bar rendering is handled by TabBar reading the route, so SessionLayout is a thin wrapper. Use `ace-session-layout` CSS prefix.
 
 ### Placeholder Views
 
-- [ ] T019 [P] [US1] Create `frontend/src/views/garage/index.tsx` and `GarageView.css` — placeholder Garage Home view with heading "My Garage", descriptive text "Your cars with session data will appear here", and a car icon (`fa-solid fa-car`). Use the EmptyState component from `components/ui/`. Include a `data-testid="garage-view"` attribute.
-- [ ] T020 [P] [US1] Create `frontend/src/views/tracks/index.tsx` and `CarTracksView.css` — placeholder Car Tracks view that reads `carId` from `useParams()`, shows heading "Tracks for {formatCar(carId)}", descriptive text "Tracks driven with this car will appear here", and a road icon (`fa-solid fa-road`). Use the EmptyState component. Include a `data-testid="tracks-view"` attribute.
+- [x] T019 [P] [US1] Create `frontend/src/views/garage/index.tsx` and `GarageView.css` — placeholder Garage Home view with heading "My Garage", descriptive text "Your cars with session data will appear here", and a car icon (`fa-solid fa-car`). Use the EmptyState component from `components/ui/`. Include a `data-testid="garage-view"` attribute.
+- [x] T020 [P] [US1] Create `frontend/src/views/tracks/index.tsx` and `CarTracksView.css` — placeholder Car Tracks view that reads `carId` from `useParams()`, shows heading "Tracks for {formatCar(carId)}", descriptive text "Tracks driven with this car will appear here", and a road icon (`fa-solid fa-road`). Use the EmptyState component. Include a `data-testid="tracks-view"` attribute.
 
 ### Existing View Adaptations
 
-- [ ] T021 [US1] Adapt `frontend/src/views/sessions/index.tsx` — read `carId` and `trackId` from `useParams()` instead of showing all sessions. Filter sessions by carId+trackId (using existing `useSessions` hook data). Replace `selectSession(id)` calls with `useNavigate()` to `/session/${id}/laps`. Replace `useUIStore.getState().setActiveSection("sessions")` calls with `useNavigate()`. Remove all `useSessionStore` and `useUIStore` imports.
-- [ ] T022 [P] [US2] Adapt `frontend/src/views/analysis/index.tsx` — read `sessionId` from `useParams()` instead of `useSessionStore`. Replace the no-session empty state with route-based check (if `!sessionId`, navigate to /garage). Replace `useUIStore.getState().setActiveSection("sessions")` with `useNavigate()` to appropriate route. Remove all `useSessionStore` and `useUIStore` imports.
-- [ ] T023 [P] [US2] Adapt `frontend/src/views/compare/index.tsx` — same pattern as T022: read `sessionId` from `useParams()`, replace store-based navigation with `useNavigate()`, remove `useSessionStore` and `useUIStore` imports.
-- [ ] T024 [P] [US2] Adapt `frontend/src/views/engineer/index.tsx` — same pattern as T022: read `sessionId` from `useParams()`, replace store-based navigation with `useNavigate()`, remove `useSessionStore` and `useUIStore` imports.
-- [ ] T025 [US1] Adapt `frontend/src/views/settings/index.tsx` — remove the `useUIStore` import and the `activeSection`-based dirty-state navigation interception logic. Settings is now a route (`/settings`), so browser back handles "return to previous view". Remove `useUIStore` and `useSessionStore` imports. Keep all existing settings functionality unchanged.
-- [ ] T026 [US1] Delete `frontend/src/components/layout/Sidebar.tsx` and `frontend/src/components/layout/Sidebar.css`
+- [x] T021 [US1] Adapt `frontend/src/views/sessions/index.tsx` — read `carId` and `trackId` from `useParams()` instead of showing all sessions. Filter sessions by carId+trackId (using existing `useSessions` hook data). Replace `selectSession(id)` calls with `useNavigate()` to `/session/${id}/laps`. Replace `useUIStore.getState().setActiveSection("sessions")` calls with `useNavigate()`. Remove all `useSessionStore` and `useUIStore` imports.
+- [x] T022 [P] [US2] Adapt `frontend/src/views/analysis/index.tsx` — read `sessionId` from `useParams()` instead of `useSessionStore`. Replace the no-session empty state with route-based check (if `!sessionId`, navigate to /garage). Replace `useUIStore.getState().setActiveSection("sessions")` with `useNavigate()` to appropriate route. Remove all `useSessionStore` and `useUIStore` imports.
+- [x] T023 [P] [US2] Adapt `frontend/src/views/compare/index.tsx` — same pattern as T022: read `sessionId` from `useParams()`, replace store-based navigation with `useNavigate()`, remove `useSessionStore` and `useUIStore` imports.
+- [x] T024 [P] [US2] Adapt `frontend/src/views/engineer/index.tsx` — same pattern as T022: read `sessionId` from `useParams()`, replace store-based navigation with `useNavigate()`, remove `useSessionStore` and `useUIStore` imports.
+- [x] T025 [US1] Adapt `frontend/src/views/settings/index.tsx` — remove the `useUIStore` import and the `activeSection`-based dirty-state navigation interception logic. Settings is now a route (`/settings`), so browser back handles "return to previous view". Remove `useUIStore` and `useSessionStore` imports. Keep all existing settings functionality unchanged.
+- [x] T026 [US1] Delete `frontend/src/components/layout/Sidebar.tsx` and `frontend/src/components/layout/Sidebar.css`
 
 ### State Store Cleanup
 
 > Store deletion happens here — after all consumers (T021-T025) have been migrated away from uiStore and sessionStore.
 
-- [ ] T011 [US1] Delete `frontend/src/store/uiStore.ts` and `frontend/src/store/sessionStore.ts`. Remove their exports from any store barrel/index file if one exists.
+- [x] T011 [US1] Delete `frontend/src/store/uiStore.ts` and `frontend/src/store/sessionStore.ts`. Remove their exports from any store barrel/index file if one exists.
 
 ### Tests for US1+US2
 
-- [ ] T027 [US1] Create test helper `renderWithRouter` in `frontend/tests/helpers/renderWithRouter.tsx` — wraps component in `createMemoryRouter` + `RouterProvider` + `QueryClientProvider` per research.md R7 test helper pattern. Accept `route`, `path`, and optionally full route array for nested layouts.
-- [ ] T028 [US1] Create `frontend/tests/router.test.tsx` — test route rendering: / redirects to /garage, /garage renders GarageView, /garage/:carId/tracks renders CarTracksView, /session/:sessionId redirects to laps, /session/:sessionId/laps renders AnalysisView, /settings renders SettingsView, unknown routes redirect to /garage. Use `createMemoryRouter`.
-- [ ] T029 [P] [US1] Create `frontend/tests/components/layout/Header.test.tsx` — test logo image renders, breadcrumb renders, settings gear icon links to /settings
-- [ ] T030 [P] [US1] Create `frontend/tests/components/layout/Breadcrumb.test.tsx` — test breadcrumb segments at each route level per contracts/routes.md Breadcrumb Contract: home-only at /garage, home + car at tracks, home + car + track at sessions, full path at session detail, home + settings at /settings. Test segment click navigates correctly.
-- [ ] T031 [P] [US1] Create `frontend/tests/components/layout/TabBar.test.tsx` — test global nav tabs at garage/tracks/sessions/settings levels, work tabs at session detail level. Test active tab highlighting matches current route.
-- [ ] T032 [P] [US2] Create `frontend/tests/components/layout/SessionLayout.test.tsx` — test that SessionLayout renders child route (Outlet) for laps/setup/engineer paths
-- [ ] T033 [US1] Rewrite `frontend/tests/components/layout/AppShell.test.tsx` — test new layout structure: Header renders, TabBar renders, Outlet renders child content, ToastContainer present. Remove all uiStore and sessionStore mocks.
-- [ ] T034 [US1] Delete `frontend/tests/components/layout/Sidebar.test.tsx`
-- [ ] T035 [US2] Adapt `frontend/tests/views/analysis/AnalysisView.test.tsx` — replace `useSessionStore` mock with `renderWithRouter` at route `/session/test-id/laps` with path `/session/:sessionId/laps`. Replace `useUIStore` mocks with route navigation assertions. Keep all existing test coverage for laps, telemetry, corners.
-- [ ] T036 [P] [US2] Adapt `frontend/tests/views/compare/CompareView.test.tsx` — same pattern as T035: replace store mocks with router rendering at `/session/test-id/setup`
-- [ ] T037 [P] [US2] Adapt `frontend/tests/views/engineer/EngineerView.test.tsx` — same pattern as T035: replace store mocks with router rendering at `/session/test-id/engineer`
-- [ ] T038 [US1] Adapt `frontend/tests/views/sessions/SessionsView.test.tsx` — replace `useSessionStore` mock with router rendering at `/garage/test-car/tracks/test-track/sessions`. Replace `selectSession` assertions with navigation assertions. Replace `useUIStore` mocks.
-- [ ] T039 [US1] Adapt `frontend/tests/views/settings/SettingsView.test.tsx` — remove `useUIStore` mocks. Render via router at `/settings`. Keep all existing settings functionality tests.
-- [ ] T040 [US1] Adapt `frontend/tests/App.test.tsx` — integrate router into test rendering. Test that app shows splash screen → onboarding or main interface flow. Update to expect /garage route instead of sessions view.
+- [x] T027 [US1] Create test helper `renderWithRouter` in `frontend/tests/helpers/renderWithRouter.tsx` — wraps component in `createMemoryRouter` + `RouterProvider` + `QueryClientProvider` per research.md R7 test helper pattern. Accept `route`, `path`, and optionally full route array for nested layouts.
+- [x] T028 [US1] Create `frontend/tests/router.test.tsx` — test route rendering: / redirects to /garage, /garage renders GarageView, /garage/:carId/tracks renders CarTracksView, /session/:sessionId redirects to laps, /session/:sessionId/laps renders AnalysisView, /settings renders SettingsView, unknown routes redirect to /garage. Use `createMemoryRouter`.
+- [x] T029 [P] [US1] Create `frontend/tests/components/layout/Header.test.tsx` — test logo image renders, breadcrumb renders, settings gear icon links to /settings
+- [x] T030 [P] [US1] Create `frontend/tests/components/layout/Breadcrumb.test.tsx` — test breadcrumb segments at each route level per contracts/routes.md Breadcrumb Contract: home-only at /garage, home + car at tracks, home + car + track at sessions, full path at session detail, home + settings at /settings. Test segment click navigates correctly.
+- [x] T031 [P] [US1] Create `frontend/tests/components/layout/TabBar.test.tsx` — test global nav tabs at garage/tracks/sessions/settings levels, work tabs at session detail level. Test active tab highlighting matches current route.
+- [x] T032 [P] [US2] Create `frontend/tests/components/layout/SessionLayout.test.tsx` — test that SessionLayout renders child route (Outlet) for laps/setup/engineer paths
+- [x] T033 [US1] Rewrite `frontend/tests/components/layout/AppShell.test.tsx` — test new layout structure: Header renders, TabBar renders, Outlet renders child content, ToastContainer present. Remove all uiStore and sessionStore mocks.
+- [x] T034 [US1] Delete `frontend/tests/components/layout/Sidebar.test.tsx`
+- [x] T035 [US2] Adapt `frontend/tests/views/analysis/AnalysisView.test.tsx` — replace `useSessionStore` mock with `renderWithRouter` at route `/session/test-id/laps` with path `/session/:sessionId/laps`. Replace `useUIStore` mocks with route navigation assertions. Keep all existing test coverage for laps, telemetry, corners.
+- [x] T036 [P] [US2] Adapt `frontend/tests/views/compare/CompareView.test.tsx` — same pattern as T035: replace store mocks with router rendering at `/session/test-id/setup`
+- [x] T037 [P] [US2] Adapt `frontend/tests/views/engineer/EngineerView.test.tsx` — same pattern as T035: replace store mocks with router rendering at `/session/test-id/engineer`
+- [x] T038 [US1] Adapt `frontend/tests/views/sessions/SessionsView.test.tsx` — replace `useSessionStore` mock with router rendering at `/garage/test-car/tracks/test-track/sessions`. Replace `selectSession` assertions with navigation assertions. Replace `useUIStore` mocks.
+- [x] T039 [US1] Adapt `frontend/tests/views/settings/SettingsView.test.tsx` — remove `useUIStore` mocks. Render via router at `/settings`. Keep all existing settings functionality tests.
+- [x] T040 [US1] Adapt `frontend/tests/App.test.tsx` — integrate router into test rendering. Test that app shows splash screen → onboarding or main interface flow. Update to expect /garage route instead of sessions view.
 
 **Checkpoint**: Full navigation hierarchy works. All 9 routes render correctly. Breadcrumb and tab bar are contextual. Session tabs switch views. Settings accessible from header. Browser back/forward works. All existing view tests pass with router-based rendering.
 
@@ -109,12 +109,12 @@
 
 **Independent Test**: Visually inspect all views — no emoji characters visible, all icons render as Font Awesome glyphs.
 
-- [ ] T041 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/analysis/index.tsx` — replace `&#9888;` warning with `<i className="fa-solid fa-triangle-exclamation" />`, replace `&#128202;` chart with `<i className="fa-solid fa-chart-line" />`, and any other emoji in empty states per research.md R4 icon mapping
-- [ ] T042 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/compare/index.tsx` — replace `&#9888;` and `&#128260;` with appropriate FA icons per research.md R4 icon mapping
-- [ ] T043 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/engineer/index.tsx` — replace `&#129302;` robot with `<i className="fa-solid fa-robot" />`, `&#128269;` magnifier with `<i className="fa-solid fa-magnifying-glass" />`, `&#9888;` warning with FA equivalent
-- [ ] T044 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/sessions/index.tsx` — replace `&#9888;` and `&#128203;` with appropriate FA icons
-- [ ] T045 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/analysis/CornerTable.tsx` — replace `&#128739;` with appropriate FA icon (e.g., `fa-solid fa-location-dot`)
-- [ ] T046 [P] [US3] Replace emoji/warning characters in `frontend/src/components/onboarding/PathInput.tsx` (⚠ character) and `frontend/src/components/onboarding/StepReview.tsx` (⚠ characters) with `<i className="fa-solid fa-triangle-exclamation" />`
+- [x] T041 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/analysis/index.tsx` — replace `&#9888;` warning with `<i className="fa-solid fa-triangle-exclamation" />`, replace `&#128202;` chart with `<i className="fa-solid fa-chart-line" />`, and any other emoji in empty states per research.md R4 icon mapping
+- [x] T042 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/compare/index.tsx` — replace `&#9888;` and `&#128260;` with appropriate FA icons per research.md R4 icon mapping
+- [x] T043 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/engineer/index.tsx` — replace `&#129302;` robot with `<i className="fa-solid fa-robot" />`, `&#128269;` magnifier with `<i className="fa-solid fa-magnifying-glass" />`, `&#9888;` warning with FA equivalent
+- [x] T044 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/sessions/index.tsx` — replace `&#9888;` and `&#128203;` with appropriate FA icons
+- [x] T045 [P] [US3] Replace emoji icons with Font Awesome in `frontend/src/views/analysis/CornerTable.tsx` — replace `&#128739;` with appropriate FA icon (e.g., `fa-solid fa-location-dot`)
+- [x] T046 [P] [US3] Replace emoji/warning characters in `frontend/src/components/onboarding/PathInput.tsx` (⚠ character) and `frontend/src/components/onboarding/StepReview.tsx` (⚠ characters) with `<i className="fa-solid fa-triangle-exclamation" />`
 
 **Checkpoint**: All emoji icons replaced with Font Awesome. Visual identity matches prototype brand language.
 
@@ -126,8 +126,8 @@
 
 **Independent Test**: Launch the app or simulate backend unavailability — new logo, loading animation, and brand colors appear.
 
-- [ ] T047 [US7] Update `frontend/src/components/layout/SplashScreen.tsx` and `SplashScreen.css` — replace the text-based "AC Race Engineer" heading with the new logo image (`src/assets/logo.png`). Update loading indicator styling to use brand red for the spinner/progress animation. Match visual style from `frontend/prototypes/2-Racing Engineering - Loading.html`. Keep existing polling/error/retry logic unchanged.
-- [ ] T048 [US7] Update `frontend/tests/components/layout/SplashScreen.test.tsx` — add test that logo image element is rendered (query by `alt` text or `role="img"`). Keep existing polling/error state tests.
+- [x] T047 [US7] Update `frontend/src/components/layout/SplashScreen.tsx` and `SplashScreen.css` — replace the text-based "AC Race Engineer" heading with the new logo image (`src/assets/logo.png`). Update loading indicator styling to use brand red for the spinner/progress animation. Match visual style from `frontend/prototypes/2-Racing Engineering - Loading.html`. Keep existing polling/error/retry logic unchanged.
+- [x] T048 [US7] Update `frontend/tests/components/layout/SplashScreen.test.tsx` — add test that logo image element is rendered (query by `alt` text or `role="img"`). Keep existing polling/error state tests.
 
 **Checkpoint**: Splash screen shows new logo and brand colors.
 
@@ -139,8 +139,8 @@
 
 **Independent Test**: Reset onboarding state, launch app, complete wizard, confirm landing on Garage Home.
 
-- [ ] T049 [US6] Adapt `frontend/src/components/onboarding/OnboardingWizard.tsx` — ensure the wizard works within the new layout (no sidebar dependency). On completion (`handleFinish`), navigate to `/garage` using `useNavigate()` instead of relying on `setActiveSection`. Remove any `useUIStore` imports if present.
-- [ ] T050 [US6] Verify `frontend/tests/components/onboarding/OnboardingWizard.test.tsx` still passes — if the wizard tests reference `useUIStore` or `setActiveSection`, replace with route navigation assertions. If tests don't reference stores, no changes needed.
+- [x] T049 [US6] Adapt `frontend/src/components/onboarding/OnboardingWizard.tsx` — ensure the wizard works within the new layout (no sidebar dependency). On completion (`handleFinish`), navigate to `/garage` using `useNavigate()` instead of relying on `setActiveSection`. Remove any `useUIStore` imports if present.
+- [x] T050 [US6] Verify `frontend/tests/components/onboarding/OnboardingWizard.test.tsx` still passes — if the wizard tests reference `useUIStore` or `setActiveSection`, replace with route navigation assertions. If tests don't reference stores, no changes needed.
 
 **Checkpoint**: Onboarding completes and lands user on Garage Home via routing.
 
@@ -150,7 +150,7 @@
 
 **Purpose**: Regenerate application icons from new logo for Windows taskbar/start menu/explorer.
 
-- [ ] T051 Regenerate Tauri desktop icons — run `npx @tauri-apps/cli icon frontend/src/assets/logo.png` from `frontend/` directory to generate all platform icon sizes in `frontend/src-tauri/icons/`. Verify `frontend/src-tauri/tauri.conf.json` icon paths still reference the correct `icons/` directory. If logo.png is smaller than 1024×1024, the tool will generate at available sizes.
+- [x] T051 Regenerate Tauri desktop icons — run `npx @tauri-apps/cli icon frontend/src/assets/logo.png` from `frontend/` directory to generate all platform icon sizes in `frontend/src-tauri/icons/`. Verify `frontend/src-tauri/tauri.conf.json` icon paths still reference the correct `icons/` directory. If logo.png is smaller than 1024×1024, the tool will generate at available sizes.
 
 ---
 
@@ -158,9 +158,9 @@
 
 **Purpose**: Final validation across all user stories
 
-- [ ] T052 Run `npx tsc --noEmit` from `frontend/` — fix any TypeScript strict mode errors introduced by the migration
-- [ ] T053 Run `npm run test` from `frontend/` — verify all tests pass (existing adapted + new tests). Fix any remaining failures.
-- [ ] T054 Run quickstart.md verification checklist — manually verify: app starts and shows splash, navigate full hierarchy, breadcrumb clickable at each level, browser back/forward works, URLs are bookmarkable, settings accessible from header, dark+light themes show new colors, logo visible in header+splash, no emoji icons remain, taskbar icon shows new logo
+- [x] T052 Run `npx tsc --noEmit` from `frontend/` — fix any TypeScript strict mode errors introduced by the migration
+- [x] T053 Run `npm run test` from `frontend/` — verify all tests pass (existing adapted + new tests). Fix any remaining failures.
+- [x] T054 Run quickstart.md verification checklist — manually verify: app starts and shows splash, navigate full hierarchy, breadcrumb clickable at each level, browser back/forward works, URLs are bookmarkable, settings accessible from header, dark+light themes show new colors, logo visible in header+splash, no emoji icons remain, taskbar icon shows new logo
 
 ---
 

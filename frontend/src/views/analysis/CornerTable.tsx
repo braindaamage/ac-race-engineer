@@ -29,7 +29,7 @@ export function CornerTable({
   if (primaryCorners.length === 0) {
     return (
       <EmptyState
-        icon={<span>&#128739;</span>}
+        icon={<i className="fa-solid fa-location-dot" />}
         title="No corners detected"
         description="Corner detection did not find any corners for this lap."
       />
