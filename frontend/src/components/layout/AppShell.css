@@ -1,14 +1,8 @@
 .ace-app-shell {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
-}
-
-.ace-app-shell__main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
@@ -16,38 +10,7 @@
   flex: 1;
   overflow-y: auto;
   background-color: var(--bg);
-}
-
-.ace-session-strip {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: 0 var(--spacing-md);
-  background: var(--bg-elevated);
-  border-bottom: 1px solid var(--border);
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
-}
-
-.ace-session-strip__label {
-  font-weight: 500;
-  color: var(--text-primary);
-  text-transform: capitalize;
-}
-
-.ace-session-strip__close {
-  margin-left: auto;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  font-size: var(--font-size-md);
-  line-height: 1;
-  padding: var(--spacing-xs);
-  transition: color 0.15s ease;
-}
-
-.ace-session-strip__close:hover {
-  color: var(--text-primary);
+  max-width: 1920px;
+  width: 100%;
+  margin: 0 auto;
 }

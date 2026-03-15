@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Tracks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        ::webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header -->
+    <header id="header" class="bg-dark-surface border-b border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <!-- Left: Brand & Breadcrumb -->
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <nav id="breadcrumb" class="hidden md:flex items-center gap-2 pl-6 border-l border-dark-border">
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToHome()">
+                        Home
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm">
+                        Ferrari 488 GT3
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Right: Tools & Profile -->
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav id="nav-tabs" class="bg-dark-surface border-b border-dark-border sticky top-16 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Garage Home
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium bg-brand-red text-white whitespace-nowrap">
+                    Tracks
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Sessions
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Settings
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout" class="flex flex-1">
+        
+        <main id="main-content" class="flex-1 p-4 lg:p-8">
+            
+            <div id="car-info-header" class="mb-8">
+                <div class="bg-dark-surface border border-dark-border rounded-xl p-6 mb-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+                        <div class="w-24 h-24 bg-brand-red rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-car text-white text-3xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold text-white mb-2">Ferrari 488 GT3</h1>
+                            <p class="text-dark-subtext mb-4">GT3 Class • Select a track to view session history</p>
+                            <div class="flex flex-wrap gap-6 text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-road text-brand-blue"></i>
+                                    <span class="text-dark-text">8 Tracks</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-chart-line text-brand-blue"></i>
+                                    <span class="text-dark-text">24 Total Sessions</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-clock text-brand-amber"></i>
+                                    <span class="text-dark-text">Last driven 2 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="track-controls" class="flex flex-col lg:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-subtext"></i>
+                        <input type="text" placeholder="Search tracks by name or location..." class="w-full bg-dark-surface border border-dark-border rounded-lg pl-12 pr-4 py-3 text-white placeholder-dark-subtext focus:outline-none focus:border-brand-blue transition-colors">
+                    </div>
+                    <div class="flex gap-3">
+                        <select class="bg-dark-surface border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue transition-colors cursor-pointer">
+                            <option>All Countries</option>
+                            <option>United Kingdom</option>
+                            <option>Germany</option>
+                            <option>Belgium</option>
+                            <option>United States</option>
+                        </select>
+                        <select class="bg-dark-surface border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue transition-colors cursor-pointer">
+                            <option>Sort: Recent</option>
+                            <option>Sort: Name A-Z</option>
+                            <option>Sort: Most Sessions</option>
+                            <option>Sort: Best Lap Time</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tracks-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <div class="track-card bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-brand-blue transition-all duration-300 cursor-pointer group" onclick="navigateToSessions('silverstone')">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/84b8128992-d42e9810666345ca0ff1.png" alt="Silverstone Circuit race track aerial view, professional motorsport photography" />
+                        <div class="absolute top-3 right-3 bg-brand-green/90 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Recent
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-xl font-semibold text-white group-hover:text-brand-blue transition-colors">Silverstone Circuit</h3>
+                                <p class="text-dark-subtext text-sm">Silverstone, United Kingdom</p>
+                            </div>
+                            <div class="w-12 h-12 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-road text-brand-blue text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">6</div>
+                                <div class="text-dark-subtext text-xs">Sessions</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">1:42.156</div>
+                                <div class="text-dark-subtext text-xs">Best Lap</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">5.9km</div>
+                                <div class="text-dark-subtext text-xs">Length</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+                            <span class="text-dark-subtext text-xs">Last session</span>
+                            <span class="text-dark-subtext text-xs font-medium">2 hours ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-brand-blue transition-all duration-300 cursor-pointer group" onclick="navigateToSessions('spa')">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/1689447501-eecd21f6c0d262d938bd.png" alt="Spa-Francorchamps race track aerial view, famous eau rouge corner, motorsport photography" />
+                        <div class="absolute top-3 right-3 bg-brand-green/90 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Recent
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-xl font-semibold text-white group-hover:text-brand-blue transition-colors">Spa-Francorchamps</h3>
+                                <p class="text-dark-subtext text-sm">Stavelot, Belgium</p>
+                            </div>
+                            <div class="w-12 h-12 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-road text-brand-blue text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">4</div>
+                                <div class="text-dark-subtext text-xs">Sessions</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">2:18.742</div>
+                                <div class="text-dark-subtext text-xs">Best Lap</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">7.0km</div>
+                                <div class="text-dark-subtext text-xs">Length</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+                            <span class="text-dark-subtext text-xs">Last session</span>
+                            <span class="text-dark-subtext text-xs font-medium">1 day ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-brand-blue transition-all duration-300 cursor-pointer group" onclick="navigateToSessions('nurburgring')">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/ec3f2d0415-84fcb62dc457a65e9cd3.png" alt="Nurburgring GP circuit race track aerial view, modern F1 facility, motorsport photography" />
+                        <div class="absolute top-3 right-3 bg-brand-amber/90 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Analyzing
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-xl font-semibold text-white group-hover:text-brand-blue transition-colors">Nürburgring GP</h3>
+                                <p class="text-dark-subtext text-sm">Nürburg, Germany</p>
+                            </div>
+                            <div class="w-12 h-12 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-road text-brand-blue text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">3</div>
+                                <div class="text-dark-subtext text-xs">Sessions</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">1:47.892</div>
+                                <div class="text-dark-subtext text-xs">Best Lap</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">5.1km</div>
+                                <div class="text-dark-subtext text-xs">Length</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+                            <span class="text-dark-subtext text-xs">Last session</span>
+                            <span class="text-dark-subtext text-xs font-medium">2 days ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-brand-blue transition-all duration-300 cursor-pointer group" onclick="navigateToSessions('brands')">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/9fcb7e91ba-2312ed4f123dd5385185.png" alt="Brands Hatch race track aerial view, famous paddock hill bend, motorsport photography" />
+                        <div class="absolute top-3 right-3 bg-brand-grey/90 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Older
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-xl font-semibold text-white group-hover:text-brand-blue transition-colors">Brands Hatch</h3>
+                                <p class="text-dark-subtext text-sm">Kent, United Kingdom</p>
+                            </div>
+                            <div class="w-12 h-12 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-road text-brand-blue text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">5</div>
+                                <div class="text-dark-subtext text-xs">Sessions</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">1:25.634</div>
+                                <div class="text-dark-subtext text-xs">Best Lap</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">3.9km</div>
+                                <div class="text-dark-subtext text-xs">Length</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+                            <span class="text-dark-subtext text-xs">Last session</span>
+                            <span class="text-dark-subtext text-xs font-medium">1 week ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-brand-blue transition-all duration-300 cursor-pointer group" onclick="navigateToSessions('monza')">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/5bd4faa4e0-9668fe023351efc6ee44.png" alt="Monza race track aerial view, famous parabolica corner, historic Italian circuit, motorsport photography" />
+                        <div class="absolute top-3 right-3 bg-brand-grey/90 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Older
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-xl font-semibold text-white group-hover:text-brand-blue transition-colors">Autodromo Nazionale Monza</h3>
+                                <p class="text-dark-subtext text-sm">Monza, Italy</p>
+                            </div>
+                            <div class="w-12 h-12 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-road text-brand-blue text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">2</div>
+                                <div class="text-dark-subtext text-xs">Sessions</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">1:48.921</div>
+                                <div class="text-dark-subtext text-xs">Best Lap</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">5.8km</div>
+                                <div class="text-dark-subtext text-xs">Length</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+                            <span class="text-dark-subtext text-xs">Last session</span>
+                            <span class="text-dark-subtext text-xs font-medium">2 weeks ago</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="track-card bg-dark-surface border border-dark-border rounded-xl overflow-hidden hover:border-brand-blue transition-all duration-300 cursor-pointer group" onclick="navigateToSessions('sebring')">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/c133e3b0dc-be8e1ccc1d724ba0f93b.png" alt="Sebring International Raceway aerial view, famous bumpy track surface, endurance racing circuit, motorsport photography" />
+                        <div class="absolute top-3 right-3 bg-brand-grey/90 text-white text-xs px-2 py-1 rounded-full font-medium">
+                            Older
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h3 class="text-xl font-semibold text-white group-hover:text-brand-blue transition-colors">Sebring International</h3>
+                                <p class="text-dark-subtext text-sm">Sebring, United States</p>
+                            </div>
+                            <div class="w-12 h-12 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-road text-brand-blue text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">4</div>
+                                <div class="text-dark-subtext text-xs">Sessions</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">1:58.476</div>
+                                <div class="text-dark-subtext text-xs">Best Lap</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-white font-semibold font-mono">6.0km</div>
+                                <div class="text-dark-subtext text-xs">Length</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+                            <span class="text-dark-subtext text-xs">Last session</span>
+                            <span class="text-dark-subtext text-xs font-medium">3 weeks ago</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+<script>
+function navigateToHome() {
+    console.log('Navigating to Home');
+}
+
+function navigateToSessions(trackId) {
+    console.log('Navigating to sessions for track:', trackId);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const trackCards = document.querySelectorAll('.track-card');
+    
+    trackCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    const searchInput = document.querySelector('input[type="text"]');
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        trackCards.forEach(card => {
+            const trackName = card.querySelector('h3').textContent.toLowerCase();
+            const trackLocation = card.querySelector('p').textContent.toLowerCase();
+            if (trackName.includes(searchTerm) || trackLocation.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

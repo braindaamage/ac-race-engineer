@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { EmptyState, Skeleton } from "../../components/ui";
-import { useSessionStore } from "../../store/sessionStore";
-import { useUIStore } from "../../store/uiStore";
 import { useLaps, useLapDetail, useLapTelemetry } from "../../hooks/useLaps";
 import { useSessions } from "../../hooks/useSessions";
 import { LapList } from "./LapList";
@@ -11,32 +10,33 @@ import { LapSummaryPanel } from "./LapSummaryPanel";
 import "./AnalysisView.css";
 
 export function AnalysisView() {
-  const selectedSessionId = useSessionStore((s) => s.selectedSessionId);
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const { sessions } = useSessions();
   const [selectedLaps, setSelectedLaps] = useState<number[]>([]);
 
-  const { data: lapData, isLoading: lapsLoading } = useLaps(selectedSessionId);
+  const { data: lapData, isLoading: lapsLoading } = useLaps(sessionId ?? null);
 
   const primaryLap = selectedLaps[0] ?? null;
   const secondaryLap = selectedLaps[1] ?? null;
 
   const { data: primaryDetail } = useLapDetail(
-    selectedSessionId,
+    sessionId ?? null,
     primaryLap,
     primaryLap != null,
   );
   const { data: secondaryDetail } = useLapDetail(
-    selectedSessionId,
+    sessionId ?? null,
     secondaryLap,
     secondaryLap != null,
   );
   const { data: primaryTelemetry, isLoading: telemetryLoading } = useLapTelemetry(
-    selectedSessionId,
+    sessionId ?? null,
     primaryLap,
     primaryLap != null,
   );
   const { data: secondaryTelemetry } = useLapTelemetry(
-    selectedSessionId,
+    sessionId ?? null,
     secondaryLap,
     secondaryLap != null,
   );
@@ -55,32 +55,19 @@ export function AnalysisView() {
   }, []);
 
   // Empty state: no session selected
-  if (!selectedSessionId) {
-    return (
-      <EmptyState
-        icon={<span>&#128202;</span>}
-        title="Select a session to analyze laps"
-        description="Go to Sessions and select a session to view detailed lap analysis."
-        action={{
-          label: "Go to Sessions",
-          onClick: () => useUIStore.getState().setActiveSection("sessions"),
-        }}
-      />
-    );
+  if (!sessionId) {
+    navigate("/garage");
+    return null;
   }
 
   // Check session state
-  const session = sessions.find((s) => s.session_id === selectedSessionId);
+  const session = sessions.find((s) => s.session_id === sessionId);
   if (session && session.state !== "analyzed" && session.state !== "engineered") {
     return (
       <EmptyState
-        icon={<span>&#9888;</span>}
+        icon={<i className="fa-solid fa-triangle-exclamation" />}
         title="Analysis required"
         description="This session needs to be processed before lap analysis is available."
-        action={{
-          label: "Go to Sessions",
-          onClick: () => useUIStore.getState().setActiveSection("sessions"),
-        }}
       />
     );
   }
@@ -108,7 +95,7 @@ export function AnalysisView() {
   if (laps.length === 0) {
     return (
       <EmptyState
-        icon={<span>&#128202;</span>}
+        icon={<i className="fa-solid fa-chart-line" />}
         title="No laps found"
         description="This session has no laps to analyze."
       />
@@ -134,7 +121,7 @@ export function AnalysisView() {
       <div className="ace-analysis__main">
         {primaryLap == null ? (
           <EmptyState
-            icon={<span>&#128202;</span>}
+            icon={<i className="fa-solid fa-chart-line" />}
             title="Select a lap to view telemetry"
             description="Click a lap in the sidebar to view its telemetry data."
           />

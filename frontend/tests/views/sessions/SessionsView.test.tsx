@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { SessionsView } from "../../../src/views/sessions";
+import { renderWithRouter } from "../../helpers/renderWithRouter";
 
 // Mock api
 vi.mock("../../../src/lib/api", () => ({
@@ -19,19 +19,6 @@ vi.mock("../../../src/lib/wsManager", () => ({
 }));
 
 // Mock stores
-const mockSelectSession = vi.fn();
-const mockClearSession = vi.fn();
-let mockSelectedSessionId: string | null = null;
-
-vi.mock("../../../src/store/sessionStore", () => ({
-  useSessionStore: (selector: (s: Record<string, unknown>) => unknown) =>
-    selector({
-      selectedSessionId: mockSelectedSessionId,
-      selectSession: mockSelectSession,
-      clearSession: mockClearSession,
-    }),
-}));
-
 vi.mock("../../../src/store/jobStore", () => ({
   useJobStore: (selector: (s: Record<string, unknown>) => unknown) =>
     selector({ jobProgress: {} }),
@@ -65,8 +52,8 @@ const testSessions = [
   },
   {
     session_id: "sess-2",
-    car: "ks_porsche_911_gt3_r",
-    track: "monza",
+    car: "ks_ferrari_488_gt3",
+    track: "spa",
     session_date: "2026-03-02T14:00:00Z",
     lap_count: 10,
     best_lap_time: 105.3,
@@ -77,23 +64,18 @@ const testSessions = [
   },
 ];
 
-function renderWithQuery(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+function renderSessions() {
+  return renderWithRouter(<SessionsView />, {
+    path: "/garage/:carId/tracks/:trackId/sessions",
+    route: "/garage/ks_ferrari_488_gt3/tracks/spa/sessions",
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
 }
 
 describe("SessionsView", () => {
   beforeEach(() => {
-    mockSelectedSessionId = null;
     mockedApiGet.mockResolvedValue({ sessions: testSessions });
     mockedApiPost.mockResolvedValue({ job_id: "job-1", session_id: "sess-1" });
     mockedApiDelete.mockResolvedValue(undefined);
-    mockSelectSession.mockClear();
-    mockClearSession.mockClear();
     mockAddNotification.mockClear();
   });
 
@@ -104,19 +86,21 @@ describe("SessionsView", () => {
   // --- US1: View All Sessions ---
 
   it("renders session list from mocked GET /sessions response", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      // Both sessions share the same car; verify we see two session cards
+      const carNames = screen.getAllByText("ferrari 488 gt3");
+      expect(carNames).toHaveLength(2);
     });
-    expect(screen.getByText("porsche 911 gt3 r")).toBeInTheDocument();
   });
 
   it("sessions are sorted by date descending", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      const carNames = screen.getAllByText("ferrari 488 gt3");
+      expect(carNames).toHaveLength(2);
     });
 
     const cards = screen.getAllByText(/laps/);
@@ -127,7 +111,7 @@ describe("SessionsView", () => {
 
   it("shows Skeleton components while loading", () => {
     mockedApiGet.mockReturnValue(new Promise(() => {})); // never resolves
-    const { container } = renderWithQuery(<SessionsView />);
+    const { container } = renderSessions();
 
     const skeletons = container.querySelectorAll(".ace-skeleton");
     expect(skeletons.length).toBe(3);
@@ -135,7 +119,7 @@ describe("SessionsView", () => {
 
   it("shows EmptyState when sessions array is empty", async () => {
     mockedApiGet.mockResolvedValue({ sessions: [] });
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("No sessions recorded yet")).toBeInTheDocument();
@@ -144,7 +128,7 @@ describe("SessionsView", () => {
 
   it("shows error EmptyState with retry button when query fails", async () => {
     mockedApiGet.mockRejectedValue(new Error("Network error"));
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("Failed to load sessions")).toBeInTheDocument();
@@ -153,7 +137,7 @@ describe("SessionsView", () => {
   });
 
   it("Sync button is visible", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("Sync")).toBeInTheDocument();
@@ -163,10 +147,10 @@ describe("SessionsView", () => {
   // --- US2: Process a Session ---
 
   it("clicking Process button calls apiPost with /sessions/{id}/process", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      expect(screen.getByText("5 laps")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByText("Process"));
@@ -177,10 +161,10 @@ describe("SessionsView", () => {
   });
 
   it("after successful process call, jobWSManager.trackJob is called", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      expect(screen.getByText("5 laps")).toBeInTheDocument();
     });
 
     fireEvent.click(screen.getByText("Process"));
@@ -191,10 +175,10 @@ describe("SessionsView", () => {
   });
 
   it('Process button is not rendered on "Ready" sessions', async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("porsche 911 gt3 r")).toBeInTheDocument();
+      expect(screen.getByText("10 laps")).toBeInTheDocument();
     });
 
     // Only one Process button (for the "new" session)
@@ -204,52 +188,42 @@ describe("SessionsView", () => {
 
   // --- US3: Select a Session ---
 
-  it('clicking a "Ready" session card calls selectSession', async () => {
-    const { container } = renderWithQuery(<SessionsView />);
+  it('clicking a "Ready" session card navigates to session detail', async () => {
+    const { router } = renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("porsche 911 gt3 r")).toBeInTheDocument();
+      expect(screen.getByText("10 laps")).toBeInTheDocument();
     });
 
     // Find the card for the ready session (sess-2)
-    const cards = container.querySelectorAll(".ace-session-card");
+    const cards = document.querySelectorAll(".ace-session-card");
     // sess-2 is first in sorted order (more recent date)
     fireEvent.click(cards[0]!);
 
-    expect(mockSelectSession).toHaveBeenCalledWith("sess-2");
+    // Should navigate to session detail
+    expect(router.state.location.pathname).toBe("/session/sess-2/laps");
   });
 
-  it('clicking a "New" session card does NOT call selectSession', async () => {
-    const { container } = renderWithQuery(<SessionsView />);
+  it('clicking a "New" session card does NOT navigate', async () => {
+    const { router } = renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      expect(screen.getByText("5 laps")).toBeInTheDocument();
     });
 
-    const cards = container.querySelectorAll(".ace-session-card");
-    // sess-1 is second (earlier date), state=discovered → uiState=new
+    const cards = document.querySelectorAll(".ace-session-card");
+    // sess-1 is second (earlier date), state=discovered -> uiState=new
     fireEvent.click(cards[1]!);
 
-    expect(mockSelectSession).not.toHaveBeenCalled();
-  });
-
-  it("the selected session has isSelected=true", async () => {
-    mockSelectedSessionId = "sess-2";
-    const { container } = renderWithQuery(<SessionsView />);
-
-    await waitFor(() => {
-      expect(screen.getByText("porsche 911 gt3 r")).toBeInTheDocument();
-    });
-
-    const selectedCards = container.querySelectorAll(".ace-session-card--selected");
-    expect(selectedCards).toHaveLength(1);
+    // Should stay on the sessions page
+    expect(router.state.location.pathname).toBe("/garage/ks_ferrari_488_gt3/tracks/spa/sessions");
   });
 
   // --- US4: Sync ---
 
   it("clicking Sync button calls apiPost with /sessions/sync", async () => {
     mockedApiPost.mockResolvedValue({ discovered: 2, already_known: 3, incomplete: 0 });
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("Sync")).toBeInTheDocument();
@@ -273,7 +247,7 @@ describe("SessionsView", () => {
       },
     );
 
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("Sync")).toBeInTheDocument();
@@ -294,7 +268,7 @@ describe("SessionsView", () => {
 
   it("toast notification appears after sync with discovered > 0", async () => {
     mockedApiPost.mockResolvedValue({ discovered: 2, already_known: 3, incomplete: 0 });
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("Sync")).toBeInTheDocument();
@@ -309,7 +283,7 @@ describe("SessionsView", () => {
 
   it("toast notification appears after sync with discovered === 0", async () => {
     mockedApiPost.mockResolvedValue({ discovered: 0, already_known: 5, incomplete: 0 });
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
       expect(screen.getByText("Sync")).toBeInTheDocument();
@@ -325,10 +299,10 @@ describe("SessionsView", () => {
   // --- US5: Delete ---
 
   it("clicking delete button opens Modal with confirmation text", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      expect(screen.getByText("5 laps")).toBeInTheDocument();
     });
 
     const deleteButtons = screen.getAllByLabelText("Delete session");
@@ -340,10 +314,10 @@ describe("SessionsView", () => {
   });
 
   it("clicking confirm in Modal calls apiDelete", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      expect(screen.getByText("5 laps")).toBeInTheDocument();
     });
 
     const deleteButtons = screen.getAllByLabelText("Delete session");
@@ -361,10 +335,10 @@ describe("SessionsView", () => {
   });
 
   it("clicking cancel in Modal closes it without calling apiDelete", async () => {
-    renderWithQuery(<SessionsView />);
+    renderSessions();
 
     await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
+      expect(screen.getByText("5 laps")).toBeInTheDocument();
     });
 
     const deleteButtons = screen.getAllByLabelText("Delete session");
@@ -380,27 +354,5 @@ describe("SessionsView", () => {
       expect(screen.queryByText("Delete Session")).not.toBeInTheDocument();
     });
     expect(mockedApiDelete).not.toHaveBeenCalled();
-  });
-
-  it("if deleted session was selectedSessionId, clearSession is called", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<SessionsView />);
-
-    await waitFor(() => {
-      expect(screen.getByText("ferrari 488 gt3")).toBeInTheDocument();
-    });
-
-    const deleteButtons = screen.getAllByLabelText("Delete session");
-    fireEvent.click(deleteButtons[1]!); // sess-1
-
-    await waitFor(() => {
-      expect(screen.getByText("Delete Session")).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByText("Delete"));
-
-    await waitFor(() => {
-      expect(mockClearSession).toHaveBeenCalled();
-    });
   });
 });

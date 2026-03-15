@@ -20,6 +20,25 @@ vi.mock("../src/hooks/useTheme", () => ({
   useTheme: () => ({ theme: "dark", toggleTheme: vi.fn() }),
 }));
 
+// Mock the router module to avoid deep rendering of all views
+vi.mock("../src/router", async () => {
+  const React = await import("react");
+  const { createMemoryRouter } = await import("react-router-dom");
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/",
+        element: React.createElement("div", null, "Router loaded"),
+        children: [
+          { index: true, element: React.createElement("div", null, "Garage placeholder") },
+        ],
+      },
+    ],
+    { initialEntries: ["/"] },
+  );
+  return { router };
+});
+
 import { apiGet } from "../src/lib/api";
 import { useBackendStatus } from "../src/hooks/useBackendStatus";
 
@@ -68,7 +87,7 @@ describe("App", () => {
     });
   });
 
-  it("shows AppShell when onboarding_completed is true", async () => {
+  it("shows router content when onboarding_completed is true", async () => {
     mockedApiGet.mockResolvedValue({
       ac_install_path: "C:\\AC",
       setups_path: "C:\\AC\\setups",
@@ -82,8 +101,7 @@ describe("App", () => {
     renderWithQuery(<App />);
 
     await waitFor(() => {
-      // AppShell renders Sidebar which contains "Sessions" and the view title
-      expect(screen.getAllByText("Sessions").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText("Router loaded")).toBeDefined();
     });
   });
 

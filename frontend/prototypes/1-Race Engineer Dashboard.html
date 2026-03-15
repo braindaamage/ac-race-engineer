@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AC Race Engineer - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+        .glass-panel {
+            background: rgba(23, 30, 39, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 dark">
+
+    <!-- Header -->
+    <header id="header" class="bg-light-surface dark:bg-dark-surface border-b border-light-border dark:border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <!-- Left: Brand & Session Status -->
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-3 pl-6 border-l border-dark-border">
+                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-brand-red/20 text-brand-red border border-brand-red/30 animate-pulse">ACTIVE TRACK SESSION</span>
+                    <span class="text-brand-grey font-mono text-sm">PRACTICE • SILVERSTONE GP</span>
+                </div>
+            </div>
+
+            <!-- Center: Navigation (Desktop) -->
+            <nav class="hidden lg:flex items-center gap-1">
+                <a href="#" class="px-4 py-2 rounded-md text-sm font-medium bg-dark-border text-white">Dashboard</a>
+                <a href="#" class="px-4 py-2 rounded-md text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/50 transition-colors">Telemetry</a>
+                <a href="#" class="px-4 py-2 rounded-md text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/50 transition-colors">Setup</a>
+                <a href="#" class="px-4 py-2 rounded-md text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/50 transition-colors">Strategy</a>
+            </nav>
+
+            <!-- Right: Tools & Profile -->
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="lg:hidden ml-2 text-light-text dark:text-white" onclick="document.getElementById('mobile-nav').classList.toggle('hidden')">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Nav -->
+        <nav id="mobile-nav" class="hidden lg:hidden bg-light-surface dark:bg-dark-surface border-b border-light-border dark:border-dark-border p-4 flex flex-col gap-2">
+            <a href="#" class="px-4 py-2 rounded-md text-sm font-medium bg-brand-red text-white">Dashboard</a>
+            <a href="#" class="px-4 py-2 rounded-md text-sm font-medium text-light-subtext dark:text-dark-subtext">Telemetry</a>
+            <a href="#" class="px-4 py-2 rounded-md text-sm font-medium text-light-subtext dark:text-dark-subtext">Setup</a>
+            <a href="#" class="px-4 py-2 rounded-md text-sm font-medium text-light-subtext dark:text-dark-subtext">Strategy</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-6 lg:p-8 max-w-[1920px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Car Status & Tires (3 cols) -->
+        <section id="car-status" class="lg:col-span-3 flex flex-col gap-6">
+            
+            <!-- Car Visualization Card -->
+            <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-5 shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-sm font-medium text-light-subtext dark:text-dark-subtext uppercase tracking-wider">Tire & Brake Status</h3>
+                    <span class="text-xs font-mono text-brand-green bg-brand-green/10 px-2 py-1 rounded border border-brand-green/20">OPTIMAL</span>
+                </div>
+                
+                <!-- Car Silhouette & Tire Data -->
+                <div class="relative min-h-[400px] w-full grid grid-cols-2 gap-4 items-center justify-items-center py-4">
+                    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/85ac1baacf-767b61152ffd7b59924e.png" alt="top down formula race car silhouette, technical blueprint style, white on transparent" />
+                    </div>
+
+                    <!-- FL Tire -->
+                    <div class="z-10 w-full max-w-[100px]">
+                        <div class="text-[10px] text-light-subtext dark:text-dark-subtext mb-1 text-center">FL</div>
+                        <div class="bg-light-bg dark:bg-dark-bg border border-brand-green/50 rounded p-2 text-center">
+                            <div class="text-xl md:text-2xl font-mono font-bold text-brand-green">88°</div>
+                            <div class="text-[10px] font-mono text-brand-grey">26.5 psi</div>
+                        </div>
+                    </div>
+
+                    <!-- FR Tire -->
+                    <div class="z-10 w-full max-w-[100px]">
+                        <div class="text-[10px] text-light-subtext dark:text-dark-subtext mb-1 text-center">FR</div>
+                        <div class="bg-light-bg dark:bg-dark-bg border border-brand-green/50 rounded p-2 text-center">
+                            <div class="text-xl md:text-2xl font-mono font-bold text-brand-green">91°</div>
+                            <div class="text-[10px] font-mono text-brand-grey">26.8 psi</div>
+                        </div>
+                    </div>
+
+                    <!-- RL Tire -->
+                    <div class="z-10 w-full max-w-[100px]">
+                        <div class="text-[10px] text-light-subtext dark:text-dark-subtext mb-1 text-center">RL</div>
+                        <div class="bg-light-bg dark:bg-dark-bg border border-brand-amber/50 rounded p-2 text-center">
+                            <div class="text-xl md:text-2xl font-mono font-bold text-brand-amber">104°</div>
+                            <div class="text-[10px] font-mono text-brand-grey">27.2 psi</div>
+                        </div>
+                    </div>
+
+                    <!-- RR Tire -->
+                    <div class="z-10 w-full max-w-[100px]">
+                        <div class="text-[10px] text-light-subtext dark:text-dark-subtext mb-1 text-center">RR</div>
+                        <div class="bg-light-bg dark:bg-dark-bg border border-brand-green/50 rounded p-2 text-center">
+                            <div class="text-xl md:text-2xl font-mono font-bold text-brand-green">98°</div>
+                            <div class="text-[10px] font-mono text-brand-grey">27.0 psi</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-light-border dark:border-dark-border">
+                    <div>
+                        <div class="text-xs text-light-subtext dark:text-dark-subtext mb-1">Brake Bias</div>
+                        <div class="text-lg font-mono font-bold text-white">56.5%</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-light-subtext dark:text-dark-subtext mb-1">ABS / TC</div>
+                        <div class="text-lg font-mono font-bold text-white">3 / 4</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Lap Card -->
+            <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-5 shadow-lg">
+                <h3 class="text-sm font-medium text-light-subtext dark:text-dark-subtext uppercase tracking-wider mb-4">Current Lap</h3>
+                
+                <div class="flex items-end gap-2 mb-2">
+                    <span class="text-4xl font-mono font-bold text-white">1:28.432</span>
+                    <span class="text-sm font-mono text-brand-green mb-1.5 flex items-center">
+                        <i class="fa-solid fa-caret-down mr-1"></i>0.215
+                    </span>
+                </div>
+                
+                <!-- Sector Bars -->
+                <div class="flex gap-1 h-2 w-full mt-4 mb-2">
+                    <div class="flex-1 bg-brand-green rounded-sm"></div> <!-- S1 -->
+                    <div class="flex-1 bg-brand-amber rounded-sm"></div> <!-- S2 -->
+                    <div class="flex-1 bg-dark-border rounded-sm animate-pulse"></div> <!-- S3 -->
+                </div>
+                <div class="flex justify-between text-xs font-mono text-light-subtext dark:text-dark-subtext">
+                    <span>S1: 28.1</span>
+                    <span>S2: 34.2</span>
+                    <span>S3: --.-</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Center Column: Telemetry & AI Suggestions (6 cols) -->
+        <section id="main-analytics" class="lg:col-span-6 flex flex-col gap-6">
+            
+            <!-- AI Engineer Suggestions -->
+            <div class="bg-light-surface dark:bg-dark-surface border border-brand-blue/30 rounded-xl p-0 shadow-[0_0_30px_rgba(0,204,255,0.05)] overflow-hidden">
+                <div class="bg-gradient-to-r from-brand-blue/10 to-transparent p-5 border-b border-brand-blue/20 flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded bg-brand-blue/20 flex items-center justify-center text-brand-blue border border-brand-blue/30">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white">AI Race Engineer</h3>
+                            <p class="text-xs text-brand-blue">Analysis based on last 5 laps</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 bg-brand-blue/20 text-brand-blue text-xs font-mono rounded border border-brand-blue/30">CONFIDENCE: 94%</span>
+                </div>
+                
+                <div class="p-5">
+                    <p class="text-light-text dark:text-dark-text mb-4 text-sm leading-relaxed">
+                        Rear tires are overheating in Sector 3 exits. Lower rear tire pressures by <span class="font-mono font-bold text-brand-blue">0.5 psi</span> to increase contact patch stability and reduce thermal degradation.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-3 mt-4">
+                        <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors shadow-lg shadow-brand-red/20 flex items-center gap-2">
+                            <i class="fa-solid fa-wrench"></i> Apply Suggested Changes
+                        </button>
+                        <button class="bg-transparent border border-dark-border text-light-subtext dark:text-dark-subtext hover:text-white hover:border-dark-subtext px-4 py-2 rounded text-sm font-medium transition-colors">
+                            Dismiss
+                        </button>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t border-light-border dark:border-dark-border grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-brand-green"></div>
+                            <span class="text-xs text-light-subtext dark:text-dark-subtext">Estimated Gain: <span class="text-brand-green font-mono font-bold">+0.15s / lap</span></span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-brand-amber"></div>
+                            <span class="text-xs text-light-subtext dark:text-dark-subtext">Tire Wear Impact: <span class="text-brand-amber font-mono font-bold">-2% / stint</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Telemetry Graph -->
+            <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-5 shadow-lg flex-1 min-h-[400px]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-sm font-medium text-light-subtext dark:text-dark-subtext uppercase tracking-wider">Speed vs Throttle Telemetry</h3>
+                    <div class="flex gap-2">
+                        <button class="px-2 py-1 text-xs font-medium bg-light-bg dark:bg-dark-bg text-white border border-light-border dark:border-dark-border rounded hover:border-brand-grey transition-colors">Lap 12</button>
+                        <button class="px-2 py-1 text-xs font-medium bg-transparent text-light-subtext dark:text-dark-subtext border border-transparent rounded hover:text-white transition-colors">Lap 11</button>
+                        <button class="px-2 py-1 text-xs font-medium bg-transparent text-brand-blue border border-brand-blue/30 rounded bg-brand-blue/10">Optimal</button>
+                    </div>
+                </div>
+                
+                <div id="telemetryChart" class="w-full h-[320px]"></div>
+                
+                <script>
+                    window.addEventListener('load', function() {
+                        try {
+                            const trace1 = {
+                                x: Array.from({length: 50}, (_, i) => i),
+                                y: [60, 80, 110, 140, 160, 150, 120, 90, 70, 85, 110, 145, 180, 200, 215, 220, 210, 180, 140, 100, 80, 90, 120, 150, 180, 190, 195, 180, 150, 120, 100, 110, 130, 160, 190, 210, 230, 240, 245, 230, 200, 160, 120, 90, 70, 60, 80, 100, 120, 140],
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'Speed (km/h)',
+                                line: { color: '#00CCFF', width: 2 }
+                            };
+                            
+                            const trace2 = {
+                                x: Array.from({length: 50}, (_, i) => i),
+                                y: [100, 100, 100, 100, 100, 0, 0, 0, 50, 80, 100, 100, 100, 100, 100, 80, 0, 0, 0, 20, 60, 90, 100, 100, 100, 100, 90, 50, 0, 0, 40, 70, 100, 100, 100, 100, 100, 100, 100, 80, 0, 0, 0, 0, 30, 60, 90, 100, 100, 100],
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'Throttle %',
+                                yaxis: 'y2',
+                                line: { color: '#1AB866', width: 2, shape: 'hv' },
+                                fill: 'tozeroy',
+                                fillcolor: 'rgba(26, 184, 102, 0.1)'
+                            };
+
+                            const layout = {
+                                paper_bgcolor: 'rgba(0,0,0,0)',
+                                plot_bgcolor: 'rgba(0,0,0,0)',
+                                margin: { t: 10, r: 40, b: 40, l: 40 },
+                                showlegend: true,
+                                legend: { orientation: 'h', y: 1.1, x: 0, font: { color: '#9CA3AF' } },
+                                xaxis: { 
+                                    showgrid: true, 
+                                    gridcolor: '#2A333D', 
+                                    zeroline: false,
+                                    tickfont: { color: '#7A8B99' }
+                                },
+                                yaxis: { 
+                                    title: 'Speed',
+                                    titlefont: { color: '#00CCFF' },
+                                    tickfont: { color: '#00CCFF' },
+                                    showgrid: true,
+                                    gridcolor: '#2A333D',
+                                    zeroline: false 
+                                },
+                                yaxis2: {
+                                    title: 'Throttle',
+                                    titlefont: { color: '#1AB866' },
+                                    tickfont: { color: '#1AB866' },
+                                    overlaying: 'y',
+                                    side: 'right',
+                                    showgrid: false,
+                                    zeroline: false
+                                }
+                            };
+                            
+                            const config = { responsive: true, displayModeBar: false };
+                            Plotly.newPlot('telemetryChart', [trace1, trace2], layout, config);
+                        } catch(e) {
+                            console.error(e);
+                        }
+                    });
+                </script>
+            </div>
+        </section>
+
+        <!-- Right Column: Lap History & Setup (3 cols) -->
+        <section id="sidebar-data" class="lg:col-span-3 flex flex-col gap-6">
+            
+            <!-- Lap History Table -->
+            <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl shadow-lg flex flex-col h-[400px]">
+                <div class="p-5 border-b border-light-border dark:border-dark-border">
+                    <h3 class="text-sm font-medium text-light-subtext dark:text-dark-subtext uppercase tracking-wider">Session Laps</h3>
+                </div>
+                
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[300px]">
+                        <thead class="bg-light-bg dark:bg-dark-bg sticky top-0">
+                            <tr>
+                                <th class="py-3 px-4 text-xs font-medium text-light-subtext dark:text-dark-subtext border-b border-light-border dark:border-dark-border">#</th>
+                                <th class="py-3 px-4 text-xs font-medium text-light-subtext dark:text-dark-subtext border-b border-light-border dark:border-dark-border">Time</th>
+                                <th class="py-3 px-4 text-xs font-medium text-light-subtext dark:text-dark-subtext border-b border-light-border dark:border-dark-border text-right">Delta</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-sm">
+                            <tr class="hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors">
+                                <td class="py-3 px-4 text-brand-grey border-b border-light-border/50 dark:border-dark-border/50">12</td>
+                                <td class="py-3 px-4 text-white font-bold border-b border-light-border/50 dark:border-dark-border/50">1:28.432</td>
+                                <td class="py-3 px-4 text-brand-green text-right border-b border-light-border/50 dark:border-dark-border/50">-0.215</td>
+                            </tr>
+                            <tr class="hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors">
+                                <td class="py-3 px-4 text-brand-grey border-b border-light-border/50 dark:border-dark-border/50">11</td>
+                                <td class="py-3 px-4 text-light-text border-b border-light-border/50 dark:border-dark-border/50">1:28.647</td>
+                                <td class="py-3 px-4 text-brand-amber text-right border-b border-light-border/50 dark:border-dark-border/50">+0.110</td>
+                            </tr>
+                            <tr class="hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors bg-brand-blue/5">
+                                <td class="py-3 px-4 text-brand-blue border-b border-light-border/50 dark:border-dark-border/50">10</td>
+                                <td class="py-3 px-4 text-brand-blue font-bold border-b border-light-border/50 dark:border-dark-border/50">1:28.537</td>
+                                <td class="py-3 px-4 text-brand-grey text-right border-b border-light-border/50 dark:border-dark-border/50">PB</td>
+                            </tr>
+                            <tr class="hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors">
+                                <td class="py-3 px-4 text-brand-grey border-b border-light-border/50 dark:border-dark-border/50">09</td>
+                                <td class="py-3 px-4 text-light-text border-b border-light-border/50 dark:border-dark-border/50">1:29.102</td>
+                                <td class="py-3 px-4 text-brand-amber text-right border-b border-light-border/50 dark:border-dark-border/50">+0.565</td>
+                            </tr>
+                            <tr class="hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors">
+                                <td class="py-3 px-4 text-brand-grey border-b border-light-border/50 dark:border-dark-border/50">08</td>
+                                <td class="py-3 px-4 text-light-text border-b border-light-border/50 dark:border-dark-border/50">1:28.950</td>
+                                <td class="py-3 px-4 text-brand-amber text-right border-b border-light-border/50 dark:border-dark-border/50">+0.413</td>
+                            </tr>
+                             <tr class="hover:bg-light-border/30 dark:hover:bg-dark-border/30 transition-colors">
+                                <td class="py-3 px-4 text-brand-grey border-b border-light-border/50 dark:border-dark-border/50">07</td>
+                                <td class="py-3 px-4 text-light-text border-b border-light-border/50 dark:border-dark-border/50">IN LAP</td>
+                                <td class="py-3 px-4 text-brand-grey text-right border-b border-light-border/50 dark:border-dark-border/50">--</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Setup Summary -->
+            <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl p-5 shadow-lg flex-1">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-medium text-light-subtext dark:text-dark-subtext uppercase tracking-wider">Setup Summary</h3>
+                    <button class="text-xs text-brand-blue hover:text-white transition-colors"><i class="fa-solid fa-pen mr-1"></i> Edit</button>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-2 rounded bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border">
+                        <span class="text-xs text-light-subtext dark:text-dark-subtext">Aero Balance</span>
+                        <span class="text-sm font-mono font-bold text-white">42.5%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border">
+                        <span class="text-xs text-light-subtext dark:text-dark-subtext">Ride Height (F/R)</span>
+                        <span class="text-sm font-mono font-bold text-white">55 / 62 mm</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border">
+                        <span class="text-xs text-light-subtext dark:text-dark-subtext">Fuel Load</span>
+                        <span class="text-sm font-mono font-bold text-white">25 L</span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded bg-light-bg dark:bg-dark-bg border border-brand-green/30 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-brand-green"></div>
+                        <span class="text-xs text-light-subtext dark:text-dark-subtext pl-2">TC2 Setting</span>
+                        <span class="text-sm font-mono font-bold text-brand-green">4 <span class="text-[10px] font-normal opacity-70">(+1)</span></span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Setup Detailed Section (Collapsible/Scrollable) -->
+    <section id="setup-details" class="px-4 sm:px-6 lg:px-8 pb-8 max-w-[1920px] mx-auto w-full">
+        <div class="bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-xl overflow-hidden shadow-lg">
+            <div class="p-5 border-b border-light-border dark:border-dark-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Engineering Setup</h2>
+                    <p class="text-sm text-light-subtext dark:text-dark-subtext">Current Configuration: Dry_Quali_V2</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="px-4 py-2 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-light-subtext dark:text-light-subtext rounded hover:text-white hover:border-brand-grey transition-colors text-sm">Load Setup</button>
+                    <button class="px-4 py-2 bg-brand-red text-white rounded font-medium hover:bg-red-600 transition-colors shadow-lg shadow-brand-red/20 text-sm">Save Changes</button>
+                </div>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Suspension -->
+                <div>
+                    <h4 class="text-brand-blue text-xs font-bold uppercase tracking-wider mb-4 border-b border-light-border dark:border-dark-border pb-2">Suspension</h4>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Springs (F)</label>
+                            <input type="range" class="col-span-1 accent-brand-blue h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer">
+                            <span class="text-right font-mono text-sm text-white col-span-1">1600 N</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Springs (R)</label>
+                            <input type="range" class="col-span-1 accent-brand-blue h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer">
+                            <span class="text-right font-mono text-sm text-white col-span-1">1400 N</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">ARB (F)</label>
+                            <div class="col-span-1 flex justify-center gap-1">
+                                <div class="w-2 h-2 rounded-full bg-brand-blue"></div>
+                                <div class="w-2 h-2 rounded-full bg-light-border dark:bg-dark-border"></div>
+                                <div class="w-2 h-2 rounded-full bg-light-border dark:bg-dark-border"></div>
+                            </div>
+                            <span class="text-right font-mono text-sm text-white col-span-1">SOFT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Aerodynamics -->
+                <div>
+                    <h4 class="text-brand-blue text-xs font-bold uppercase tracking-wider mb-4 border-b border-light-border dark:border-dark-border pb-2">Aerodynamics</h4>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Wing Angle</label>
+                            <input type="range" class="col-span-1 accent-brand-blue h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer" value="8">
+                            <span class="text-right font-mono text-sm text-white col-span-1">8 deg</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Splitter</label>
+                            <input type="range" class="col-span-1 accent-brand-blue h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer" value="4">
+                            <span class="text-right font-mono text-sm text-white col-span-1">4 deg</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 items-center group">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1 group-hover:text-brand-green transition-colors">Brake Ducts</label>
+                            <input type="range" class="col-span-1 accent-brand-green h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer" value="2">
+                            <span class="text-right font-mono text-sm text-brand-green font-bold col-span-1">2 <i class="fa-solid fa-arrow-down text-[10px] ml-1"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drivetrain -->
+                <div>
+                    <h4 class="text-brand-blue text-xs font-bold uppercase tracking-wider mb-4 border-b border-light-border dark:border-dark-border pb-2">Drivetrain</h4>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Diff Preload</label>
+                            <input type="range" class="col-span-1 accent-brand-blue h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer">
+                            <span class="text-right font-mono text-sm text-white col-span-1">60 Nm</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Engine Map</label>
+                            <select class="col-span-1 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-xs text-white rounded p-1 focus:outline-none focus:border-brand-blue">
+                                <option>1 (Dry)</option>
+                                <option>2 (Wet)</option>
+                                <option>3 (Quali)</option>
+                            </select>
+                            <span class="text-right font-mono text-sm text-white col-span-1">MAP 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tires & Fuel -->
+                <div>
+                    <h4 class="text-brand-blue text-xs font-bold uppercase tracking-wider mb-4 border-b border-light-border dark:border-dark-border pb-2">Strategy</h4>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Start Fuel</label>
+                            <input type="number" class="col-span-1 bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border text-white text-xs rounded p-1 text-center" value="45">
+                            <span class="text-right font-mono text-sm text-white col-span-1">Liters</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 items-center">
+                            <label class="text-xs text-light-subtext dark:text-dark-subtext col-span-1">Compound</label>
+                            <div class="col-span-2 flex gap-2">
+                                <button class="flex-1 bg-brand-red text-white text-xs py-1 px-2 rounded font-bold border border-transparent shadow-sm">SOFT</button>
+                                <button class="flex-1 bg-transparent text-light-subtext dark:text-dark-subtext border border-light-border dark:border-dark-border text-xs py-1 px-2 rounded hover:text-white">MED</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer" class="bg-light-surface dark:bg-dark-surface border-t border-light-border dark:border-dark-border mt-auto">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 text-light-subtext dark:text-dark-subtext">
+                <i class="fa-solid fa-flag-checkered text-brand-red"></i>
+                <span class="text-sm font-medium">AC Race Engineer <span class="text-xs opacity-50 ml-1">v1.1</span></span>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="text-xs text-light-subtext dark:text-dark-subtext flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-brand-green animate-pulse"></span>
+                    Server Connected
+                </div>
+                <div class="text-xs text-light-subtext dark:text-dark-subtext font-mono">
+                    Ping: 24ms
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <span class="text-xs text-light-subtext dark:text-dark-subtext uppercase tracking-wider mr-2">Theme</span>
+                <button onclick="toggleTheme('light')" class="w-8 h-8 rounded-full bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border flex items-center justify-center text-light-subtext dark:text-light-subtext hover:text-brand-blue transition-colors">
+                    <i class="fa-regular fa-sun"></i>
+                </button>
+                <button onclick="toggleTheme('dark')" class="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center shadow-lg shadow-brand-blue/20">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle Logic
+        function toggleTheme(theme) {
+            const body = document.body;
+            if (theme === 'light') {
+                body.classList.remove('bg-dark-bg', 'text-dark-text');
+                body.classList.add('bg-light-bg', 'text-light-text');
+                
+                // Update CSS Variables for specific elements if needed
+                document.querySelectorAll('.bg-dark-surface').forEach(el => {
+                    el.classList.remove('bg-dark-surface', 'border-dark-border');
+                    el.classList.add('bg-light-surface', 'border-light-border');
+                });
+                 document.querySelectorAll('.text-dark-subtext').forEach(el => {
+                    el.classList.remove('text-dark-subtext');
+                    el.classList.add('text-light-subtext');
+                });
+                // Note: In a real app, this would be handled more robustly with CSS variables or Tailwind's 'dark' class on HTML tag
+                // Since I used custom colors in config, I'm simulating the switch for the demo
+                alert("Theme switch simulation: In a real implementation, this would toggle the 'dark' class on the HTML tag and use Tailwind's dark mode features fully.");
+            } else {
+                // Revert to dark
+                 body.classList.add('bg-dark-bg', 'text-dark-text');
+                body.classList.remove('bg-light-bg', 'text-light-text');
+                 document.querySelectorAll('.bg-light-surface').forEach(el => {
+                    el.classList.add('bg-dark-surface', 'border-dark-border');
+                    el.classList.remove('bg-light-surface', 'border-light-border');
+                });
+                 document.querySelectorAll('.text-light-subtext').forEach(el => {
+                    el.classList.add('text-dark-subtext');
+                    el.classList.remove('text-light-subtext');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

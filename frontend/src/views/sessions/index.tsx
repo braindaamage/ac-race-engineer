@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSessions } from "../../hooks/useSessions";
-import { useSessionStore } from "../../store/sessionStore";
 import { useJobStore } from "../../store/jobStore";
 import { useNotificationStore } from "../../store/notificationStore";
 import { jobWSManager } from "../../lib/wsManager";
@@ -13,11 +13,10 @@ import { getUISessionState } from "./utils";
 import "./SessionsView.css";
 
 export function SessionsView() {
+  const { carId, trackId } = useParams<{ carId: string; trackId: string }>();
+  const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
   const queryClient = useQueryClient();
-  const selectedSessionId = useSessionStore((s) => s.selectedSessionId);
-  const selectSession = useSessionStore((s) => s.selectSession);
-  const clearSession = useSessionStore((s) => s.clearSession);
   const jobProgress = useJobStore((s) => s.jobProgress);
   const addNotification = useNotificationStore((s) => s.addNotification);
 
@@ -72,7 +71,7 @@ export function SessionsView() {
   };
 
   const handleSelect = (sessionId: string) => {
-    selectSession(sessionId);
+    navigate(`/session/${sessionId}/laps`);
   };
 
   const handleDelete = (sessionId: string) => {
@@ -84,9 +83,6 @@ export function SessionsView() {
     try {
       await apiDelete(`/sessions/${pendingDeleteId}`);
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
-      if (pendingDeleteId === selectedSessionId) {
-        clearSession();
-      }
     } catch (err) {
       addNotification("error", `Failed to delete session: ${(err as Error).message}`);
     } finally {
@@ -115,11 +111,18 @@ export function SessionsView() {
     }
   };
 
+  // Filter sessions by car and track from route params
+  const filteredSessions = sessions.filter((s) => {
+    if (carId && s.car !== carId) return false;
+    if (trackId && s.track !== trackId) return false;
+    return true;
+  });
+
   const pendingSession = pendingDeleteId
-    ? sessions.find((s) => s.session_id === pendingDeleteId)
+    ? filteredSessions.find((s) => s.session_id === pendingDeleteId)
     : null;
 
-  const sortedSessions = [...sessions].sort(
+  const sortedSessions = [...filteredSessions].sort(
     (a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime(),
   );
 
@@ -142,22 +145,22 @@ export function SessionsView() {
 
       {!isLoading && error && (
         <EmptyState
-          icon={<span>&#9888;</span>}
+          icon={<i className="fa-solid fa-triangle-exclamation" />}
           title="Failed to load sessions"
           description={error.message}
           action={{ label: "Retry", onClick: () => refetch() }}
         />
       )}
 
-      {!isLoading && !error && sessions.length === 0 && (
+      {!isLoading && !error && filteredSessions.length === 0 && (
         <EmptyState
-          icon={<span>&#128203;</span>}
+          icon={<i className="fa-solid fa-clipboard-list" />}
           title="No sessions recorded yet"
           description="Sessions are recorded automatically while you drive in Assetto Corsa. Make sure the AC Race Engineer app is installed in your Assetto Corsa folder, then go for a drive!"
         />
       )}
 
-      {!isLoading && !error && sessions.length > 0 && (
+      {!isLoading && !error && filteredSessions.length > 0 && (
         <div className="ace-sessions__list">
           {sortedSessions.map((session) => {
             const uiState = getUISessionState(session, processingJobs);
@@ -168,7 +171,7 @@ export function SessionsView() {
                 key={session.session_id}
                 session={session}
                 uiState={uiState}
-                isSelected={session.session_id === selectedSessionId}
+                isSelected={false}
                 jobProgress={jp}
                 jobError={jobInfo?.error ?? null}
                 onProcess={() => handleProcess(session.session_id)}

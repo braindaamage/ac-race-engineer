@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+        * { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300 overflow-x-hidden">
+
+<div id="app-container" class="min-h-screen flex flex-col">
+    
+    <header id="header" class="bg-dark-surface border-b border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <nav id="breadcrumb" class="hidden md:flex items-center gap-2 pl-6 border-l border-dark-border">
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToHome()">
+                        Home
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToCar()">
+                        Ferrari 488 GT3
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToTrack()">
+                        Silverstone Circuit
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-white font-medium text-sm">
+                        Practice Session
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav id="nav-tabs" class="bg-dark-surface border-b border-dark-border sticky top-16 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <button id="lap-analysis-tab" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap" onclick="switchTab('lap-analysis')">
+                    Lap Analysis
+                </button>
+                <button id="setup-compare-tab" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap" onclick="switchTab('setup-compare')">
+                    Setup Compare
+                </button>
+                <button id="engineer-tab" class="px-4 py-3 text-sm font-medium bg-brand-red text-white whitespace-nowrap" onclick="switchTab('engineer')">
+                    Engineer
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout" class="flex flex-1">
+        <main id="main-content" class="flex-1 flex flex-col">
+            
+            <div id="session-header" class="bg-dark-surface border-b border-dark-border p-4 lg:p-6">
+                <div class="max-w-[1920px] mx-auto flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center border border-brand-green/30">
+                            <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Practice Session</h1>
+                            <p class="text-dark-subtext">Today, 14:30 - 15:45 • 24 laps • Best: 1:42.156</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-auto">
+                        <button class="bg-dark-border hover:bg-dark-subtext/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                        <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 shadow-lg shadow-brand-red/20">
+                            <i class="fa-solid fa-share"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-content" class="flex-1 p-4 lg:p-6 overflow-auto">
+                <div class="max-w-[1920px] mx-auto">
+                    <div id="engineer-content" class="space-y-6">
+                        
+                        <div id="engineer-header" class="flex flex-col lg:flex-row gap-4 lg:items-center">
+                            <h2 class="text-xl font-bold text-white">Engineer Analysis</h2>
+                            <div class="flex gap-2 ml-auto">
+                                <button class="bg-dark-border hover:bg-dark-subtext/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                                    <i class="fa-solid fa-filter"></i>
+                                    <span>Filter</span>
+                                </button>
+                                <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 shadow-lg shadow-brand-red/20">
+                                    <i class="fa-solid fa-plus"></i>
+                                    <span>Add Note</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="issue-alerts" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                            
+                            <div id="critical-alert" class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <div class="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-exclamation-triangle text-red-400"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-red-400">Critical Issue</h3>
+                                        <p class="text-xs text-dark-subtext">Requires immediate attention</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-white mb-3">Tire temperature imbalance detected in corners 3-7. Front left overheating by 15°C.</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-dark-subtext font-mono">Laps 8-12</span>
+                                    <button class="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition-colors">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="warning-alert" class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <div class="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-exclamation-circle text-yellow-400"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-yellow-400">Warning</h3>
+                                        <p class="text-xs text-dark-subtext">Potential performance impact</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-white mb-3">Brake bias too aggressive. Consider reducing rear bias by 2-3% for better stability.</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-dark-subtext font-mono">Laps 15-18</span>
+                                    <button class="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded transition-colors">
+                                        Review
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="info-alert" class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-info-circle text-blue-400"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-blue-400">Optimization</h3>
+                                        <p class="text-xs text-dark-subtext">Performance improvement opportunity</p>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-white mb-3">Gear ratios optimal for current setup. Consider minor aero adjustments for sector 2.</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-dark-subtext font-mono">General</span>
+                                    <button class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors">
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div id="recommendations-section" class="bg-dark-surface border border-brand-blue/30 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(0,204,255,0.05)]">
+                            <div class="bg-gradient-to-r from-brand-blue/10 to-transparent p-5 border-b border-brand-blue/20 flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded bg-brand-blue/20 flex items-center justify-center text-brand-blue border border-brand-blue/30">
+                                        <i class="fa-solid fa-brain"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-base font-bold text-white">AI Race Engineer</h3>
+                                        <p class="text-xs text-brand-blue">Analysis based on last 5 laps</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-brand-blue/20 text-brand-blue text-xs font-mono rounded border border-brand-blue/30">CONFIDENCE: 94%</span>
+                            </div>
+                            
+                            <div class="p-4 space-y-4">
+                                
+                                <div id="recommendation-1" class="bg-dark-bg/50 border border-dark-border rounded-lg p-4">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-6 h-6 bg-brand-green/20 rounded-full flex items-center justify-center mt-1">
+                                            <i class="fa-solid fa-check text-brand-green text-xs"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-white mb-2">Reduce Front Wing Angle</h4>
+                                            <p class="text-sm text-dark-subtext mb-3">Decrease front wing from 8 to 6 to reduce understeer in high-speed corners. Expected lap time improvement: 0.2-0.4 seconds.</p>
+                                            <div class="flex items-center space-x-4">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-xs text-dark-subtext">Confidence:</span>
+                                                    <div class="flex space-x-1">
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                                    </div>
+                                                    <span class="text-xs text-brand-green">High</span>
+                                                </div>
+                                                <button class="text-xs bg-brand-red hover:bg-red-600 text-white px-3 py-1 rounded transition-colors shadow-sm shadow-brand-red/20">
+                                                    Tag to Lap 8
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="recommendation-2" class="bg-dark-bg/50 border border-dark-border rounded-lg p-4">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-6 h-6 bg-brand-amber/20 rounded-full flex items-center justify-center mt-1">
+                                            <i class="fa-solid fa-exclamation text-brand-amber text-xs"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-white mb-2">Adjust Brake Balance</h4>
+                                            <p class="text-sm text-dark-subtext mb-3">Move brake bias 2% forward to 58% to improve stability under braking. Monitor rear tire temperatures.</p>
+                                            <div class="flex items-center space-x-4">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-xs text-dark-subtext">Confidence:</span>
+                                                    <div class="flex space-x-1">
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                                    </div>
+                                                    <span class="text-xs text-brand-amber">Medium</span>
+                                                </div>
+                                                <button class="text-xs bg-brand-red hover:bg-red-600 text-white px-3 py-1 rounded transition-colors shadow-sm shadow-brand-red/20">
+                                                    Tag to Lap 15
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="recommendation-3" class="bg-dark-bg/50 border border-dark-border rounded-lg p-4">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="w-6 h-6 bg-brand-blue/20 rounded-full flex items-center justify-center mt-1">
+                                            <i class="fa-solid fa-info text-brand-blue text-xs"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-white mb-2">Tire Pressure Optimization</h4>
+                                            <p class="text-sm text-dark-subtext mb-3">Increase rear tire pressures by 0.5 PSI to improve contact patch consistency through long corners.</p>
+                                            <div class="flex items-center space-x-4">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-xs text-dark-subtext">Confidence:</span>
+                                                    <div class="flex space-x-1">
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-brand-green rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                                        <div class="w-2 h-2 bg-dark-border rounded-full"></div>
+                                                    </div>
+                                                    <span class="text-xs text-brand-blue">Low</span>
+                                                </div>
+                                                <button class="text-xs bg-brand-red hover:bg-red-600 text-white px-3 py-1 rounded transition-colors shadow-sm shadow-brand-red/20">
+                                                    Tag to Lap 20
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="engineer-notes" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            
+                            <div id="session-notes" class="bg-dark-surface border border-dark-border rounded-xl">
+                                <div class="p-4 border-b border-dark-border">
+                                    <h3 class="font-semibold text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-sticky-note text-brand-blue"></i>
+                                        <span>Session Notes</span>
+                                    </h3>
+                                </div>
+                                
+                                <div class="p-4 space-y-4 max-h-96 overflow-y-auto">
+                                    
+                                    <div id="note-1" class="border-l-4 border-brand-green bg-brand-green/5 p-3 rounded-r-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs text-brand-green font-medium font-mono">LAP 12 • 14:45</span>
+                                            <button class="text-dark-subtext hover:text-white">
+                                                <i class="fa-solid fa-ellipsis-h text-xs"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-white">Best lap achieved with current setup. Car felt balanced through Maggotts-Becketts complex.</p>
+                                    </div>
+
+                                    <div id="note-2" class="border-l-4 border-brand-amber bg-brand-amber/5 p-3 rounded-r-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs text-brand-amber font-medium font-mono">LAP 18 • 15:12</span>
+                                            <button class="text-dark-subtext hover:text-white">
+                                                <i class="fa-solid fa-ellipsis-h text-xs"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-white">Front tires starting to slide in turn 3. Consider reducing front wing for next stint.</p>
+                                    </div>
+
+                                    <div id="note-3" class="border-l-4 border-brand-blue bg-brand-blue/5 p-3 rounded-r-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs text-brand-blue font-medium font-mono">LAP 22 • 15:28</span>
+                                            <button class="text-dark-subtext hover:text-white">
+                                                <i class="fa-solid fa-ellipsis-h text-xs"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-white">Good top speed on Hangar Straight. Aero package working well for this track layout.</p>
+                                    </div>
+
+                                    <div id="note-4" class="border-l-4 border-red-500 bg-red-500/5 p-3 rounded-r-lg">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-xs text-red-400 font-medium font-mono">LAP 24 • 15:35</span>
+                                            <button class="text-dark-subtext hover:text-white">
+                                                <i class="fa-solid fa-ellipsis-h text-xs"></i>
+                                            </button>
+                                        </div>
+                                        <p class="text-sm text-white">Rear end stepped out in turn 15. Possible brake bias issue or tire degradation.</p>
+                                    </div>
+
+                                </div>
+                                
+                                <div class="p-4 border-t border-dark-border">
+                                    <div class="flex space-x-2">
+                                        <input type="text" placeholder="Add a note..." class="flex-1 bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white text-sm placeholder-dark-subtext focus:outline-none focus:border-brand-blue">
+                                        <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-brand-red/20">
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="tasks-panel" class="bg-dark-surface border border-dark-border rounded-xl">
+                                <div class="p-4 border-b border-dark-border">
+                                    <h3 class="font-semibold text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-tasks text-brand-blue"></i>
+                                        <span>Action Items</span>
+                                    </h3>
+                                </div>
+                                
+                                <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
+                                    
+                                    <div id="task-1" class="flex items-start space-x-3 p-3 bg-dark-bg/50 rounded-lg border border-dark-border">
+                                        <input type="checkbox" class="mt-1 w-4 h-4 text-brand-red bg-dark-bg border-dark-border rounded focus:ring-brand-red">
+                                        <div class="flex-1">
+                                            <p class="text-sm text-white font-medium">Adjust front wing angle</p>
+                                            <p class="text-xs text-dark-subtext">Reduce from 8 to 6 degrees</p>
+                                            <div class="flex items-center space-x-2 mt-2">
+                                                <span class="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded-full">High Priority</span>
+                                                <span class="text-xs text-dark-subtext font-mono">Due: Next session</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="task-2" class="flex items-start space-x-3 p-3 bg-dark-bg/50 rounded-lg border border-dark-border">
+                                        <input type="checkbox" class="mt-1 w-4 h-4 text-brand-red bg-dark-bg border-dark-border rounded focus:ring-brand-red">
+                                        <div class="flex-1">
+                                            <p class="text-sm text-white font-medium">Review brake balance settings</p>
+                                            <p class="text-xs text-dark-subtext">Move bias 2% forward to 58%</p>
+                                            <div class="flex items-center space-x-2 mt-2">
+                                                <span class="bg-brand-amber/20 text-brand-amber text-xs px-2 py-1 rounded-full">Medium Priority</span>
+                                                <span class="text-xs text-dark-subtext font-mono">Due: Tomorrow</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="task-3" class="flex items-start space-x-3 p-3 bg-dark-bg/50 rounded-lg border border-dark-border opacity-60">
+                                        <input type="checkbox" checked class="mt-1 w-4 h-4 text-brand-red bg-dark-bg border-dark-border rounded focus:ring-brand-red">
+                                        <div class="flex-1">
+                                            <p class="text-sm text-white font-medium line-through">Check tire pressures</p>
+                                            <p class="text-xs text-dark-subtext">Verified all within optimal range</p>
+                                            <div class="flex items-center space-x-2 mt-2">
+                                                <span class="bg-brand-green/20 text-brand-green text-xs px-2 py-1 rounded-full">Completed</span>
+                                                <span class="text-xs text-dark-subtext font-mono">Completed: Today</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="task-4" class="flex items-start space-x-3 p-3 bg-dark-bg/50 rounded-lg border border-dark-border">
+                                        <input type="checkbox" class="mt-1 w-4 h-4 text-brand-red bg-dark-bg border-dark-border rounded focus:ring-brand-red">
+                                        <div class="flex-1">
+                                            <p class="text-sm text-white font-medium">Analyze sector 2 performance</p>
+                                            <p class="text-xs text-dark-subtext">Compare with qualifying data</p>
+                                            <div class="flex items-center space-x-2 mt-2">
+                                                <span class="bg-brand-blue/20 text-brand-blue text-xs px-2 py-1 rounded-full">Low Priority</span>
+                                                <span class="text-xs text-dark-subtext font-mono">Due: This week</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</div>
+
+<script>
+function switchTab(tabName) {
+    const tabs = ['lap-analysis-tab', 'setup-compare-tab', 'engineer-tab'];
+    tabs.forEach(tab => {
+        const element = document.getElementById(tab);
+        if (tab === tabName + '-tab') {
+            element.classList.add('bg-brand-red', 'text-white');
+            element.classList.remove('text-dark-subtext', 'hover:text-white', 'hover:bg-dark-border/30');
+        } else {
+            element.classList.remove('bg-brand-red', 'text-white');
+            element.classList.add('text-dark-subtext', 'hover:text-white', 'hover:bg-dark-border/30');
+        }
+    });
+}
+
+function navigateToHome() {
+    console.log('Navigate to Home');
+}
+
+function navigateToCar() {
+    console.log('Navigate to Car');
+}
+
+function navigateToTrack() {
+    console.log('Navigate to Track');
+}
+</script>
+
+</body>
+</html>

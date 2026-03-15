@@ -108,7 +108,7 @@ export function PathInput({
       {!isValidating && validation && (
         <p className={`ace-path-input__status ${statusClass}`}>
           {validation.status === "valid" && "✓ "}
-          {validation.status === "warning" && "⚠ "}
+          {validation.status === "warning" && <><i className="fa-solid fa-triangle-exclamation" />{" "}</>}
           {validation.status === "not_found" && "✗ "}
           {validation.message}
         </p>

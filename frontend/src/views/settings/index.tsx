@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, Button, Modal } from "../../components/ui";
+import { Card, Button } from "../../components/ui";
 import { PathInput } from "../../components/onboarding/PathInput";
 import { OnboardingWizard } from "../../components/onboarding/OnboardingWizard";
 import { useConfig } from "../../hooks/useConfig";
 import { useTheme } from "../../hooks/useTheme";
 import { useNotificationStore } from "../../store/notificationStore";
-import { useUIStore } from "../../store/uiStore";
 import { apiPost } from "../../lib/api";
 import type { ConnectionTestResult } from "../../lib/validation";
 import { CarDataSection } from "./CarDataSection";
@@ -15,8 +14,6 @@ export function SettingsView() {
   const { config, updateConfig, isUpdating } = useConfig();
   const { theme, toggleTheme } = useTheme();
   const addNotification = useNotificationStore((s) => s.addNotification);
-  const activeSection = useUIStore((s) => s.activeSection);
-  const setActiveSection = useUIStore((s) => s.setActiveSection);
 
   const [acInstallPath, setAcInstallPath] = useState("");
   const [setupsPath, setSetupsPath] = useState("");
@@ -28,8 +25,6 @@ export function SettingsView() {
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
-  const [showDiscardModal, setShowDiscardModal] = useState(false);
-  const pendingSection = useRef<string | null>(null);
   const initialized = useRef(false);
 
   // Initialize form from config (only once when config first loads)
@@ -52,19 +47,7 @@ export function SettingsView() {
       diagnosticMode !== (config.diagnostic_mode ?? false)
     : false;
 
-  // Intercept sidebar navigation when dirty
-  const prevSection = useRef(activeSection);
-  useEffect(() => {
-    if (activeSection !== "settings" && prevSection.current === "settings" && isDirty) {
-      pendingSection.current = activeSection;
-      setActiveSection("settings");
-      setShowDiscardModal(true);
-    }
-    prevSection.current = activeSection;
-  }, [activeSection, isDirty, setActiveSection]);
-
   const handleDiscard = useCallback(() => {
-    setShowDiscardModal(false);
     if (config) {
       setAcInstallPath(config.ac_install_path);
       setSetupsPath(config.setups_path);
@@ -72,11 +55,7 @@ export function SettingsView() {
       setApiKey("");
       setDiagnosticMode(config.diagnostic_mode ?? false);
     }
-    if (pendingSection.current) {
-      setActiveSection(pendingSection.current);
-      pendingSection.current = null;
-    }
-  }, [config, setActiveSection]);
+  }, [config]);
 
   const handleSave = async () => {
     const fields: Record<string, string | boolean> = {};
@@ -277,38 +256,17 @@ export function SettingsView() {
         </button>
       </Card>
 
-      {/* Save button */}
+      {/* Save / Discard buttons */}
       <div className="ace-settings__footer">
+        {isDirty && (
+          <Button variant="secondary" onClick={handleDiscard}>
+            Discard
+          </Button>
+        )}
         <Button onClick={handleSave} disabled={!isDirty || isUpdating}>
           {isUpdating ? "Saving..." : "Save"}
         </Button>
       </div>
-
-      {/* Unsaved changes modal */}
-      <Modal
-        open={showDiscardModal}
-        onClose={() => {
-          setShowDiscardModal(false);
-          pendingSection.current = null;
-        }}
-        title="Unsaved Changes"
-        actions={{
-          cancel: {
-            label: "Stay",
-            onClick: () => {
-              setShowDiscardModal(false);
-              pendingSection.current = null;
-            },
-          },
-          confirm: {
-            label: "Discard",
-            onClick: handleDiscard,
-            variant: "secondary",
-          },
-        }}
-      >
-        <p>You have unsaved changes. Discard them?</p>
-      </Modal>
     </div>
   );
 }

@@ -2,10 +2,12 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SplashScreen } from "../../../src/components/layout/SplashScreen";
 
+vi.mock("../../../src/assets/logo.png", () => ({ default: "test-logo.png" }));
+
 describe("SplashScreen", () => {
-  it('shows "AC Race Engineer" text in polling state', () => {
+  it("shows logo image in polling state", () => {
     render(<SplashScreen status="polling" onRetry={() => {}} />);
-    expect(screen.getByText("AC Race Engineer")).toBeInTheDocument();
+    expect(screen.getByAltText("AC Race Engineer")).toBeInTheDocument();
   });
 
   it('shows "Starting backend..." message in polling state', () => {

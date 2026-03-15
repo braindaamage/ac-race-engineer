@@ -1,4 +1,5 @@
 import { Button } from "../ui/Button";
+import logoSrc from "../../assets/logo.png";
 import "./SplashScreen.css";
 
 interface SplashScreenProps {
@@ -9,7 +10,7 @@ interface SplashScreenProps {
 export function SplashScreen({ status, onRetry }: SplashScreenProps) {
   return (
     <div className="ace-splash">
-      <h1 className="ace-splash__title">AC Race Engineer</h1>
+      <img src={logoSrc} alt="AC Race Engineer" className="ace-splash__logo" />
       {status === "polling" && (
         <>
           <div className="ace-splash__spinner" />

@@ -1,14 +1,14 @@
 .ace-sessions {
   max-width: 960px;
   margin: 0 auto;
-  padding: var(--spacing-lg);
+  padding: var(--space-6);
 }
 
 .ace-sessions__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--space-6);
 }
 
 .ace-sessions__header h1 {

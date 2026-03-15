@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Data</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        ::webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+        .drag-active { border-color: #E60000; background-color: rgba(230, 0, 0, 0.1); }
+        .file-preview { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+<div id="app-container" class="min-h-screen flex flex-col">
+    
+    <header id="header" class="bg-dark-surface border-b border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <nav id="breadcrumb" class="hidden md:flex items-center gap-2 pl-6 border-l border-dark-border">
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm">
+                        Home
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm">
+                        Import
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-2.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav id="nav-tabs" class="bg-dark-surface border-b border-dark-border sticky top-16 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Garage Home
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Tracks
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Sessions
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Settings
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium bg-brand-red text-white whitespace-nowrap">
+                    Import
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout" class="flex flex-1">
+        
+        <main id="main-content" class="flex-1 p-4 lg:p-6 overflow-auto">
+            
+            <div id="import-header" class="mb-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-white mb-2">Import Data</h1>
+                        <p class="text-dark-subtext">Import telemetry and session files to your garage with automatic mapping and duplicate detection</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-dark-surface border border-dark-border hover:bg-dark-border text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>Browse Files</span>
+                        </button>
+                        <button class="bg-dark-surface border border-dark-border hover:bg-dark-border text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-cog"></i>
+                            <span>Settings</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="import-methods" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                
+                <div id="drag-drop-card" class="bg-dark-surface border-2 border-dashed border-dark-border hover:border-brand-red/50 rounded-xl p-6 transition-colors cursor-pointer">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-brand-red/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-cloud-upload-alt text-brand-red text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Drag & Drop</h3>
+                        <p class="text-sm text-dark-subtext mb-4">Drop telemetry files directly here or click to browse</p>
+                        <div class="text-xs text-dark-subtext">
+                            Supports: .ibt, .ld, .csv, .json
+                        </div>
+                    </div>
+                </div>
+
+                <div id="folder-watch-card" class="bg-dark-surface border border-dark-border rounded-xl p-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-brand-blue/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-folder-open text-brand-blue text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Folder Watch</h3>
+                        <p class="text-sm text-dark-subtext mb-4">Monitor folder for automatic import of new files</p>
+                        <button class="bg-brand-blue hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Setup Folder
+                        </button>
+                    </div>
+                </div>
+
+                <div id="device-sync-card" class="bg-dark-surface border border-dark-border rounded-xl p-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-brand-green/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-mobile-alt text-brand-green text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Device Sync</h3>
+                        <p class="text-sm text-dark-subtext mb-4">Sync directly from racing apps and devices</p>
+                        <button class="bg-brand-green hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Connect Device
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="import-queue" class="bg-dark-surface border border-dark-border rounded-xl mb-6">
+                <div class="p-4 border-b border-dark-border">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-white">Import Queue</h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-sm text-dark-subtext">3 files pending</span>
+                            <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                Start Import
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="queue-list" class="space-y-3 p-4">
+                    
+                    <div id="file-1" class="file-preview bg-dark-bg border border-dark-border rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-file-alt text-brand-blue"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-white">silverstone_practice_20241215.ibt</h4>
+                                    <p class="text-sm text-dark-subtext">1.2 GB • iRacing Telemetry</p>
+                                </div>
+                            </div>
+                            <button class="text-dark-subtext hover:text-brand-red transition-colors">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-3">
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Car</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Ferrari 488 GT3</option>
+                                    <option>Porsche 911 GT3 R</option>
+                                    <option>McLaren 720S GT3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Track</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Silverstone Circuit</option>
+                                    <option>Spa-Francorchamps</option>
+                                    <option>Monza</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Session Type</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Practice</option>
+                                    <option>Qualifying</option>
+                                    <option>Race</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center space-x-4 text-dark-subtext font-mono">
+                                <div class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-clock"></i>
+                                    <span>Dec 15, 2024 14:30</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <span>24 laps detected</span>
+                                </div>
+                            </div>
+                            <span class="bg-brand-green/20 text-brand-green px-2 py-1 rounded-full font-medium">Ready</span>
+                        </div>
+                    </div>
+
+                    <div id="file-2" class="file-preview bg-dark-bg border border-dark-border rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-brand-amber/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-file-csv text-brand-amber"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-white">spa_qualifying_data.csv</h4>
+                                    <p class="text-sm text-dark-subtext">456 MB • CSV Export</p>
+                                </div>
+                            </div>
+                            <button class="text-dark-subtext hover:text-brand-red transition-colors">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="bg-brand-amber/10 border border-brand-amber/20 rounded-lg p-3 mb-3">
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-exclamation-triangle text-brand-amber mt-0.5"></i>
+                                <div>
+                                    <p class="text-sm text-brand-amber font-medium">Potential Duplicate</p>
+                                    <p class="text-xs text-dark-subtext mt-1">Similar session found: Spa-Francorchamps Qualifying (Dec 15, 14:00)</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-3">
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Car</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Porsche 911 GT3 R</option>
+                                    <option>Ferrari 488 GT3</option>
+                                    <option>McLaren 720S GT3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Track</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Spa-Francorchamps</option>
+                                    <option>Silverstone Circuit</option>
+                                    <option>Monza</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Session Type</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Qualifying</option>
+                                    <option>Practice</option>
+                                    <option>Race</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center space-x-4 text-dark-subtext font-mono">
+                                <div class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-clock"></i>
+                                    <span>Dec 15, 2024 16:00</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <span>18 laps detected</span>
+                                </div>
+                            </div>
+                            <span class="bg-brand-amber/20 text-brand-amber px-2 py-1 rounded-full font-medium">Review</span>
+                        </div>
+                    </div>
+
+                    <div id="file-3" class="file-preview bg-dark-bg border border-dark-border rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-brand-blue/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-file-code text-brand-blue"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-white">monza_race_telemetry.json</h4>
+                                    <p class="text-sm text-dark-subtext">2.1 GB • JSON Format</p>
+                                </div>
+                            </div>
+                            <button class="text-dark-subtext hover:text-brand-red transition-colors">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-3">
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Car</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>McLaren 720S GT3</option>
+                                    <option>Ferrari 488 GT3</option>
+                                    <option>Porsche 911 GT3 R</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Track</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Monza</option>
+                                    <option>Silverstone Circuit</option>
+                                    <option>Spa-Francorchamps</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-dark-subtext mb-1">Session Type</label>
+                                <select class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>Race</option>
+                                    <option>Practice</option>
+                                    <option>Qualifying</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center space-x-4 text-dark-subtext font-mono">
+                                <div class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-clock"></i>
+                                    <span>Dec 15, 2024 18:15</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    <span>32 laps detected</span>
+                                </div>
+                            </div>
+                            <span class="bg-brand-green/20 text-brand-green px-2 py-1 rounded-full font-medium">Ready</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="import-summary" class="bg-dark-surface border border-dark-border rounded-xl">
+                <div class="p-4 border-b border-dark-border">
+                    <h3 class="text-lg font-semibold text-white">Import Summary</h3>
+                </div>
+                
+                <div class="p-4">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-white font-mono">3</div>
+                            <div class="text-sm text-dark-subtext">Files Selected</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-brand-red font-mono">3.8 GB</div>
+                            <div class="text-sm text-dark-subtext">Total Size</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-brand-green font-mono">74</div>
+                            <div class="text-sm text-dark-subtext">Total Laps</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-brand-amber font-mono">1</div>
+                            <div class="text-sm text-dark-subtext">Needs Review</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button class="bg-brand-red hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 flex-1">
+                            <i class="fa-solid fa-upload"></i>
+                            <span>Import All Files</span>
+                        </button>
+                        <button class="bg-dark-surface border border-dark-border hover:bg-dark-border text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Preview Changes</span>
+                        </button>
+                        <button class="bg-dark-surface border border-dark-border hover:bg-dark-border text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-times"></i>
+                            <span>Clear Queue</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+</div>
+
+<script>
+window.addEventListener('load', function() {
+    const dragDropCard = document.getElementById('drag-drop-card');
+    
+    dragDropCard.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('drag-active');
+    });
+    
+    dragDropCard.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-active');
+    });
+    
+    dragDropCard.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-active');
+    });
+});
+</script>
+
+</body>
+</html>

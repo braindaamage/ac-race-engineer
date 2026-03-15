@@ -1,31 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { AnalysisView } from "../../../src/views/analysis";
+import { renderWithRouter } from "../../helpers/renderWithRouter";
 
 // Mock api
 vi.mock("../../../src/lib/api", () => ({
   apiGet: vi.fn(),
-}));
-
-// Mock stores
-let mockSelectedSessionId: string | null = null;
-
-vi.mock("../../../src/store/sessionStore", () => ({
-  useSessionStore: (selector: (s: Record<string, unknown>) => unknown) =>
-    selector({
-      selectedSessionId: mockSelectedSessionId,
-      selectSession: vi.fn(),
-      clearSession: vi.fn(),
-    }),
-}));
-
-vi.mock("../../../src/store/uiStore", () => ({
-  useUIStore: Object.assign(
-    (selector: (s: Record<string, unknown>) => unknown) =>
-      selector({ activeSection: "analysis" }),
-    { getState: () => ({ setActiveSection: vi.fn() }) },
-  ),
 }));
 
 // Mock recharts with minimal stubs
@@ -115,18 +95,15 @@ const testSessions = [
   },
 ];
 
-function renderWithQuery(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+function renderAnalysis(sessionId: string) {
+  return renderWithRouter(<AnalysisView />, {
+    path: "/session/:sessionId/laps",
+    route: `/session/${sessionId}/laps`,
   });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
 }
 
 describe("AnalysisView", () => {
   beforeEach(() => {
-    mockSelectedSessionId = null;
     mockedApiGet.mockImplementation((path: string) => {
       if (path.includes("/sessions") && !path.includes("/laps")) {
         return Promise.resolve({ sessions: testSessions });
@@ -142,15 +119,8 @@ describe("AnalysisView", () => {
     vi.restoreAllMocks();
   });
 
-  it("shows 'Go to Sessions' empty state when no session selected", () => {
-    renderWithQuery(<AnalysisView />);
-    expect(screen.getByText("Select a session to analyze laps")).toBeInTheDocument();
-    expect(screen.getByText("Go to Sessions")).toBeInTheDocument();
-  });
-
   it("shows 'Analysis required' when session state is 'discovered'", async () => {
-    mockSelectedSessionId = "sess-unanalyzed";
-    renderWithQuery(<AnalysisView />);
+    renderAnalysis("sess-unanalyzed");
 
     await waitFor(() => {
       expect(screen.getByText("Analysis required")).toBeInTheDocument();
@@ -158,8 +128,7 @@ describe("AnalysisView", () => {
   });
 
   it("renders lap list when laps are returned", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<AnalysisView />);
+    renderAnalysis("sess-1");
 
     await waitFor(() => {
       expect(screen.getByTestId("lap-item-0")).toBeInTheDocument();
@@ -169,8 +138,7 @@ describe("AnalysisView", () => {
   });
 
   it("selecting a third lap replaces the oldest selection", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<AnalysisView />);
+    renderAnalysis("sess-1");
 
     await waitFor(() => {
       expect(screen.getByTestId("lap-item-1")).toBeInTheDocument();
@@ -189,8 +157,7 @@ describe("AnalysisView", () => {
   });
 
   it("max 2 laps can be selected simultaneously", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<AnalysisView />);
+    renderAnalysis("sess-1");
 
     await waitFor(() => {
       expect(screen.getByTestId("lap-item-0")).toBeInTheDocument();
@@ -205,8 +172,7 @@ describe("AnalysisView", () => {
   });
 
   it("shows 'Select a lap' empty state when no lap selected", async () => {
-    mockSelectedSessionId = "sess-1";
-    renderWithQuery(<AnalysisView />);
+    renderAnalysis("sess-1");
 
     await waitFor(() => {
       expect(screen.getByText("Select a lap to view telemetry")).toBeInTheDocument();

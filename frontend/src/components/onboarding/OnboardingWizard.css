@@ -31,7 +31,7 @@
 }
 
 .ace-onboarding__progress-dot--active {
-  background: var(--brand);
+  background: var(--color-brand);
 }
 
 .ace-onboarding__step-label {
@@ -57,7 +57,7 @@
 
 .ace-onboarding__text {
   color: var(--text-secondary);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-base);
   margin: 0;
   line-height: var(--line-height-relaxed);
 }
@@ -108,7 +108,7 @@
 
 .ace-path-input__field:focus {
   outline: none;
-  border-color: var(--brand);
+  border-color: var(--color-brand);
 }
 
 .ace-path-input__browse {
@@ -138,7 +138,7 @@
 }
 
 .ace-path-input__status--valid {
-  color: var(--success);
+  color: var(--color-positive);
 }
 
 .ace-path-input__status--warning {
@@ -146,7 +146,7 @@
 }
 
 .ace-path-input__status--not_found {
-  color: var(--error);
+  color: var(--color-error);
 }
 
 .ace-path-input__status--empty {
@@ -167,7 +167,7 @@
 .ace-onboarding__edit-link {
   background: none;
   border: none;
-  color: var(--brand);
+  color: var(--color-brand);
   cursor: pointer;
   font-size: var(--font-size-sm);
   padding: var(--space-2);
@@ -210,7 +210,7 @@
 /* Nav buttons (used in Step 3 placeholder) */
 .ace-onboarding__nav-btn {
   padding: var(--space-2) var(--space-4);
-  background: var(--brand);
+  background: var(--color-brand);
   color: var(--text-on-brand, #fff);
   border: none;
   border-radius: var(--radius-md);

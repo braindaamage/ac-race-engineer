@@ -1,0 +1,5 @@
+.ace-session-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
