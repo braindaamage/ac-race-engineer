@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        ::webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF6B35',
+                        secondary: '#1E293B',
+                        accent: '#0EA5E9',
+                        dark: '#0F172A',
+                        light: '#F8FAFC'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-white overflow-hidden h-screen flex items-center justify-center">
+
+<div id="loading-screen" class="flex flex-col items-center justify-center w-full h-full">
+    
+    <div class="mb-8 relative">
+        <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/b979a0b10e-a6a9b448a39a2d216f27.png" alt="RaceEngineer Logo" class="w-64 h-auto object-contain animate-pulse">
+        <div class="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-48 h-1 bg-slate-800 rounded-full overflow-hidden">
+            <div class="h-full bg-primary rounded-full animate-[loading_2s_ease-in-out_infinite]"></div>
+        </div>
+    </div>
+    
+    <h1 class="text-3xl font-bold mb-2 text-white tracking-wide">RaceEngineer</h1>
+    <p class="text-slate-400 text-sm animate-pulse">Initializing telemetry engines...</p>
+
+</div>
+
+<style>
+    @keyframes loading {
+        0% { width: 0%; margin-left: 0; }
+        50% { width: 100%; margin-left: 0; }
+        100% { width: 0%; margin-left: 100%; }
+    }
+</style>
+
+<script>
+// Simulate loading and redirect
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        // Here you would typically redirect to the garage/home screen
+        console.log('Loading complete, redirecting to garage...');
+    }, 3000);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sessions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        ::webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header -->
+    <header id="header" class="bg-dark-surface border-b border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <!-- Left: Brand & Breadcrumb -->
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <nav id="breadcrumb" class="hidden md:flex items-center gap-2 pl-6 border-l border-dark-border">
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToHome()">
+                        Home
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToCar()">
+                        Ferrari 488 GT3
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm">
+                        Silverstone Circuit
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Right: Tools & Profile -->
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav id="nav-tabs" class="bg-dark-surface border-b border-dark-border sticky top-16 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Garage Home
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Tracks
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium bg-brand-red text-white whitespace-nowrap">
+                    Sessions
+                </a>
+                <a href="#" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap">
+                    Settings
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout" class="flex flex-1">
+        
+        <main id="main-content" class="flex-1 p-4 lg:p-8">
+            
+            <div id="track-info-header" class="mb-8">
+                <div class="bg-dark-surface border border-dark-border rounded-xl p-6 mb-6">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+                        <div class="w-24 h-24 rounded-xl overflow-hidden">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/84b8128992-d42e9810666345ca0ff1.png" alt="Silverstone Circuit" />
+                        </div>
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold text-white mb-2">Silverstone Circuit</h1>
+                            <p class="text-dark-subtext mb-4">Ferrari 488 GT3 • 6 Recorded Sessions</p>
+                            <div class="flex flex-wrap gap-6 text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-road text-brand-blue"></i>
+                                    <span class="text-dark-text">5.9km Length</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-trophy text-brand-amber"></i>
+                                    <span class="text-dark-text">Best: 1:42.156</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fa-solid fa-clock text-brand-blue"></i>
+                                    <span class="text-dark-text">Last session 2 hours ago</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="bg-brand-red hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>New Session</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="session-controls" class="flex flex-col lg:flex-row gap-4">
+                    <div class="flex-1 relative">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-subtext"></i>
+                        <input type="text" placeholder="Search sessions by date or conditions..." class="w-full bg-dark-surface border border-dark-border rounded-lg pl-12 pr-4 py-3 text-white placeholder-dark-subtext focus:outline-none focus:border-brand-blue transition-colors">
+                    </div>
+                    <div class="flex gap-3">
+                        <select class="bg-dark-surface border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue transition-colors cursor-pointer">
+                            <option>All Status</option>
+                            <option>Analyzed</option>
+                            <option>Pending</option>
+                        </select>
+                        <select class="bg-dark-surface border border-dark-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-blue transition-colors cursor-pointer">
+                            <option>Sort: Newest</option>
+                            <option>Sort: Oldest</option>
+                            <option>Sort: Best Lap</option>
+                            <option>Sort: Most Laps</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sessions-list" class="space-y-4">
+                
+                <div class="session-card bg-dark-surface border border-dark-border rounded-xl p-5 hover:border-brand-blue transition-all duration-300 cursor-pointer" onclick="expandSession('session1')">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">Practice Session</h3>
+                                    <p class="text-dark-subtext text-sm">Today, 14:30 - 15:45</p>
+                                </div>
+                                <div class="ml-auto hidden lg:block">
+                                    <span class="bg-brand-green/20 text-brand-green text-xs px-3 py-1 rounded-full font-medium">Analyzed</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Duration</div>
+                                    <div class="text-white font-semibold font-mono">1h 15m</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Laps</div>
+                                    <div class="text-white font-semibold font-mono">24 laps</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Best Lap</div>
+                                    <div class="text-brand-red font-semibold font-mono">1:42.156</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Conditions</div>
+                                    <div class="text-white font-semibold flex items-center space-x-1 font-mono">
+                                        <i class="fa-solid fa-sun text-brand-amber text-xs"></i>
+                                        <span>Dry, 22°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg:flex-col gap-2">
+                            <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>View Analysis</span>
+                            </button>
+                            <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-card bg-dark-surface border border-dark-border rounded-xl p-5 hover:border-brand-blue transition-all duration-300 cursor-pointer" onclick="expandSession('session2')">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">Qualifying</h3>
+                                    <p class="text-dark-subtext text-sm">Yesterday, 10:00 - 10:30</p>
+                                </div>
+                                <div class="ml-auto hidden lg:block">
+                                    <span class="bg-brand-green/20 text-brand-green text-xs px-3 py-1 rounded-full font-medium">Analyzed</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Duration</div>
+                                    <div class="text-white font-semibold font-mono">30m</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Laps</div>
+                                    <div class="text-white font-semibold font-mono">8 laps</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Best Lap</div>
+                                    <div class="text-brand-red font-semibold font-mono">1:42.834</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Conditions</div>
+                                    <div class="text-white font-semibold flex items-center space-x-1 font-mono">
+                                        <i class="fa-solid fa-cloud text-dark-subtext text-xs"></i>
+                                        <span>Dry, 18°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg:flex-col gap-2">
+                            <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>View Analysis</span>
+                            </button>
+                            <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-card bg-dark-surface border border-brand-amber/50 rounded-xl p-5 hover:border-brand-amber transition-all duration-300 cursor-pointer" onclick="expandSession('session3')">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-brand-amber/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-clock text-brand-amber text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">Race Simulation</h3>
+                                    <p class="text-dark-subtext text-sm">2 days ago, 13:00 - 14:30</p>
+                                </div>
+                                <div class="ml-auto hidden lg:block">
+                                    <span class="bg-brand-amber/20 text-brand-amber text-xs px-3 py-1 rounded-full font-medium">Pending Analysis</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Duration</div>
+                                    <div class="text-white font-semibold font-mono">1h 30m</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Laps</div>
+                                    <div class="text-white font-semibold font-mono">32 laps</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Best Lap</div>
+                                    <div class="text-white font-semibold font-mono">1:43.521</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Conditions</div>
+                                    <div class="text-white font-semibold flex items-center space-x-1 font-mono">
+                                        <i class="fa-solid fa-sun text-brand-amber text-xs"></i>
+                                        <span>Dry, 24°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg:flex-col gap-2">
+                            <button class="bg-brand-amber hover:bg-yellow-600 text-dark-bg px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Start Analysis</span>
+                            </button>
+                            <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-card bg-dark-surface border border-dark-border rounded-xl p-5 hover:border-brand-blue transition-all duration-300 cursor-pointer" onclick="expandSession('session4')">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">Setup Testing</h3>
+                                    <p class="text-dark-subtext text-sm">1 week ago, 09:00 - 11:00</p>
+                                </div>
+                                <div class="ml-auto hidden lg:block">
+                                    <span class="bg-brand-green/20 text-brand-green text-xs px-3 py-1 rounded-full font-medium">Analyzed</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Duration</div>
+                                    <div class="text-white font-semibold font-mono">2h 0m</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Laps</div>
+                                    <div class="text-white font-semibold font-mono">41 laps</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Best Lap</div>
+                                    <div class="text-brand-red font-semibold font-mono">1:42.892</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Conditions</div>
+                                    <div class="text-white font-semibold flex items-center space-x-1 font-mono">
+                                        <i class="fa-solid fa-cloud-rain text-brand-blue text-xs"></i>
+                                        <span>Wet, 15°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg:flex-col gap-2">
+                            <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>View Analysis</span>
+                            </button>
+                            <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-card bg-dark-surface border border-dark-border rounded-xl p-5 hover:border-brand-blue transition-all duration-300 cursor-pointer" onclick="expandSession('session5')">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">Endurance Stint</h3>
+                                    <p class="text-dark-subtext text-sm">2 weeks ago, 14:00 - 16:30</p>
+                                </div>
+                                <div class="ml-auto hidden lg:block">
+                                    <span class="bg-brand-green/20 text-brand-green text-xs px-3 py-1 rounded-full font-medium">Analyzed</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Duration</div>
+                                    <div class="text-white font-semibold font-mono">2h 30m</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Laps</div>
+                                    <div class="text-white font-semibold font-mono">52 laps</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Best Lap</div>
+                                    <div class="text-brand-red font-semibold font-mono">1:43.124</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Conditions</div>
+                                    <div class="text-white font-semibold flex items-center space-x-1 font-mono">
+                                        <i class="fa-solid fa-sun text-brand-amber text-xs"></i>
+                                        <span>Dry, 26°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg:flex-col gap-2">
+                            <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>View Analysis</span>
+                            </button>
+                            <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-card bg-dark-surface border border-brand-amber/50 rounded-xl p-5 hover:border-brand-amber transition-all duration-300 cursor-pointer" onclick="expandSession('session6')">
+                    <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-12 h-12 bg-brand-amber/20 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-clock text-brand-amber text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white">Track Day</h3>
+                                    <p class="text-dark-subtext text-sm">3 weeks ago, 10:00 - 12:00</p>
+                                </div>
+                                <div class="ml-auto hidden lg:block">
+                                    <span class="bg-brand-amber/20 text-brand-amber text-xs px-3 py-1 rounded-full font-medium">Pending Analysis</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Duration</div>
+                                    <div class="text-white font-semibold font-mono">2h 0m</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Laps</div>
+                                    <div class="text-white font-semibold font-mono">36 laps</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Best Lap</div>
+                                    <div class="text-white font-semibold font-mono">1:44.678</div>
+                                </div>
+                                <div>
+                                    <div class="text-dark-subtext text-xs mb-1">Conditions</div>
+                                    <div class="text-white font-semibold flex items-center space-x-1 font-mono">
+                                        <i class="fa-solid fa-cloud text-dark-subtext text-xs"></i>
+                                        <span>Dry, 19°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex lg:flex-col gap-2">
+                            <button class="bg-brand-amber hover:bg-yellow-600 text-dark-bg px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Start Analysis</span>
+                            </button>
+                            <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

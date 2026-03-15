@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.plot.ly/plotly-3.1.1.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        ::webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+<div id="app-container" class="min-h-screen flex flex-col">
+    
+    <header id="header" class="bg-dark-surface border-b border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <nav id="breadcrumb" class="hidden md:flex items-center gap-2 pl-6 border-l border-dark-border">
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToHome()">
+                        Home
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToCar()">
+                        Ferrari 488 GT3
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToTrack()">
+                        Silverstone Circuit
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-white font-medium text-sm">
+                        Practice Session
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <nav id="nav-tabs" class="bg-dark-surface border-b border-dark-border sticky top-16 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <button id="lap-analysis-tab" class="px-4 py-3 text-sm font-medium bg-brand-red text-white whitespace-nowrap" onclick="switchTab('lap-analysis')">
+                    Lap Analysis
+                </button>
+                <button id="setup-compare-tab" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap" onclick="switchTab('setup-compare')">
+                    Setup Compare
+                </button>
+                <button id="engineer-tab" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap" onclick="switchTab('engineer')">
+                    Engineer
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout" class="flex flex-1">
+        <main id="main-content" class="flex-1 flex flex-col">
+            
+            <div id="session-header" class="bg-dark-surface border-b border-dark-border p-4 lg:p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Practice Session</h1>
+                            <p class="text-dark-subtext">Today, 14:30 - 15:45 • 24 laps • Best: 1:42.156</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-auto">
+                        <button class="bg-dark-border hover:bg-dark-subtext text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                        <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-share"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-content" class="flex-1 p-4 lg:p-6 overflow-auto">
+                
+                <div id="lap-analysis-content" class="space-y-6">
+                    
+                    <div id="lap-overview" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="bg-dark-surface border border-dark-border rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-white mb-4">Lap Time Progression</h3>
+                                <div id="lap-times-chart" style="height: 300px;"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-dark-surface border border-dark-border rounded-xl p-4">
+                                <h4 class="text-sm font-medium text-dark-subtext mb-2">Session Summary</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-dark-text">Best Lap</span>
+                                        <span class="text-brand-red font-semibold font-mono">1:42.156</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-dark-text">Average</span>
+                                        <span class="text-white font-mono">1:44.823</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-dark-text">Consistency</span>
+                                        <span class="text-brand-green font-mono">±0.8s</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-dark-text">Total Distance</span>
+                                        <span class="text-white font-mono">141.6 km</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-dark-surface border border-dark-border rounded-xl p-4">
+                                <h4 class="text-sm font-medium text-dark-subtext mb-2">Track Conditions</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-sun text-brand-amber"></i>
+                                        <span class="text-white">Dry Track</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-thermometer-half text-brand-blue"></i>
+                                        <span class="text-white">22°C Air / 28°C Track</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fa-solid fa-wind text-dark-subtext"></i>
+                                        <span class="text-white">5 km/h SW Wind</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="sector-analysis" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <div class="bg-dark-surface border border-dark-border rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Sector Times</h3>
+                            <div id="sector-times-chart" style="height: 250px;"></div>
+                        </div>
+                        <div class="bg-dark-surface border border-dark-border rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">Speed Trace</h3>
+                            <div id="speed-trace-chart" style="height: 250px;"></div>
+                        </div>
+                    </div>
+
+                    <div id="lap-list" class="bg-dark-surface border border-dark-border rounded-xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-white">Lap Details</h3>
+                            <div class="flex gap-2">
+                                <select class="bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                                    <option>All Laps</option>
+                                    <option>Valid Only</option>
+                                    <option>Personal Best</option>
+                                </select>
+                                <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Compare Selected
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-dark-border">
+                                        <th class="text-left py-3 text-dark-subtext font-medium">Lap</th>
+                                        <th class="text-left py-3 text-dark-subtext font-medium">Time</th>
+                                        <th class="text-left py-3 text-dark-subtext font-medium">S1</th>
+                                        <th class="text-left py-3 text-dark-subtext font-medium">S2</th>
+                                        <th class="text-left py-3 text-dark-subtext font-medium">S3</th>
+                                        <th class="text-left py-3 text-dark-subtext font-medium">Top Speed</th>
+                                        <th class="text-left py-3 text-dark-subtext font-medium">Status</th>
+                                        <th class="text-center py-3 text-dark-subtext font-medium">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="font-mono">
+                                    <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 transition-colors">
+                                        <td class="py-3 text-white font-medium">12</td>
+                                        <td class="py-3 text-brand-red font-semibold">1:42.156</td>
+                                        <td class="py-3 text-white">28.234</td>
+                                        <td class="py-3 text-white">41.123</td>
+                                        <td class="py-3 text-white">32.799</td>
+                                        <td class="py-3 text-white">287 km/h</td>
+                                        <td class="py-3">
+                                            <span class="bg-brand-green/20 text-brand-green text-xs px-2 py-1 rounded-full">Personal Best</span>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <button class="text-brand-blue hover:text-brand-red transition-colors">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 transition-colors">
+                                        <td class="py-3 text-white font-medium">8</td>
+                                        <td class="py-3 text-white">1:42.834</td>
+                                        <td class="py-3 text-white">28.445</td>
+                                        <td class="py-3 text-white">41.234</td>
+                                        <td class="py-3 text-white">33.155</td>
+                                        <td class="py-3 text-white">284 km/h</td>
+                                        <td class="py-3">
+                                            <span class="bg-brand-blue/20 text-brand-blue text-xs px-2 py-1 rounded-full">Valid</span>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <button class="text-brand-blue hover:text-brand-red transition-colors">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 transition-colors">
+                                        <td class="py-3 text-white font-medium">15</td>
+                                        <td class="py-3 text-white">1:43.245</td>
+                                        <td class="py-3 text-white">28.567</td>
+                                        <td class="py-3 text-white">41.456</td>
+                                        <td class="py-3 text-white">33.222</td>
+                                        <td class="py-3 text-white">282 km/h</td>
+                                        <td class="py-3">
+                                            <span class="bg-brand-blue/20 text-brand-blue text-xs px-2 py-1 rounded-full">Valid</span>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <button class="text-brand-blue hover:text-brand-red transition-colors">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 transition-colors">
+                                        <td class="py-3 text-white font-medium">3</td>
+                                        <td class="py-3 text-brand-amber">1:47.892</td>
+                                        <td class="py-3 text-white">29.234</td>
+                                        <td class="py-3 text-white">43.567</td>
+                                        <td class="py-3 text-white">35.091</td>
+                                        <td class="py-3 text-white">245 km/h</td>
+                                        <td class="py-3">
+                                            <span class="bg-brand-amber/20 text-brand-amber text-xs px-2 py-1 rounded-full">Invalid</span>
+                                        </td>
+                                        <td class="py-3 text-center">
+                                            <button class="text-dark-subtext">
+                                                <i class="fa-solid fa-chart-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+</div>
+
+<script>
+function switchTab(tabName) {
+    const tabs = ['lap-analysis', 'setup-compare', 'engineer'];
+    tabs.forEach(tab => {
+        const tabButton = document.getElementById(tab + '-tab');
+        if (tab === tabName) {
+            tabButton.classList.add('bg-brand-red', 'text-white');
+            tabButton.classList.remove('text-dark-subtext', 'hover:text-white', 'hover:bg-dark-border/30');
+        } else {
+            tabButton.classList.remove('bg-brand-red', 'text-white');
+            tabButton.classList.add('text-dark-subtext', 'hover:text-white', 'hover:bg-dark-border/30');
+        }
+    });
+}
+
+window.addEventListener('load', function() {
+    try {
+        const lapTimes = [103.234, 102.567, 107.892, 103.445, 102.889, 102.234, 102.667, 102.834, 103.123, 102.445, 102.789, 102.156, 102.567, 103.234, 103.245, 102.889, 103.445, 102.667, 103.123, 102.789, 103.234, 102.445, 103.567, 102.889];
+        const lapNumbers = Array.from({length: 24}, (_, i) => i + 1);
+
+        Plotly.newPlot('lap-times-chart', [{
+            type: 'scatter',
+            mode: 'lines+markers',
+            x: lapNumbers,
+            y: lapTimes,
+            line: { color: '#E60000', width: 3 },
+            marker: { color: '#E60000', size: 6 },
+            name: 'Lap Time'
+        }], {
+            title: { text: '', font: { size: 16 } },
+            xaxis: { title: 'Lap Number', gridcolor: '#2A333D' },
+            yaxis: { title: 'Time (seconds)', gridcolor: '#2A333D' },
+            margin: { t: 20, r: 20, b: 60, l: 60 },
+            plot_bgcolor: '#171E27',
+            paper_bgcolor: '#171E27',
+            font: { color: '#F3F4F6' },
+            showlegend: false
+        }, {responsive: true, displayModeBar: false, displaylogo: false});
+
+        const sectors = ['Sector 1', 'Sector 2', 'Sector 3'];
+        const sectorTimes = [28.234, 41.123, 32.799];
+        const sectorColors = ['#00CCFF', '#1AB866', '#FFB917'];
+
+        Plotly.newPlot('sector-times-chart', [{
+            type: 'bar',
+            x: sectors,
+            y: sectorTimes,
+            marker: { color: sectorColors }
+        }], {
+            title: { text: '', font: { size: 16 } },
+            xaxis: { title: '' },
+            yaxis: { title: 'Time (seconds)' },
+            margin: { t: 20, r: 20, b: 60, l: 60 },
+            plot_bgcolor: '#171E27',
+            paper_bgcolor: '#171E27',
+            font: { color: '#F3F4F6' },
+            showlegend: false
+        }, {responsive: true, displayModeBar: false, displaylogo: false});
+
+        const distance = Array.from({length: 100}, (_, i) => i * 59);
+        const speed = distance.map(d => 80 + 120 * Math.sin(d / 1000) + 50 * Math.cos(d / 500) + 30 * Math.random());
+
+        Plotly.newPlot('speed-trace-chart', [{
+            type: 'scatter',
+            mode: 'lines',
+            x: distance,
+            y: speed,
+            line: { color: '#00CCFF', width: 2 },
+            fill: 'tozeroy',
+            fillcolor: 'rgba(0, 204, 255, 0.1)'
+        }], {
+            title: { text: '', font: { size: 16 } },
+            xaxis: { title: 'Distance (m)' },
+            yaxis: { title: 'Speed (km/h)' },
+            margin: { t: 20, r: 20, b: 60, l: 60 },
+            plot_bgcolor: '#171E27',
+            paper_bgcolor: '#171E27',
+            font: { color: '#F3F4F6' },
+            showlegend: false
+        }, {responsive: true, displayModeBar: false, displaylogo: false});
+
+    } catch(e) {
+        console.error('Chart rendering failed:', e);
+    }
+});
+</script>
+
+</body>
+</html>

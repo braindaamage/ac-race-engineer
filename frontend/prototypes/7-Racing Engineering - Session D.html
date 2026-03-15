@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        ::webkit-scrollbar { display: none;}
+        * { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2A333D; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #7A8B99; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E60000',
+                            blue: '#00CCFF',
+                            green: '#1AB866',
+                            amber: '#FFB917',
+                            grey: '#7A8B99',
+                        },
+                        dark: {
+                            bg: '#0B1015',
+                            surface: '#171E27',
+                            text: '#F3F4F6',
+                            subtext: '#9CA3AF',
+                            border: '#2A333D',
+                        },
+                        light: {
+                            bg: '#F8F9FA',
+                            surface: '#FFFFFF',
+                            text: '#111827',
+                            subtext: '#6B7280',
+                            border: '#E5E7EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text font-sans antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Header -->
+    <header id="header" class="bg-dark-surface border-b border-dark-border sticky top-0 z-50 h-16">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+            <!-- Left: Brand & Breadcrumb -->
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded bg-brand-red flex items-center justify-center text-white font-bold">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                    </div>
+                    <span class="font-bold text-lg tracking-tight">AC RACE ENGINEER</span>
+                </div>
+                
+                <nav id="breadcrumb" class="hidden md:flex items-center gap-2 pl-6 border-l border-dark-border">
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToHome()">
+                        Home
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToCar()">
+                        Ferrari 488 GT3
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-brand-blue hover:text-brand-red transition-colors font-medium text-sm" onclick="navigateToTrack()">
+                        Silverstone Circuit
+                    </button>
+                    <span class="text-dark-subtext">/</span>
+                    <button class="text-white font-medium text-sm">
+                        Practice Session
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Right: Tools & Profile -->
+            <div class="flex items-center gap-4">
+                <button class="w-9 h-9 flex items-center justify-center rounded-full text-dark-subtext hover:text-white hover:bg-dark-border transition-colors relative">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-brand-red rounded-full"></span>
+                </button>
+                
+                <div class="h-6 w-px bg-dark-border mx-1"></div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-sm font-medium text-white">Driver 1</div>
+                        <div class="text-xs text-brand-grey font-mono">ID: 8842</div>
+                    </div>
+                    <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-3.jpg" alt="User" class="w-9 h-9 rounded-full border border-dark-border">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav id="nav-tabs" class="bg-dark-surface border-b border-dark-border sticky top-16 z-40">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center gap-1 overflow-x-auto">
+                <button id="lap-analysis-tab" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap" onclick="switchTab('lap-analysis')">
+                    Lap Analysis
+                </button>
+                <button id="setup-compare-tab" class="px-4 py-3 text-sm font-medium bg-brand-red text-white whitespace-nowrap" onclick="switchTab('setup-compare')">
+                    Setup Compare
+                </button>
+                <button id="engineer-tab" class="px-4 py-3 text-sm font-medium text-dark-subtext hover:text-white hover:bg-dark-border/30 transition-colors whitespace-nowrap" onclick="switchTab('engineer')">
+                    Engineer
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-layout" class="flex flex-1">
+        
+        <main id="main-content" class="flex-1 flex flex-col">
+            
+            <div id="session-header" class="bg-dark-surface border-b border-dark-border p-4 lg:p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-brand-green/20 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-check-circle text-brand-green text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-bold text-white">Practice Session</h1>
+                            <p class="text-dark-subtext">Today, 14:30 - 15:45 • 24 laps • Best: 1:42.156</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-auto">
+                        <button class="bg-dark-bg border border-dark-border hover:border-brand-grey text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                        <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-share"></i>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-content" class="flex-1 p-4 lg:p-6 overflow-auto">
+                
+                <div id="setup-compare-content" class="space-y-6">
+                    
+                    <div id="comparison-header" class="flex flex-col lg:flex-row gap-4 lg:items-center">
+                        <h2 class="text-xl font-bold text-white">Setup Comparison</h2>
+                        <div class="flex gap-4 ml-auto">
+                            <select class="bg-dark-surface border border-dark-border rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-blue transition-colors">
+                                <option value="">Compare with...</option>
+                                <option value="qualifying">Qualifying Session</option>
+                                <option value="race">Race Session</option>
+                                <option value="baseline">Baseline Setup</option>
+                            </select>
+                            <button class="bg-brand-red hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Add Snapshot</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="setup-snapshots" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        
+                        <div id="current-setup" class="bg-dark-surface border border-dark-border rounded-xl">
+                            <div class="p-4 border-b border-dark-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-semibold text-white">Current Setup</h3>
+                                        <p class="text-sm text-dark-subtext">Practice Session - Lap 12 (Best)</p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="bg-brand-green/20 text-brand-green text-xs px-2 py-1 rounded-full">Active</span>
+                                        <button class="text-dark-subtext hover:text-white">
+                                            <i class="fa-solid fa-ellipsis-v"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 space-y-4">
+                                
+                                <div class="space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-car text-brand-blue"></i>
+                                        <span>Aerodynamics</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Wing</span>
+                                                <span class="text-white font-medium font-mono">8</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Wing</span>
+                                                <span class="text-white font-medium font-mono">12</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Splitter</span>
+                                                <span class="text-white font-medium font-mono">4</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Diffuser</span>
+                                                <span class="text-white font-medium font-mono">6</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dark-border pt-4 space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-cog text-brand-blue"></i>
+                                        <span>Suspension</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Ride Height</span>
+                                                <span class="text-white font-medium font-mono">65mm</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Ride Height</span>
+                                                <span class="text-white font-medium font-mono">70mm</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Spring Rate</span>
+                                                <span class="text-white font-medium font-mono">85 N/mm</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Spring Rate</span>
+                                                <span class="text-white font-medium font-mono">90 N/mm</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Damping</span>
+                                                <span class="text-white font-medium font-mono">12</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Damping</span>
+                                                <span class="text-white font-medium font-mono">14</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dark-border pt-4 space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-circle text-brand-blue"></i>
+                                        <span>Tire Pressures</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Left</span>
+                                                <span class="text-white font-medium font-mono">26.8 PSI</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Right</span>
+                                                <span class="text-white font-medium font-mono">26.5 PSI</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Left</span>
+                                                <span class="text-white font-medium font-mono">24.2 PSI</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Right</span>
+                                                <span class="text-white font-medium font-mono">24.0 PSI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dark-border pt-4 space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-gear text-brand-blue"></i>
+                                        <span>Gearing</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Final Drive</span>
+                                                <span class="text-white font-medium font-mono">3.85</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">1st Gear</span>
+                                                <span class="text-white font-medium font-mono">2.95</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">2nd Gear</span>
+                                                <span class="text-white font-medium font-mono">2.15</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">3rd Gear</span>
+                                                <span class="text-white font-medium font-mono">1.65</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">4th Gear</span>
+                                                <span class="text-white font-medium font-mono">1.35</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">5th Gear</span>
+                                                <span class="text-white font-medium font-mono">1.15</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="comparison-setup" class="bg-dark-surface border border-dark-border rounded-xl">
+                            <div class="p-4 border-b border-dark-border">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3 class="font-semibold text-white">Qualifying Setup</h3>
+                                        <p class="text-sm text-dark-subtext">Yesterday - Lap 8 (Best: 1:41.892)</p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="bg-brand-blue/20 text-brand-blue text-xs px-2 py-1 rounded-full">Comparison</span>
+                                        <button class="text-dark-subtext hover:text-white">
+                                            <i class="fa-solid fa-ellipsis-v"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 space-y-4">
+                                
+                                <div class="space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-car text-brand-blue"></i>
+                                        <span>Aerodynamics</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Wing</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">6</span>
+                                                    <span class="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded">-2</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Wing</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">10</span>
+                                                    <span class="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded">-2</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Splitter</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">3</span>
+                                                    <span class="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded">-1</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Diffuser</span>
+                                                <span class="text-white font-medium font-mono">6</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dark-border pt-4 space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-cog text-brand-blue"></i>
+                                        <span>Suspension</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Ride Height</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">62mm</span>
+                                                    <span class="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded">-3mm</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Ride Height</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">68mm</span>
+                                                    <span class="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded">-2mm</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Spring Rate</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">90 N/mm</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+5</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Spring Rate</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">95 N/mm</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+5</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Damping</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">10</span>
+                                                    <span class="bg-red-500/20 text-red-400 text-xs px-1.5 py-0.5 rounded">-2</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Damping</span>
+                                                <span class="text-white font-medium font-mono">14</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dark-border pt-4 space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-circle text-brand-blue"></i>
+                                        <span>Tire Pressures</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Left</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">27.2 PSI</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+0.4</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Front Right</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">26.9 PSI</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+0.4</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Left</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">24.5 PSI</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+0.3</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Rear Right</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">24.3 PSI</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+0.3</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="border-t border-dark-border pt-4 space-y-3">
+                                    <h4 class="font-medium text-white flex items-center space-x-2">
+                                        <i class="fa-solid fa-gear text-brand-blue"></i>
+                                        <span>Gearing</span>
+                                    </h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">Final Drive</span>
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="text-white font-medium font-mono">3.95</span>
+                                                    <span class="bg-brand-green/20 text-brand-green text-xs px-1.5 py-0.5 rounded">+0.1</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">1st Gear</span>
+                                                <span class="text-white font-medium font-mono">2.95</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">2nd Gear</span>
+                                                <span class="text-white font-medium font-mono">2.15</span>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">3rd Gear</span>
+                                                <span class="text-white font-medium font-mono">1.65</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">4th Gear</span>
+                                                <span class="text-white font-medium font-mono">1.35</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-dark-subtext">5th Gear</span>
+                                                <span class="text-white font-medium font-mono">1.15</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
