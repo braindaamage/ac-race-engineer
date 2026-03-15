@@ -14,13 +14,14 @@ def save_session(db_path: str | Path, session: SessionRecord) -> None:
     try:
         conn.execute(
             """INSERT OR REPLACE INTO sessions
-               (session_id, car, track, session_date, lap_count, best_lap_time,
-                state, session_type, csv_path, meta_path)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (session_id, car, track, track_config, session_date, lap_count,
+                best_lap_time, state, session_type, csv_path, meta_path)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 session.session_id,
                 session.car,
                 session.track,
+                session.track_config,
                 session.session_date,
                 session.lap_count,
                 session.best_lap_time,
@@ -36,20 +37,31 @@ def save_session(db_path: str | Path, session: SessionRecord) -> None:
 
 
 def list_sessions(
-    db_path: str | Path, *, car: str | None = None
+    db_path: str | Path,
+    *,
+    car: str | None = None,
+    track: str | None = None,
+    track_config: str | None = None,
 ) -> list[SessionRecord]:
-    """Return all sessions ordered by session_date DESC, optionally filtered by car."""
+    """Return all sessions ordered by session_date DESC, optionally filtered."""
     conn = _connect(db_path)
     try:
+        clauses: list[str] = []
+        params: list[str] = []
         if car is not None:
-            rows = conn.execute(
-                "SELECT * FROM sessions WHERE car = ? ORDER BY session_date DESC",
-                (car,),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                "SELECT * FROM sessions ORDER BY session_date DESC"
-            ).fetchall()
+            clauses.append("car = ?")
+            params.append(car)
+        if track is not None:
+            clauses.append("track = ?")
+            params.append(track)
+            if track_config is not None:
+                clauses.append("track_config = ?")
+                params.append(track_config)
+        where = " WHERE " + " AND ".join(clauses) if clauses else ""
+        rows = conn.execute(
+            f"SELECT * FROM sessions{where} ORDER BY session_date DESC",
+            params,
+        ).fetchall()
         return [SessionRecord(**dict(row)) for row in rows]
     finally:
         conn.close()
@@ -90,6 +102,40 @@ def delete_session(db_path: str | Path, session_id: str) -> bool:
         )
         conn.commit()
         return cursor.rowcount > 0
+    finally:
+        conn.close()
+
+
+def list_car_stats(db_path: str | Path) -> list[dict]:
+    """Return aggregated stats per car, ordered by most recent session."""
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT car, "
+            "COUNT(DISTINCT track || char(0) || track_config) AS track_count, "
+            "COUNT(*) AS session_count, "
+            "MAX(session_date) AS last_session_date "
+            "FROM sessions GROUP BY car ORDER BY last_session_date DESC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def list_track_stats(db_path: str | Path, car: str) -> list[dict]:
+    """Return aggregated stats per track+config for a given car."""
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT track, track_config, "
+            "COUNT(*) AS session_count, "
+            "MIN(best_lap_time) AS best_lap_time, "
+            "MAX(session_date) AS last_session_date "
+            "FROM sessions WHERE car = ? "
+            "GROUP BY track, track_config ORDER BY last_session_date DESC",
+            (car,),
+        ).fetchall()
+        return [dict(row) for row in rows]
     finally:
         conn.close()
 

@@ -6,7 +6,13 @@ from pathlib import Path
 
 from ac_engineer.storage.db import _connect
 from ac_engineer.storage.models import SessionRecord
-from ac_engineer.storage.sessions import get_session, list_sessions, save_session
+from ac_engineer.storage.sessions import (
+    get_session,
+    list_car_stats,
+    list_sessions,
+    list_track_stats,
+    save_session,
+)
 
 
 def _session(**overrides: object) -> SessionRecord:
@@ -76,6 +82,92 @@ class TestGetSession:
 
     def test_not_found(self, db_path: Path) -> None:
         assert get_session(db_path, "nonexistent") is None
+
+
+class TestListSessionsTrackFilter:
+    def test_filter_by_track(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", track="monza"))
+        save_session(db_path, _session(session_id="s2", track="spa"))
+        result = list_sessions(db_path, track="monza")
+        assert len(result) == 1
+        assert result[0].track == "monza"
+
+    def test_filter_by_track_and_config(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", track="nurburgring", track_config="gp"))
+        save_session(db_path, _session(session_id="s2", track="nurburgring", track_config="nordschleife"))
+        save_session(db_path, _session(session_id="s3", track="nurburgring"))
+        result = list_sessions(db_path, track="nurburgring", track_config="gp")
+        assert len(result) == 1
+        assert result[0].session_id == "s1"
+
+    def test_track_config_ignored_without_track(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", track_config="gp"))
+        save_session(db_path, _session(session_id="s2"))
+        result = list_sessions(db_path, track_config="gp")
+        assert len(result) == 2  # track_config alone is ignored
+
+
+class TestSaveSessionTrackConfig:
+    def test_persists_track_config(self, db_path: Path) -> None:
+        save_session(db_path, _session(track_config="gp"))
+        loaded = get_session(db_path, "test_session_001")
+        assert loaded is not None
+        assert loaded.track_config == "gp"
+
+    def test_default_empty_track_config(self, db_path: Path) -> None:
+        save_session(db_path, _session())
+        loaded = get_session(db_path, "test_session_001")
+        assert loaded is not None
+        assert loaded.track_config == ""
+
+
+class TestListCarStats:
+    def test_returns_correct_stats(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="monza"))
+        save_session(db_path, _session(session_id="s2", car="ferrari", track="spa"))
+        save_session(db_path, _session(session_id="s3", car="porsche", track="monza"))
+        stats = list_car_stats(db_path)
+        assert len(stats) == 2
+        ferrari = next(s for s in stats if s["car"] == "ferrari")
+        assert ferrari["track_count"] == 2
+        assert ferrari["session_count"] == 2
+
+    def test_empty_db(self, db_path: Path) -> None:
+        assert list_car_stats(db_path) == []
+
+    def test_track_count_with_configs(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="nurburgring", track_config="gp"))
+        save_session(db_path, _session(session_id="s2", car="ferrari", track="nurburgring", track_config="nordschleife"))
+        save_session(db_path, _session(session_id="s3", car="ferrari", track="monza"))
+        stats = list_car_stats(db_path)
+        ferrari = stats[0]
+        assert ferrari["track_count"] == 3  # gp, nordschleife, monza
+
+    def test_ordered_by_last_session(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", car="old_car", session_date="2026-01-01T00:00:00"))
+        save_session(db_path, _session(session_id="s2", car="new_car", session_date="2026-03-01T00:00:00"))
+        stats = list_car_stats(db_path)
+        assert stats[0]["car"] == "new_car"
+
+
+class TestListTrackStats:
+    def test_groups_by_track_and_config(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="nurburgring", track_config="gp", best_lap_time=120.0))
+        save_session(db_path, _session(session_id="s2", car="ferrari", track="nurburgring", track_config="gp", best_lap_time=115.0))
+        save_session(db_path, _session(session_id="s3", car="ferrari", track="nurburgring", track_config="nordschleife"))
+        stats = list_track_stats(db_path, "ferrari")
+        assert len(stats) == 2
+        gp = next(s for s in stats if s["track_config"] == "gp")
+        assert gp["session_count"] == 2
+        assert gp["best_lap_time"] == 115.0
+
+    def test_empty_for_unknown_car(self, db_path: Path) -> None:
+        assert list_track_stats(db_path, "nonexistent") == []
+
+    def test_best_lap_time_null_when_none(self, db_path: Path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", best_lap_time=None))
+        stats = list_track_stats(db_path, "ferrari")
+        assert stats[0]["best_lap_time"] is None
 
 
 class TestCascadeDelete:

@@ -26,17 +26,31 @@ Usage::
     print(resolved.tier, len(resolved.parameters))
 """
 
+from .ac_assets import (
+    CarInfo,
+    TrackInfo,
+    car_badge_path,
+    read_car_info,
+    read_track_info,
+    track_preview_path,
+)
 from .cache import get_cached_parameters, invalidate_all_caches, invalidate_cache
 from .models import CarStatus, ResolvedParameters, ResolutionTier
 from .resolver import list_cars, resolve_parameters
 
 __all__ = [
-    "resolve_parameters",
-    "list_cars",
-    "get_cached_parameters",
-    "invalidate_cache",
-    "invalidate_all_caches",
+    "CarInfo",
+    "CarStatus",
     "ResolvedParameters",
     "ResolutionTier",
-    "CarStatus",
+    "TrackInfo",
+    "car_badge_path",
+    "get_cached_parameters",
+    "invalidate_all_caches",
+    "invalidate_cache",
+    "list_cars",
+    "read_car_info",
+    "read_track_info",
+    "resolve_parameters",
+    "track_preview_path",
 ]

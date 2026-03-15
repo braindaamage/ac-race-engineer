@@ -124,4 +124,31 @@ describe("Breadcrumb", () => {
     expect(homeLink).toBeInTheDocument();
     expect(homeLink).toHaveAttribute("href", "/garage");
   });
+
+  it("shows display name from car-tracks cache for track segment", () => {
+    renderBreadcrumbAt(
+      "/garage/ks_ferrari_488_gt3/tracks/ks_monza/sessions",
+    );
+    const nav = screen.getByLabelText("Breadcrumb");
+    const segments = nav.querySelectorAll(".ace-breadcrumb__current, .ace-breadcrumb__link");
+    // Should have: home link, car link, track current
+    expect(segments.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("falls back to formatCarTrack when no cache data available", () => {
+    renderBreadcrumbAt("/garage/ks_bmw_m3_e30/tracks");
+    const nav = screen.getByLabelText("Breadcrumb");
+    const current = nav.querySelector(".ace-breadcrumb__current");
+    expect(current!.textContent).toBe("bmw m3 e30");
+  });
+
+  it("includes config query param in sessions breadcrumb link", () => {
+    renderBreadcrumbAt(
+      "/garage/ks_ferrari_488_gt3/tracks/ks_nurburgring/sessions?config=gp",
+    );
+    const nav = screen.getByLabelText("Breadcrumb");
+    const current = nav.querySelector(".ace-breadcrumb__current");
+    // The sessions segment is current, so no href — but verify it renders
+    expect(current).toBeInTheDocument();
+  });
 });

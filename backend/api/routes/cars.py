@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from ac_engineer.config.io import read_config
 from ac_engineer.resolver import (
+    car_badge_path,
     get_cached_parameters,
     invalidate_all_caches,
     invalidate_cache,
     list_cars,
 )
+from ac_engineer.resolver.ac_assets import _validate_identifier
 
 router = APIRouter()
 
@@ -117,6 +119,24 @@ def delete_all_caches(request: Request) -> CacheInvalidateAllResponse:
     """Invalidate all cached parameter data."""
     count = invalidate_all_caches(request.app.state.db_path)
     return CacheInvalidateAllResponse(invalidated_count=count)
+
+
+@router.get("/{car_name}/badge")
+def get_car_badge(car_name: str, request: Request):
+    """Serve the car badge image from the AC install directory."""
+    try:
+        _validate_identifier(car_name)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid car name: {car_name}")
+    config = read_config(request.app.state.config_path)
+    badge = car_badge_path(config.ac_cars_path, car_name)
+    if badge is None:
+        raise HTTPException(status_code=404, detail=f"Badge not found for car: {car_name}")
+    return FileResponse(
+        str(badge),
+        media_type="image/png",
+        headers={"Cache-Control": "max-age=86400"},
+    )
 
 
 @router.get("/{car_name}/parameters")

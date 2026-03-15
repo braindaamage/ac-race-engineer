@@ -30,6 +30,15 @@ vi.mock("../../../src/store/notificationStore", () => ({
     selector({ addNotification: mockAddNotification }),
 }));
 
+// Mock useCarTracks
+vi.mock("../../../src/hooks/useCarTracks", () => ({
+  useCarTracks: vi.fn(() => ({
+    data: undefined,
+    isLoading: false,
+    error: null,
+  })),
+}));
+
 import { apiGet, apiPost, apiDelete } from "../../../src/lib/api";
 import { jobWSManager } from "../../../src/lib/wsManager";
 
@@ -37,11 +46,15 @@ const mockedApiGet = vi.mocked(apiGet);
 const mockedApiPost = vi.mocked(apiPost);
 const mockedApiDelete = vi.mocked(apiDelete);
 
+import { useCarTracks } from "../../../src/hooks/useCarTracks";
+const mockedUseCarTracks = vi.mocked(useCarTracks);
+
 const testSessions = [
   {
     session_id: "sess-1",
     car: "ks_ferrari_488_gt3",
     track: "spa",
+    track_config: "",
     session_date: "2026-03-01T12:00:00Z",
     lap_count: 5,
     best_lap_time: 120.5,
@@ -54,6 +67,7 @@ const testSessions = [
     session_id: "sess-2",
     car: "ks_ferrari_488_gt3",
     track: "spa",
+    track_config: "",
     session_date: "2026-03-02T14:00:00Z",
     lap_count: 10,
     best_lap_time: 105.3,
@@ -354,5 +368,60 @@ describe("SessionsView", () => {
       expect(screen.queryByText("Delete Session")).not.toBeInTheDocument();
     });
     expect(mockedApiDelete).not.toHaveBeenCalled();
+  });
+
+  // --- Contextual Header ---
+
+  it("shows contextual header when car/track metadata available", async () => {
+    mockedUseCarTracks.mockReturnValue({
+      data: {
+        car_name: "ks_ferrari_488_gt3",
+        car_display_name: "Ferrari 488 GT3",
+        car_brand: "Ferrari",
+        car_class: "GT3",
+        badge_url: null,
+        track_count: 2,
+        session_count: 5,
+        last_session_date: "2026-03-15",
+        tracks: [
+          {
+            track_name: "spa",
+            track_config: "",
+            display_name: "Spa-Francorchamps",
+            country: "Belgium",
+            length_m: 7004,
+            preview_url: null,
+            session_count: 3,
+            best_lap_time: 105.3,
+            last_session_date: "2026-03-15",
+          },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    });
+
+    renderSessions();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("sessions-context-header")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Ferrari 488 GT3")).toBeInTheDocument();
+    expect(screen.getByText("Spa-Francorchamps")).toBeInTheDocument();
+  });
+
+  it("does not show contextual header without car/track data", async () => {
+    mockedUseCarTracks.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
+
+    renderSessions();
+
+    await waitFor(() => {
+      expect(screen.getByText("Sessions")).toBeInTheDocument();
+    });
+    expect(screen.queryByTestId("sessions-context-header")).not.toBeInTheDocument();
   });
 });

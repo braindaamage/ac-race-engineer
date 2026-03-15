@@ -133,3 +133,36 @@ class TestDeleteAllCaches:
             resp = await client.delete("/cars/cache")
         # Should NOT be 404 (which would mean "cache" was treated as car_name)
         assert resp.status_code == 200
+
+
+class TestGetCarBadge:
+    @pytest.mark.anyio
+    async def test_returns_image_when_exists(self, client: httpx.AsyncClient, tmp_path: Path) -> None:
+        badge = tmp_path / "ks_ferrari" / "ui" / "badge.png"
+        badge.parent.mkdir(parents=True)
+        # Write minimal valid PNG
+        import base64
+        png_data = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==")
+        badge.write_bytes(png_data)
+        with patch("api.routes.cars.read_config") as mock_cfg:
+            mock_cfg.return_value = _mock_config()
+            mock_cfg.return_value.ac_cars_path = tmp_path
+            with patch("api.routes.cars.car_badge_path", return_value=badge):
+                resp = await client.get("/cars/ks_ferrari/badge")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "image/png"
+        assert "max-age=86400" in resp.headers.get("cache-control", "")
+
+    @pytest.mark.anyio
+    async def test_returns_404_when_missing(self, client: httpx.AsyncClient) -> None:
+        with patch("api.routes.cars.read_config", return_value=_mock_config()), \
+             patch("api.routes.cars.car_badge_path", return_value=None):
+            resp = await client.get("/cars/ks_ferrari/badge")
+        assert resp.status_code == 404
+
+    @pytest.mark.anyio
+    async def test_rejects_path_traversal(self, client: httpx.AsyncClient) -> None:
+        with patch("api.routes.cars.read_config", return_value=_mock_config()):
+            resp = await client.get("/cars/..%2F..%2Fetc/badge")
+        # Path traversal results in validation error (400) or not found (404)
+        assert resp.status_code in (400, 404)

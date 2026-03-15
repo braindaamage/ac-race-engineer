@@ -7,6 +7,7 @@ const baseSession: SessionRecord = {
   session_id: "sess-1",
   car: "ks_ferrari_488_gt3",
   track: "spa",
+  track_config: "",
   session_date: "2026-03-01T12:00:00Z",
   lap_count: 5,
   best_lap_time: 120.5,

@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSessions } from "../../hooks/useSessions";
+import { useCarTracks } from "../../hooks/useCarTracks";
 import { useJobStore } from "../../store/jobStore";
 import { useNotificationStore } from "../../store/notificationStore";
 import { jobWSManager } from "../../lib/wsManager";
 import { apiPost, apiDelete } from "../../lib/api";
+import { API_BASE_URL } from "../../lib/constants";
 import type { ProcessResponse, SyncResult, ProcessingJobInfo } from "../../lib/types";
 import { Button, EmptyState, Skeleton, Modal } from "../../components/ui";
 import { SessionCard } from "./SessionCard";
@@ -14,11 +16,16 @@ import "./SessionsView.css";
 
 export function SessionsView() {
   const { carId, trackId } = useParams<{ carId: string; trackId: string }>();
+  const [searchParams] = useSearchParams();
+  const config = searchParams.get("config") ?? "";
   const navigate = useNavigate();
   const { sessions, isLoading, error, refetch } = useSessions();
   const queryClient = useQueryClient();
   const jobProgress = useJobStore((s) => s.jobProgress);
   const addNotification = useNotificationStore((s) => s.addNotification);
+
+  // Fetch car+track metadata for contextual header
+  const { data: carTracksData } = useCarTracks(carId);
 
   const [processingJobs, setProcessingJobs] = useState<Map<string, ProcessingJobInfo>>(
     () => new Map(),
@@ -111,10 +118,11 @@ export function SessionsView() {
     }
   };
 
-  // Filter sessions by car and track from route params
+  // Filter sessions by car, track, and track_config from route params
   const filteredSessions = sessions.filter((s) => {
     if (carId && s.car !== carId) return false;
     if (trackId && s.track !== trackId) return false;
+    if (config && s.track_config !== config) return false;
     return true;
   });
 
@@ -126,8 +134,67 @@ export function SessionsView() {
     (a, b) => new Date(b.session_date).getTime() - new Date(a.session_date).getTime(),
   );
 
+  // Resolve display names for contextual header
+  const trackMeta = carTracksData?.tracks.find(
+    (t) => t.track_name === trackId && t.track_config === config,
+  );
+
   return (
     <div className="ace-sessions">
+      {carId && trackId && carTracksData && (
+        <div className="ace-sessions__context-header" data-testid="sessions-context-header">
+          <div className="ace-sessions__context-car">
+            <div className="ace-sessions__context-badge">
+              {carTracksData.badge_url ? (
+                <img
+                  src={`${API_BASE_URL}${carTracksData.badge_url}`}
+                  alt={carTracksData.car_display_name}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <i className="fa-solid fa-car" />
+              )}
+            </div>
+            <span className="ace-sessions__context-name">{carTracksData.car_display_name}</span>
+          </div>
+          {trackMeta && (
+            <div className="ace-sessions__context-track">
+              {trackMeta.preview_url && (
+                <div className="ace-sessions__context-preview">
+                  <img
+                    src={`${API_BASE_URL}${trackMeta.preview_url}`}
+                    alt={trackMeta.display_name}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              )}
+              <div className="ace-sessions__context-track-info">
+                <span className="ace-sessions__context-name">
+                  {trackMeta.display_name}
+                  {trackMeta.track_config ? ` - ${trackMeta.track_config}` : ""}
+                </span>
+                <span className="ace-sessions__context-stats">
+                  <span className="ace-mono">{trackMeta.session_count}</span> sessions
+                  {trackMeta.best_lap_time != null && (
+                    <>
+                      {" · best "}
+                      <span className="ace-mono">
+                        {Math.floor(trackMeta.best_lap_time / 60)}:
+                        {(trackMeta.best_lap_time % 60).toFixed(3).padStart(6, "0")}
+                      </span>
+                    </>
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="ace-sessions__header">
         <h1>Sessions</h1>
         <Button variant="secondary" onClick={handleSync} disabled={isSyncing}>
