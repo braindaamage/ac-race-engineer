@@ -224,6 +224,9 @@ async def get_recommendation_detail(
                 reasoning=c.reasoning,
                 expected_effect=c.expected_effect,
                 confidence=c.confidence,
+                storage_value_before=c.storage_value_before,
+                storage_value_after=c.storage_value_after,
+                storage_convention=c.storage_convention,
             )
             for c in cached.setup_changes
         ]

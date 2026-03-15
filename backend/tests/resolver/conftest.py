@@ -25,24 +25,28 @@ def sample_car_dir(tmp_path: Path) -> Path:
     car_dir = tmp_path / "content" / "cars" / "ks_test_car" / "data"
     car_dir.mkdir(parents=True)
 
-    # setup.ini with MIN/MAX/STEP for several sections
+    # setup.ini with MIN/MAX/STEP/SHOW_CLICKS for several sections
     setup_ini = textwrap.dedent("""\
         [CAMBER_LF]
+        SHOW_CLICKS=0
         MIN=-4.0
         MAX=0.0
         STEP=0.1
 
         [CAMBER_RF]
+        SHOW_CLICKS=0
         MIN=-4.0
         MAX=0.0
         STEP=0.1
 
         [PRESSURE_LF]
+        SHOW_CLICKS=0
         MIN=18.0
         MAX=35.0
         STEP=0.5
 
         [WING_1]
+        SHOW_CLICKS=1
         MIN=0
         MAX=11
         STEP=1
@@ -93,16 +97,19 @@ def sample_acd_car_dir(tmp_path: Path) -> Path:
 
     setup_ini = textwrap.dedent("""\
         [CAMBER_LF]
+        SHOW_CLICKS=0
         MIN=-4.0
         MAX=0.0
         STEP=0.1
 
         [PRESSURE_LF]
+        SHOW_CLICKS=0
         MIN=18.0
         MAX=35.0
         STEP=0.5
 
         [WING_1]
+        SHOW_CLICKS=1
         MIN=0
         MAX=11
         STEP=1

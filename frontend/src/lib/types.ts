@@ -281,6 +281,9 @@ export interface SetupChangeDetail {
   reasoning: string;
   expected_effect: string;
   confidence: "high" | "medium" | "low";
+  storage_value_before: number | null;
+  storage_value_after: number | null;
+  storage_convention: string | null;
 }
 
 export interface DriverFeedbackDetail {

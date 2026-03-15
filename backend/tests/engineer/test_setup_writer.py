@@ -167,8 +167,8 @@ class TestApplyChanges:
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
 
-        assert cp.get("CAMBER_LF", "VALUE") == "-3.0"
-        assert cp.get("CAMBER_RF", "VALUE") == "-2.0"  # unchanged
+        assert cp.get("CAMBER_LF", "VALUE") == "-3"
+        assert cp.get("CAMBER_RF", "VALUE") == "-2.0"  # unchanged (original file value)
         assert cp.get("PRESSURE_LF", "VALUE") == "26.5"  # unchanged
 
     def test_backup_created_before_modify(self, sample_setup_ini: Path):
@@ -204,7 +204,7 @@ class TestApplyChanges:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
-        assert cp.get("CAMBER_LF", "VALUE") == "-4.0"
+        assert cp.get("CAMBER_LF", "VALUE") == "-4"
 
     def test_other_sections_preserved(self, sample_setup_ini: Path):
         import configparser
@@ -230,7 +230,7 @@ class TestApplyChanges:
         assert len(outcomes) == 1
         assert outcomes[0].section == "CAMBER_LF"
         assert outcomes[0].old_value == "-2.0"
-        assert outcomes[0].new_value == "-3.0"
+        assert outcomes[0].new_value == "-3"
 
     def test_clamped_value_used_when_invalid(self, sample_setup_ini: Path):
         ranges = _make_ranges()
@@ -242,7 +242,7 @@ class TestApplyChanges:
         cp = configparser.ConfigParser()
         cp.optionxform = str
         cp.read(str(sample_setup_ini))
-        assert cp.get("CAMBER_LF", "VALUE") == "-5.0"
+        assert cp.get("CAMBER_LF", "VALUE") == "-5"
 
     def test_nonexistent_section_skipped(self, sample_setup_ini: Path):
         """A change targeting a section not in the .ini is skipped, not added."""
@@ -283,3 +283,84 @@ class TestApplyChanges:
         ]
         outcomes = apply_changes(sample_setup_ini, changes)
         assert all(o.status == "skipped" for o in outcomes)
+
+
+# ---------------------------------------------------------------------------
+# T009 [US1]: INDEX parameter conversion on write
+# ---------------------------------------------------------------------------
+
+
+class TestIndexParameterWriteConversion:
+    def test_index_physical_converted_to_storage(self, sample_setup_ini: Path):
+        """apply_changes converts physical 30000 -> storage index 1 for ARB_FRONT."""
+        import configparser
+
+        ranges = {
+            "ARB_FRONT": ParameterRange(
+                section="ARB_FRONT", parameter="VALUE",
+                min_value=25500, max_value=48000, step=4500,
+                show_clicks=2, storage_convention="index",
+            ),
+        }
+        changes = validate_changes(ranges, [_make_change("ARB_FRONT", 30000.0)])
+        apply_changes(sample_setup_ini, changes, parameter_ranges=ranges)
+
+        cp = configparser.ConfigParser()
+        cp.optionxform = str
+        cp.read(str(sample_setup_ini))
+        assert cp.get("ARB_FRONT", "VALUE") == "1"
+
+
+# ---------------------------------------------------------------------------
+# T010 [US2]: SCALED parameter conversion on write
+# ---------------------------------------------------------------------------
+
+
+class TestScaledParameterWriteConversion:
+    def test_scaled_physical_converted_to_storage(self, tmp_path: Path):
+        """apply_changes converts physical -1.0 -> storage -10.0 for CAMBER_LR."""
+        import configparser
+
+        setup_path = tmp_path / "test_setup.ini"
+        setup_path.write_text("[CAMBER_LR]\nVALUE=-18\n", encoding="utf-8")
+
+        ranges = {
+            "CAMBER_LR": ParameterRange(
+                section="CAMBER_LR", parameter="VALUE",
+                min_value=-5.0, max_value=0.0, step=0.1,
+                show_clicks=0, storage_convention="scaled",
+            ),
+        }
+        changes = validate_changes(ranges, [_make_change("CAMBER_LR", -1.0)])
+        apply_changes(setup_path, changes, parameter_ranges=ranges)
+
+        cp = configparser.ConfigParser()
+        cp.optionxform = str
+        cp.read(str(setup_path))
+        assert cp.get("CAMBER_LR", "VALUE") == "-10"
+
+
+# ---------------------------------------------------------------------------
+# T017 [US3]: DIRECT parameter passthrough on write
+# ---------------------------------------------------------------------------
+
+
+class TestDirectParameterWritePassthrough:
+    def test_direct_physical_unchanged_on_write(self, sample_setup_ini: Path):
+        """apply_changes writes physical 16.0 unchanged for PRESSURE_LF (direct)."""
+        import configparser
+
+        ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE",
+                min_value=15.0, max_value=35.0, step=0.5,
+                show_clicks=0, storage_convention="direct",
+            ),
+        }
+        changes = validate_changes(ranges, [_make_change("PRESSURE_LF", 16.0)])
+        apply_changes(sample_setup_ini, changes, parameter_ranges=ranges)
+
+        cp = configparser.ConfigParser()
+        cp.optionxform = str
+        cp.read(str(sample_setup_ini))
+        assert cp.get("PRESSURE_LF", "VALUE") == "16"

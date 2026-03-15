@@ -33,6 +33,7 @@ from .models import (
     SetupChange,
     SpecialistResult,
 )
+from .conversion import to_physical, to_storage
 from .setup_reader import read_parameter_ranges
 from .setup_writer import validate_changes
 from .tools import (
@@ -522,6 +523,31 @@ def _post_validate_changes(
     return updated
 
 
+def _populate_storage_fields(
+    changes: list[SetupChange],
+    ranges: dict[str, ParameterRange],
+) -> list[SetupChange]:
+    """Annotate each SetupChange with raw storage values and convention."""
+    result: list[SetupChange] = []
+    for change in changes:
+        pr = ranges.get(change.section)
+        if pr is None:
+            result.append(change)
+            continue
+        storage_after = to_storage(change.value_after, pr)
+        storage_before = (
+            to_storage(change.value_before, pr)
+            if change.value_before is not None
+            else None
+        )
+        result.append(change.model_copy(update={
+            "storage_value_before": storage_before,
+            "storage_value_after": storage_after,
+            "storage_convention": pr.storage_convention or "direct",
+        }))
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Principal agent synthesis (Phase 12)
 # ---------------------------------------------------------------------------
@@ -652,6 +678,17 @@ async def analyze_with_engineer(
         ranges = parameter_ranges
     else:
         ranges = read_parameter_ranges(install_path, summary.car_name)
+
+    # Convert raw storage values to physical units in the summary
+    if summary.active_setup_parameters and ranges:
+        converted_params = {}
+        for section, params in summary.active_setup_parameters.items():
+            pr = ranges.get(section)
+            if pr and isinstance(params.get("VALUE"), (int, float)):
+                converted_params[section] = {**params, "VALUE": to_physical(params["VALUE"], pr)}
+            else:
+                converted_params[section] = params
+        summary = summary.model_copy(update={"active_setup_parameters": converted_params})
 
     # Route signals to domains
     domains = route_signals(summary.signals, summary.active_setup_parameters)
@@ -786,6 +823,11 @@ async def analyze_with_engineer(
     # Resolve conflicts
     response = response.model_copy(update={
         "setup_changes": _resolve_conflicts(response.setup_changes),
+    })
+
+    # Populate storage fields for frontend display
+    response = response.model_copy(update={
+        "setup_changes": _populate_storage_fields(response.setup_changes, ranges),
     })
 
     # Principal agent synthesis (Phase 12)
@@ -966,10 +1008,14 @@ async def apply_recommendation(
     # Build ValidationResults from stored changes
     from .models import SetupChange as EngSetupChange
 
-    # Read parameter ranges for re-validation
-    ranges = {}
+    # Resolve parameter ranges (with show_clicks/storage_convention) for
+    # re-validation and outbound storage conversion.
+    ranges: dict[str, ParameterRange] = {}
     if ac_install_path and car_name:
-        ranges = read_parameter_ranges(ac_install_path, car_name)
+        from ac_engineer.resolver import resolve_parameters
+
+        resolved = resolve_parameters(ac_install_path, car_name, db_path)
+        ranges = resolved.parameters
 
     # Convert stored changes to SetupChange for validation
     proposed_changes = []
@@ -993,7 +1039,7 @@ async def apply_recommendation(
         raise FileNotFoundError(f"Setup file not found: {setup_path}")
 
     create_backup(setup_path)
-    outcomes = apply_changes(setup_path, validation_results)
+    outcomes = apply_changes(setup_path, validation_results, parameter_ranges=ranges)
 
     # Update status
     update_recommendation_status(db_path, recommendation_id, "applied")

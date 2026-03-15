@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from .conversion import (
+    SCALE_FACTORS,
+    classify_parameter,
+    to_physical,
+    to_storage,
+)
 from .agents import (
     DOMAIN_PRIORITY,
     DOMAIN_TOOLS,
@@ -65,4 +71,9 @@ __all__ = [
     "DOMAIN_PRIORITY",
     # Constants — Phase 9.6
     "DOMAIN_TOOLS",
+    # Functions — Phase 13 (conversion)
+    "classify_parameter",
+    "to_physical",
+    "to_storage",
+    "SCALE_FACTORS",
 ]

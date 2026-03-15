@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
+from ac_engineer.engineer.conversion import classify_parameter
 from ac_engineer.engineer.models import ParameterRange
 
 from .defaults import extract_defaults
@@ -40,6 +41,14 @@ def _parse_setup_ini(content: str) -> dict[str, ParameterRange]:
         except (configparser.NoOptionError, ValueError):
             pass
 
+        show_clicks: int | None = None
+        try:
+            show_clicks = int(cp.get(section, "SHOW_CLICKS"))
+        except (configparser.NoOptionError, ValueError):
+            pass
+
+        storage_convention = classify_parameter(section, show_clicks)
+
         ranges[section] = ParameterRange(
             section=section,
             parameter="VALUE",
@@ -47,6 +56,8 @@ def _parse_setup_ini(content: str) -> dict[str, ParameterRange]:
             max_value=max_val,
             step=step_val,
             default_value=default_val,
+            show_clicks=show_clicks,
+            storage_convention=storage_convention,
         )
 
     return ranges

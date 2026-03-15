@@ -322,3 +322,93 @@ class TestSetupIniContents:
         summary = summarize_session(session, _config(), setup_ini_contents="not valid ini {{{{")
         # Should handle gracefully — either None or parsed as best effort
         assert isinstance(summary, SessionSummary)
+
+
+# ---------------------------------------------------------------------------
+# T007 [US1]: INDEX parameter conversion in summarizer
+# ---------------------------------------------------------------------------
+
+
+class TestIndexParameterConversion:
+    def test_index_parameter_converted_to_physical(self):
+        """ARB_FRONT VALUE=2 with index range -> physical 34500."""
+        from ac_engineer.engineer.models import ParameterRange
+
+        ini_contents = "[ARB_FRONT]\nVALUE=2\n"
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+
+        param_ranges = {
+            "ARB_FRONT": ParameterRange(
+                section="ARB_FRONT", parameter="VALUE",
+                min_value=25500, max_value=48000, step=4500,
+                show_clicks=2, storage_convention="index",
+            ),
+        }
+        summary = summarize_session(
+            session, _config(),
+            setup_ini_contents=ini_contents,
+            parameter_ranges=param_ranges,
+        )
+        assert summary.active_setup_parameters is not None
+        assert summary.active_setup_parameters["ARB_FRONT"]["VALUE"] == 34500.0
+
+
+# ---------------------------------------------------------------------------
+# T008 [US2]: SCALED parameter conversion in summarizer
+# ---------------------------------------------------------------------------
+
+
+class TestScaledParameterConversion:
+    def test_scaled_parameter_converted_to_physical(self):
+        """CAMBER_LR VALUE=-18 with scaled range -> physical -1.8."""
+        from ac_engineer.engineer.models import ParameterRange
+
+        ini_contents = "[CAMBER_LR]\nVALUE=-18\n"
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+
+        param_ranges = {
+            "CAMBER_LR": ParameterRange(
+                section="CAMBER_LR", parameter="VALUE",
+                min_value=-5.0, max_value=0.0, step=0.1,
+                show_clicks=0, storage_convention="scaled",
+            ),
+        }
+        summary = summarize_session(
+            session, _config(),
+            setup_ini_contents=ini_contents,
+            parameter_ranges=param_ranges,
+        )
+        assert summary.active_setup_parameters is not None
+        assert summary.active_setup_parameters["CAMBER_LR"]["VALUE"] == -1.8
+
+
+# ---------------------------------------------------------------------------
+# T016 [US3]: DIRECT parameter passthrough in summarizer
+# ---------------------------------------------------------------------------
+
+
+class TestDirectParameterPassthrough:
+    def test_direct_parameter_unchanged(self):
+        """PRESSURE_LF VALUE=18 with direct range -> 18.0 unchanged."""
+        from ac_engineer.engineer.models import ParameterRange
+
+        ini_contents = "[PRESSURE_LF]\nVALUE=18\n"
+        stint = make_stint_metrics(setup_filename="test.ini")
+        session = make_analyzed_session(stints=[stint])
+
+        param_ranges = {
+            "PRESSURE_LF": ParameterRange(
+                section="PRESSURE_LF", parameter="VALUE",
+                min_value=15.0, max_value=35.0, step=0.5,
+                show_clicks=0, storage_convention="direct",
+            ),
+        }
+        summary = summarize_session(
+            session, _config(),
+            setup_ini_contents=ini_contents,
+            parameter_ranges=param_ranges,
+        )
+        assert summary.active_setup_parameters is not None
+        assert summary.active_setup_parameters["PRESSURE_LF"]["VALUE"] == 18.0

@@ -9,6 +9,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from .conversion import to_storage
 from .models import ChangeOutcome, ParameterRange, SetupChange, ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -117,6 +118,7 @@ def create_backup(setup_path: Path) -> Path:
 def apply_changes(
     setup_path: Path,
     changes: list[ValidationResult],
+    parameter_ranges: dict[str, ParameterRange] | None = None,
 ) -> list[ChangeOutcome]:
     """Apply validated changes to a setup .ini file atomically.
 
@@ -164,11 +166,21 @@ def apply_changes(
         # Determine effective value
         effective = vr.clamped_value if (not vr.is_valid and vr.clamped_value is not None) else vr.proposed_value
 
+        # Convert physical value to storage format if parameter_ranges provided
+        if parameter_ranges is not None:
+            pr = parameter_ranges.get(section)
+            if pr is not None:
+                effective = to_storage(effective, pr)
+
         old_value = ""
         if cp.has_option(section, "VALUE"):
             old_value = cp.get(section, "VALUE")
 
-        new_val_str = str(effective)
+        # AC .ini files expect integer formatting for whole numbers
+        if isinstance(effective, float) and effective == int(effective):
+            new_val_str = str(int(effective))
+        else:
+            new_val_str = str(effective)
         cp.set(section, "VALUE", new_val_str)
 
         outcomes.append(ChangeOutcome(

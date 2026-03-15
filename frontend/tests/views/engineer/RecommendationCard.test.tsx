@@ -24,6 +24,9 @@ const baseRecommendation: RecommendationDetailResponse = {
       reasoning: "Stiffer front ARB reduces understeer",
       expected_effect: "Better turn-in response",
       confidence: "high",
+      storage_value_before: null,
+      storage_value_after: null,
+      storage_convention: null,
     },
     {
       section: "SPRINGS",
@@ -33,6 +36,9 @@ const baseRecommendation: RecommendationDetailResponse = {
       reasoning: "Complement ARB change",
       expected_effect: "More front grip",
       confidence: "medium",
+      storage_value_before: null,
+      storage_value_after: null,
+      storage_convention: null,
     },
   ],
   driver_feedback: [

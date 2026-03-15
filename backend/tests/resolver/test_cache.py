@@ -17,28 +17,43 @@ from ac_engineer.resolver.models import ResolvedParameters, ResolutionTier
 from ac_engineer.resolver.resolver import resolve_parameters
 
 
-def _make_resolved(car_name: str = "test_car", tier: int = 1) -> ResolvedParameters:
-    return ResolvedParameters(
-        car_name=car_name,
-        tier=ResolutionTier(tier),
-        parameters={
+def _make_resolved(
+    car_name: str = "test_car",
+    tier: int = 1,
+    include_show_clicks: bool = True,
+) -> ResolvedParameters:
+    if include_show_clicks:
+        params = {
             "CAMBER_LF": ParameterRange(
-                section="CAMBER_LF",
-                parameter="VALUE",
-                min_value=-4.0,
-                max_value=0.0,
-                step=0.1,
+                section="CAMBER_LF", parameter="VALUE",
+                min_value=-4.0, max_value=0.0, step=0.1,
+                default_value=-3.0,
+                show_clicks=0, storage_convention="scaled",
+            ),
+            "WING_1": ParameterRange(
+                section="WING_1", parameter="VALUE",
+                min_value=0, max_value=11, step=1,
+                default_value=6.0,
+                show_clicks=1, storage_convention="direct",
+            ),
+        }
+    else:
+        params = {
+            "CAMBER_LF": ParameterRange(
+                section="CAMBER_LF", parameter="VALUE",
+                min_value=-4.0, max_value=0.0, step=0.1,
                 default_value=-3.0,
             ),
             "WING_1": ParameterRange(
-                section="WING_1",
-                parameter="VALUE",
-                min_value=0,
-                max_value=11,
-                step=1,
+                section="WING_1", parameter="VALUE",
+                min_value=0, max_value=11, step=1,
                 default_value=6.0,
             ),
-        },
+        }
+    return ResolvedParameters(
+        car_name=car_name,
+        tier=ResolutionTier(tier),
+        parameters=params,
         has_defaults=True,
         resolved_at="2026-03-08T14:30:00+00:00",
     )
@@ -128,6 +143,8 @@ class TestCacheCRUD:
                     max_value=99999.9999,
                     step=0.0001,
                     default_value=50000.12345,
+                    show_clicks=0,
+                    storage_convention="direct",
                 ),
                 "PARAM_B": ParameterRange(
                     section="PARAM_B",
@@ -136,6 +153,8 @@ class TestCacheCRUD:
                     max_value=1.0,
                     step=0.1,
                     default_value=None,
+                    show_clicks=0,
+                    storage_convention="direct",
                 ),
             },
             has_defaults=True,
@@ -153,6 +172,48 @@ class TestCacheCRUD:
 
         pb = loaded.parameters["PARAM_B"]
         assert pb.default_value is None
+
+
+class TestStaleCacheDetection:
+    """T020-T021 — Stale cache entries with missing show_clicks are rejected."""
+
+    def test_stale_entry_returns_none(self, db_path: Path) -> None:
+        """T020: Cached params with show_clicks=None are detected as stale."""
+        resolved = _make_resolved(include_show_clicks=False)
+        assert all(pr.show_clicks is None for pr in resolved.parameters.values())
+        save_to_cache(db_path, resolved)
+
+        loaded = get_cached_parameters(db_path, "test_car")
+        assert loaded is None  # stale detection triggered
+
+    def test_fresh_entry_returns_cached(self, db_path: Path) -> None:
+        """T021: Cached params with show_clicks set are returned normally."""
+        resolved = ResolvedParameters(
+            car_name="fresh_car",
+            tier=ResolutionTier(1),
+            parameters={
+                "ARB_FRONT": ParameterRange(
+                    section="ARB_FRONT", parameter="VALUE",
+                    min_value=25500, max_value=48000, step=4500,
+                    default_value=None,
+                    show_clicks=2, storage_convention="index",
+                ),
+                "PRESSURE_LF": ParameterRange(
+                    section="PRESSURE_LF", parameter="VALUE",
+                    min_value=20.0, max_value=35.0, step=0.5,
+                    default_value=None,
+                    show_clicks=0, storage_convention="direct",
+                ),
+            },
+            has_defaults=False,
+            resolved_at="2026-03-11T10:00:00+00:00",
+        )
+        save_to_cache(db_path, resolved)
+
+        loaded = get_cached_parameters(db_path, "fresh_car")
+        assert loaded is not None
+        assert loaded.car_name == "fresh_car"
+        assert loaded.parameters["ARB_FRONT"].show_clicks == 2
 
 
 class TestCacheIntegration:
