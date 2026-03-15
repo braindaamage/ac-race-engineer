@@ -31,10 +31,29 @@ def sessions_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def app(db_path: Path, sessions_dir: Path):
+def config_path(tmp_path: Path) -> Path:
+    """Create a minimal config file for tests."""
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps({
+        "ac_install_path": str(tmp_path / "ac"),
+    }))
+    return config
+
+
+@pytest.fixture()
+def ac_cars_dir(tmp_path: Path) -> Path:
+    """Create an AC cars directory."""
+    d = tmp_path / "ac" / "content" / "cars"
+    d.mkdir(parents=True)
+    return d
+
+
+@pytest.fixture()
+def app(db_path: Path, sessions_dir: Path, config_path: Path):
     a = create_app()
     a.state.db_path = db_path
     a.state.sessions_dir = sessions_dir
+    a.state.config_path = config_path
     return a
 
 
@@ -244,3 +263,79 @@ class TestDeleteSession:
         assert resp.status_code == 204
         assert csv_file.exists()
         assert meta_file.exists()
+
+
+# --- GET /sessions/grouped/cars ---
+
+
+class TestGroupedCars:
+    @pytest.mark.asyncio
+    async def test_returns_car_list(self, client, db_path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="monza"))
+        save_session(db_path, _session(session_id="s2", car="ferrari", track="spa"))
+        save_session(db_path, _session(session_id="s3", car="porsche", track="monza"))
+        resp = await client.get("/sessions/grouped/cars")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data["cars"]) == 2
+        ferrari = next(c for c in data["cars"] if c["car_name"] == "ferrari")
+        assert ferrari["track_count"] == 2
+        assert ferrari["session_count"] == 2
+        # display_name falls back to formatted name since no AC files
+        assert ferrari["display_name"] == "ferrari"
+
+    @pytest.mark.asyncio
+    async def test_empty_list(self, client, db_path) -> None:
+        resp = await client.get("/sessions/grouped/cars")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["cars"] == []
+
+    @pytest.mark.asyncio
+    async def test_badge_url_null_when_missing(self, client, db_path) -> None:
+        save_session(db_path, _session(session_id="s1"))
+        resp = await client.get("/sessions/grouped/cars")
+        data = resp.json()
+        assert data["cars"][0]["badge_url"] is None
+
+
+# --- GET /sessions/grouped/cars/{car}/tracks ---
+
+
+class TestGroupedCarTracks:
+    @pytest.mark.asyncio
+    async def test_returns_tracks_list(self, client, db_path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="monza", best_lap_time=120.0))
+        save_session(db_path, _session(session_id="s2", car="ferrari", track="spa"))
+        resp = await client.get("/sessions/grouped/cars/ferrari/tracks")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["car_name"] == "ferrari"
+        assert len(data["tracks"]) == 2
+
+    @pytest.mark.asyncio
+    async def test_car_header_fields(self, client, db_path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="monza"))
+        resp = await client.get("/sessions/grouped/cars/ferrari/tracks")
+        data = resp.json()
+        assert data["car_display_name"] == "ferrari"
+        assert data["track_count"] == 1
+        assert data["session_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_empty_for_unknown_car(self, client, db_path) -> None:
+        resp = await client.get("/sessions/grouped/cars/nonexistent/tracks")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["tracks"] == []
+        assert data["session_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_track_config_in_preview_url(self, client, db_path) -> None:
+        save_session(db_path, _session(session_id="s1", car="ferrari", track="nurburgring", track_config="gp"))
+        resp = await client.get("/sessions/grouped/cars/ferrari/tracks")
+        data = resp.json()
+        track = data["tracks"][0]
+        assert track["track_config"] == "gp"
+        # preview_url is None since no actual image exists
+        assert track["preview_url"] is None

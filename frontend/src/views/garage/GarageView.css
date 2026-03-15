@@ -1,7 +1,147 @@
 .ace-garage {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+.ace-garage__header {
+  margin-bottom: var(--space-6);
+}
+
+.ace-garage__header h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  color: var(--text-primary);
+}
+
+.ace-garage-search {
+  position: relative;
+  margin-bottom: var(--space-6);
+}
+
+.ace-garage-search__icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.ace-garage-search__input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-10);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  outline: none;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.ace-garage-search__input:focus {
+  border-color: var(--color-brand);
+}
+
+.ace-garage-search__input::placeholder {
+  color: var(--text-muted);
+}
+
+.ace-garage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5);
+}
+
+@media (max-width: 1024px) {
+  .ace-garage-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ace-garage-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ace-car-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+  overflow: hidden;
+}
+
+.ace-car-card:hover {
+  border-color: var(--color-brand);
+}
+
+.ace-car-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
-  padding: var(--space-6);
+  height: 80px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.ace-car-badge img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.ace-car-badge__fallback {
+  font-size: 2rem;
+  color: var(--text-muted);
+}
+
+.ace-hidden {
+  display: none;
+}
+
+.ace-car-card__body {
+  padding: var(--space-4);
+}
+
+.ace-car-card__name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--space-1);
+}
+
+.ace-car-card__subtitle {
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-3);
+}
+
+.ace-garage-stats {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+
+.ace-garage-stats__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.ace-garage-stats__value {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--text-secondary);
+}
+
+.ace-car-card__time {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
 }

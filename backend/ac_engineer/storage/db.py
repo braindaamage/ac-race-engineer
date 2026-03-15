@@ -96,6 +96,9 @@ _MIGRATIONS = [
     "ALTER TABLE llm_events ADD COLUMN cache_read_tokens INTEGER NOT NULL DEFAULT 0 CHECK(cache_read_tokens >= 0)",
     "ALTER TABLE llm_events ADD COLUMN cache_write_tokens INTEGER NOT NULL DEFAULT 0 CHECK(cache_write_tokens >= 0)",
     "ALTER TABLE recommendations ADD COLUMN explanation TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE sessions ADD COLUMN track_config TEXT NOT NULL DEFAULT ''",
+    "CREATE INDEX IF NOT EXISTS idx_sessions_car ON sessions(car)",
+    "CREATE INDEX IF NOT EXISTS idx_sessions_car_track ON sessions(car, track, track_config)",
 ]
 
 

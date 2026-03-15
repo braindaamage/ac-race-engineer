@@ -2,6 +2,7 @@ export interface SessionRecord {
   session_id: string;
   car: string;
   track: string;
+  track_config: string;
   session_date: string;
   lap_count: number;
   best_lap_time: number | null;
@@ -326,6 +327,49 @@ export interface ApplyResponse {
 export type FeedItem =
   | { type: "message"; data: MessageResponse }
   | { type: "recommendation"; data: RecommendationDetailResponse };
+
+// ---------------------------------------------------------------------------
+// Garage view types
+// ---------------------------------------------------------------------------
+
+export interface CarStatsRecord {
+  car_name: string;
+  display_name: string;
+  brand: string;
+  car_class: string;
+  badge_url: string | null;
+  track_count: number;
+  session_count: number;
+  last_session_date: string;
+}
+
+export interface CarStatsListResponse {
+  cars: CarStatsRecord[];
+}
+
+export interface TrackStatsRecord {
+  track_name: string;
+  track_config: string;
+  display_name: string;
+  country: string;
+  length_m: number | null;
+  preview_url: string | null;
+  session_count: number;
+  best_lap_time: number | null;
+  last_session_date: string;
+}
+
+export interface TrackStatsListResponse {
+  car_name: string;
+  car_display_name: string;
+  car_brand: string;
+  car_class: string;
+  badge_url: string | null;
+  track_count: number;
+  session_count: number;
+  last_session_date: string;
+  tracks: TrackStatsRecord[];
+}
 
 // ---------------------------------------------------------------------------
 // Car data types

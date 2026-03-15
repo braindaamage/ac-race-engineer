@@ -13,6 +13,7 @@ class SessionRecord(BaseModel):
     session_id: str = Field(..., min_length=1)
     car: str = Field(..., min_length=1)
     track: str = Field(..., min_length=1)
+    track_config: str = Field(default="")
     session_date: str = Field(..., min_length=1)
     lap_count: int = Field(..., ge=0)
     best_lap_time: float | None = Field(default=None, ge=0)

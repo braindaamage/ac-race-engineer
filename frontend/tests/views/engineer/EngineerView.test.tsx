@@ -90,6 +90,7 @@ function setupMocksForSession(overrides?: {
         session_id: sessionId,
         car: "ferrari_488",
         track: "spa",
+        track_config: "",
         session_date: "2026-03-01T12:00:00Z",
         lap_count: 10,
         best_lap_time: 120.5,

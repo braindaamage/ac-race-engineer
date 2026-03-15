@@ -73,6 +73,7 @@ def create_app() -> FastAPI:
     from api.routes.jobs import router as jobs_router
     from api.routes.knowledge import router as knowledge_router
     from api.routes.sessions import router as sessions_router
+    from api.routes.tracks import router as tracks_router
     from api.ws.jobs import router as ws_jobs_router
     from api.errors.handlers import register_error_handlers
 
@@ -92,6 +93,7 @@ def create_app() -> FastAPI:
     app.include_router(engineer_router, prefix="/sessions")
     app.include_router(config_router, prefix="/config")
     app.include_router(cars_router, prefix="/cars")
+    app.include_router(tracks_router, prefix="/tracks")
     app.include_router(knowledge_router)
     app.include_router(ws_jobs_router)
     register_error_handlers(app)
